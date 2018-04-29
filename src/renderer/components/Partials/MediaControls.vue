@@ -80,8 +80,17 @@ export default {
     sound: null,
     position: 0,
     duration: 0,
-    fullscreen: false
+    fullscreen: false,
+    ctx: null,
+    source: null,
+    analyser: null,
+    frequencyData: null
   }),
+  mounted () {
+    if (Howler.usingWebAudio) {
+      this.ctx = Howler.ctx
+    }
+  },
   computed: {
     ...mapState({
       currentlyPlaying: state => state.Music.currentlyPlaying,
@@ -176,7 +185,13 @@ export default {
         loop: loop
       })
       sound.on('load', (id) => {
-        console.log(sound.duration(id))
+        if (!this.ctx && Howler.usingWebAudio) {
+          this.ctx = Howler.ctx
+        }
+        if (!this.analyser) {
+          this.analyser = this.ctx.createAnalyser()
+        }
+        console.log(sound._sounds[0]._node)
         this.duration = sound.duration(id)
       })
       sound.on('stop', (id) => {
@@ -201,14 +216,14 @@ export default {
       console.log(this.previousSong, this.currentlyPlaying)
       if (!this.previousSong) {
         this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
-        this.sound = this.createSound('file://' + this.currentlyPlaying.filePath)
+        this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/#/g, '%23').replace(/\?/g, '%3f'))
       } else {
         if (this.previousSong.filePath === this.currentlyPlaying.filePath) {
           this.sound.play()
         } else {
           this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
           this.sound.stop()
-          this.sound = this.createSound('file://' + this.currentlyPlaying.filePath)
+          this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/#/g, '%23').replace(/\?/g, '%3f'))
           // fs.readFile(this.currentlyPlaying.filePath, (err, contents) => {
           //   if (err) {
           //     alert('Couldn\'t play file:' + err)
@@ -222,7 +237,7 @@ export default {
           //     })
           //   }
           // })
-          console.log(encodeURIComponent(this.currentlyPlaying.filePath))
+          // console.log(encodeURIComponent(this.currentlyPlaying.filePath))
         }
       }
     },
@@ -257,6 +272,14 @@ export default {
           album
         }
       })
+    },
+    visualizationStep () {
+      requestAnimationFrame(this.visualizationStep)
+      // update data in frequencyData
+      this.analyser.getByteFrequencyData(this.frequencyData)
+      console.log(this.frequencyData)
+      // render frame based on values in frequencyData
+      // console.log(frequencyData)
     }
   },
   beforeDestroy () {

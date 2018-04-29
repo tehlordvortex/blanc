@@ -21,9 +21,7 @@ stat(artsCachePath, (err, details) => {
     })
   }
 })
-let hash = crypto.createHash('md5')
-hash.update(artsCachePath)
-console.log('album arts path hash', hash.digest('hex'))
+
 let worker = new ImageColorWorker()
 let works = {}
 // let arts = {}
@@ -35,7 +33,7 @@ worker.onmessage = (msg) => {
       } else {
         works[msg.data.id].rejects.map(reject => reject(msg.data.error))
       }
-      console.log('Caching result for', msg.data.id, ':', msg.data.result)
+      // console.log('Caching result for', msg.data.id, ':', msg.data.result)
       works[msg.data.id] = {
         result: msg.data.result
       }
@@ -50,7 +48,7 @@ export function loadAlbumArt (filePath) {
         reject(err)
       } else {
         if (res && res.length > 0 && res[0].albumArt) {
-          console.log('Using cached art', res[0].albumArt, 'for', filePath)
+          // console.log('Using cached art', res[0].albumArt, 'for', filePath)
           resolve('file://' + res[0].albumArt) // we already have an album art
         } else {
           parseFile(filePath).then((metadata) => {
@@ -147,17 +145,17 @@ export function computedStyle (image, invertColors, id) {
         // let id = Date.now() + '-' + Math.random() * 30000
         if (!image.startsWith('data:') && image.startsWith('file://')) {
           let filePath = image.substr(7)
-          console.log('Computing color for local file', filePath)
+          // console.log('Computing color for local file', filePath)
           db.find({albumArt: filePath}, (err, docs) => {
-            console.log(err, docs)
+            // console.log(err, docs)
             if (err) {
               reject(err)
             } else if (docs && docs.length > 0) {
               if (docs[0].colorCache) {
-                console.log('Using cached color', docs[0].colorCache)
+                // console.log('Using cached color', docs[0].colorCache)
                 resolve(docs[0].colorCache)
               } else {
-                console.log('No cached color for', filePath)
+                // console.log('No cached color for', filePath)
                 if (works[id] && works[id].resolves) {
                   works[id].resolves.push(resolve)
                   works[id].rejects.push(reject)
@@ -168,7 +166,7 @@ export function computedStyle (image, invertColors, id) {
                         if (err) {
                           reject(err)
                         } else {
-                          console.log('Cached color for', filePath, 'in database')
+                          // console.log('Cached color for', filePath, 'in database')
                           resolve(res)
                         }
                       })
@@ -185,7 +183,7 @@ export function computedStyle (image, invertColors, id) {
             }
           })
         } else if (works[id] && works[id].result) {
-          console.log('Using cached result for', id)
+          // console.log('Using cached result for', id)
           resolve(works[id].result)
         } else if (works[id] && works[id].resolves) {
           works[id].resolves.push(resolve)
