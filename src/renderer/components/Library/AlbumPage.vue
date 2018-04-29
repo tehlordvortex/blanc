@@ -164,12 +164,13 @@ export default {
     z-index: 0;
   }
   .album-banner--text {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: row;
     padding: 5px;
     min-width: 300px;
     max-width: 400px;
+    margin: 1em;
   }
   .album-banner-fullimage {
     position: absolute;
