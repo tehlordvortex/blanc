@@ -16,6 +16,11 @@ export default new Router({
       component: require('@/components/Library/LandingPage').default
     },
     {
+      path: '/library/album/:album',
+      name: 'library-album-page',
+      component: require('@/components/Library/AlbumPage').default
+    },
+    {
       path: '*',
       redirect: '/'
     }

@@ -5,6 +5,7 @@ import router from './router'
 import store from './store'
 import VueAsyncComputed from 'vue-async-computed'
 import './animate.css'
+import '../../static/material-icons/material-icons.css'
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false

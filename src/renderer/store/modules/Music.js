@@ -16,11 +16,14 @@ const mutations = {
     state.currentlyPlayingIndex = state.queues[state.currentQueue].push(state.currentlyPlaying)
     state.status = 'playing'
   },
-  PAUSE_MUSIC (state, music) {
+  PAUSE_MUSIC (state) {
     state.status = 'paused'
   },
-  STOP_MUSIC (state, music) {
+  STOP_MUSIC (state) {
     state.status = 'stopped'
+  },
+  RESUME_MUSIC (state) {
+    state.status = 'playing'
   }
 }
 

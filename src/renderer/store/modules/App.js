@@ -1,5 +1,6 @@
 const state = {
-  showChrome: true
+  showChrome: true,
+  showMusicBar: true
 }
 
 const mutations = {
@@ -8,6 +9,12 @@ const mutations = {
   },
   SHOW_CHROME (state) {
     state.showChrome = true
+  },
+  HIDE_MUSIC_BAR (state) {
+    state.showMusicBar = false
+  },
+  SHOW_MUSIC_BAR (state) {
+    state.showMusicBar = true
   }
 }
 

@@ -29,7 +29,7 @@ export default {
 
 <style scoped>
   #top-bar {
-    height: 1em;
+    height: 1.5em;
     background-color: #333;
     width: 100%;
     color: white;
@@ -38,15 +38,19 @@ export default {
     left: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     z-index: 1000;
+    -webkit-app-region: drag;
   }
   .spacer {
     flex-grow: 1;
+    height: 100%;
+    -webkit-app-region: drag;
   }
   #window-buttons {
     background-color: #333;
     display: flex;
-    height: 1em;
+    height: 1.5em;
     flex-direction: row;
+    -webkit-app-region: no-drag;
   }
   #window-buttons button {
     color: white;
@@ -56,6 +60,7 @@ export default {
     padding: 0 5px;
     cursor: pointer;
     transition: all 0.3s;
+    -webkit-app-region: no-drag;
   }
   #window-buttons button:focus {
     outline: none;

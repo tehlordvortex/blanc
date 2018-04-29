@@ -30,7 +30,8 @@ function createWindow () {
     width: 1000,
     frame: false,
     webPreferences: {
-      nodeIntegrationInWorker: true
+      nodeIntegrationInWorker: true,
+      webSecurity: false
     },
     icon: require('path').join(__static, 'icon.png')
   })

@@ -1,7 +1,9 @@
 import { parseFile } from 'music-metadata'
 import * as fs from 'fs'
-import { posix, join } from 'path'
+import { posix, join, sep as pathSep } from 'path'
 import mime from 'mime'
+// import { loadAlbumArt, computedStyle } from '@/lazy-loaders'
+
 // console.log(mm)
 const flatten = (arr, result = []) => {
   for (let i = 0, length = arr.length; i < length; i++) {
@@ -55,7 +57,15 @@ function index (path) {
             libraryItem.artist = metadata.common.artist || ''
             libraryItem.artists = metadata.common.artists || []
             libraryItem.album = metadata.common.album || ''
-          }).then(() => libraryItem).catch((e) => console.log('Couldn\'t index', file, e)))
+            if (!libraryItem.album) {
+              let sections = join(path, file).split(pathSep)
+              libraryItem.album = sections[sections.length - 2]
+            }
+          })
+            // .then(() => loadAlbumArt(libraryItem.filePath)) // pre cache the album art
+            // .then((artPath) => computedStyle(artPath, false, artPath)) // pre cache the colors
+            .then(() => libraryItem)
+            .catch((e) => console.log('Couldn\'t index', file, e)))
         })
       }
       Promise.all(resolves).then((values) => resolve(values))

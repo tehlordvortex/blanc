@@ -67,6 +67,7 @@
     }),
     created () {
       this.$store.commit('HIDE_CHROME')
+      this.$store.commit('HIDE_MUSIC_BAR')
       db.find({}).limit(2).exec((err, res) => {
         if (res && res.length > 0) {
           this.leavePage(true)
@@ -96,7 +97,7 @@
                 this.doneIndexing = true
               } else if (e.data.command === 'add-items') {
                 e.data.items.forEach(item => {
-                  db.update({ filePath: item.filePath }, item, { upsert: true })
+                  if (item) db.update({ filePath: item.filePath }, item, { upsert: true })
                 })
               } else if (e.data.command === 'currently-indexing') {
                 this.currentPath = e.data.path
@@ -114,12 +115,14 @@
         if (!immediate) {
           setTimeout(() => {
             this.$store.commit('SHOW_CHROME')
+            this.$store.commit('SHOW_MUSIC_BAR')
             this.$router.push({
               name: 'library-landing-page'
             })
           }, 500)
         } else {
           this.$store.commit('SHOW_CHROME')
+          this.$store.commit('SHOW_MUSIC_BAR')
           this.$router.push({
             name: 'library-landing-page'
           })
