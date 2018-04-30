@@ -216,14 +216,14 @@ export default {
       console.log(this.previousSong, this.currentlyPlaying)
       if (!this.previousSong) {
         this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
-        this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/#/g, '%23').replace(/\?/g, '%3f'))
+        this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f'))
       } else {
         if (this.previousSong.filePath === this.currentlyPlaying.filePath) {
           this.sound.play()
         } else {
           this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
           this.sound.stop()
-          this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/#/g, '%23').replace(/\?/g, '%3f'))
+          this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f'))
           // fs.readFile(this.currentlyPlaying.filePath, (err, contents) => {
           //   if (err) {
           //     alert('Couldn\'t play file:' + err)
@@ -319,6 +319,7 @@ export default {
     max-width: 300px;
     margin-left: 1em;
     cursor: pointer;
+    font-size: 0.8em;
   }
   .media-controls-details--title {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

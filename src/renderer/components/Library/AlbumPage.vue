@@ -65,6 +65,7 @@ export default {
   name: 'album-page',
   asyncComputed: {
     album () {
+      if (!this.$route.params.album) return null
       return new Promise((resolve, reject) => {
         db.find({ album: this.$route.params.album }).exec((err, res) => {
           if (err) {
@@ -206,6 +207,7 @@ export default {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    color: white;
   }
 
 </style>

@@ -2,8 +2,8 @@
   <div id="top-bar" v-if="visible">
     <div id="window-buttons">
       <span class="spacer"></span>
-      <button @click="minimizeApp">-</button>
-      <button @click="closeApp">&times;</button>
+      <button @click="minimizeApp"><i class="material-icons">remove</i></button>
+      <button @click="closeApp"><i class="material-icons">close</i></button>
     </div>
   </div>
 </template>

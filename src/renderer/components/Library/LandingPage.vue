@@ -1,18 +1,20 @@
 <template>
   <div id="wrapper">
-    <div class="item-row">
+    <!-- <div class="item-row">
       <span class="item-row--title">Albums</span>
-      <div class="item-row--content" v-if="albums">
+      <div class="item-row--content" v-if="albums"> -->
+      <item-row title="albums">
         <album-art-card @click="gotoAlbum(item)" v-for="item in albums" :key="'albums-' + item.filePath" hasImage :filePath="item.filePath">
           {{ item.name }}
         </album-art-card>
         <card>
           <p>View all</p>
         </card>
-      </div>
-    </div>
-    <div class="item-column">
-      <span class="item-column--title">Songs</span>
+      </item-row>
+    <!-- </div> -->
+    <!-- <div class="item-column">
+      <span class="item-column--title">Songs</span> -->
+    <item-column title="songs">
       <staggered-slide-in tag="div" class="item-column--content" v-if="library">
         <music-item-tile
           v-for="(item, index) in library" :key="'all-songs-' + item.filePath"
@@ -27,7 +29,7 @@
           {{ item.title }}
         </music-item-tile>
       </staggered-slide-in>
-    </div>
+    </item-column>
   </div>
 </template>
 
@@ -37,7 +39,11 @@ import AlbumArtCard from '@/components/Partials/AlbumArtCard'
 import MusicItemTile from '@/components/Partials/MusicItemTile'
 import Card from '@/components/Partials/Card'
 import StaggeredSlideIn from '@/components/Transitions/StaggeredSlideIn'
+import ItemRow from '@/components/Partials/ItemRow'
+import ItemColumn from '@/components/Partials/ItemColumn'
 import db from '@/library.db'
+
+window.db = db
 
 export default {
   name: 'library-landing-page',
@@ -51,9 +57,11 @@ export default {
             reject(err)
           } else {
             let startIndex = Math.floor(Math.random() * (res.length - 30))
-            let endIndex = Math.floor(Math.random() * 30) + startIndex
+            let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
             if (endIndex > res.length) endIndex = res.length
-            resolve(res.slice(startIndex, endIndex))
+            let slicedLibrary = res.slice(startIndex, endIndex)
+            res = undefined
+            resolve(slicedLibrary)
           }
         })
       })
@@ -73,9 +81,13 @@ export default {
               }
             })
             let startIndex = Math.floor(Math.random() * (albums.length / 2))
-            let endIndex = Math.floor(Math.random() * 30) + startIndex
+            let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
             if (endIndex > albums.length) endIndex = albums.length
-            resolve(albums.sort((a, b) => a.name < b.name).slice(startIndex, endIndex))
+            let sortedAlbums = albums.sort((a, b) => a.name < b.name)
+            let slicedAlbums = sortedAlbums.slice(startIndex, endIndex)
+            albums = undefined
+            sortedAlbums = undefined
+            resolve(slicedAlbums)
           }
         })
       })
@@ -85,7 +97,9 @@ export default {
     Card,
     AlbumArtCard,
     MusicItemTile,
-    StaggeredSlideIn
+    StaggeredSlideIn,
+    ItemRow,
+    ItemColumn
   },
   methods: {
     play (item) {
@@ -147,7 +161,7 @@ export default {
     overflow-x: auto;
     overflow-y: hidden;
   }
-  .item-colum--content {
+  .item-column--content {
     display: flex;
     flex-direction: column;
   }

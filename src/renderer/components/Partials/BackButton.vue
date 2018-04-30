@@ -26,7 +26,7 @@ export default {
     transition: all 0.3s;
     color: white;
     padding: 2px;
-    z-index: 1000;
+    z-index: 1;
   }
   .back-button:hover {
     background-color: rgba(120, 120, 120, 0.3);
