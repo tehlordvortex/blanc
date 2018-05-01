@@ -3,9 +3,12 @@
 </template>
 
 <script>
-import MaterialButton from '@/components/MaterialButton'
+import MaterialButton from '@/components/Partials/MaterialButton'
 export default {
-  name: 'settings-popup-button'
+  name: 'settings-popup-button',
+  components: {
+    MaterialButton
+  }
 }
 </script>
 
