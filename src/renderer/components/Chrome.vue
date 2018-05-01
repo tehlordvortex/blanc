@@ -1,7 +1,13 @@
 <template>
   <div id="top-bar" v-if="visible">
     <div id="window-buttons">
-      <span class="spacer"></span>
+      <button v-if="routeHistoryLength > 2" @click="goBack"><i class="material-icons">arrow_back</i></button>
+      <span class="spacer">
+        <progress-bar
+          v-if="indexing"
+          :val="indexPercent"
+        ></progress-bar>
+      </span>
       <button @click="minimizeApp"><i class="material-icons">remove</i></button>
       <button @click="closeApp"><i class="material-icons">close</i></button>
     </div>
@@ -10,11 +16,15 @@
 
 <script>
 import { ipcRenderer } from 'electron'
+import ProgressBar from 'vue-simple-progress'
 
 export default {
   name: 'chrome',
   props: {
     visible: Boolean
+  },
+  components: {
+    ProgressBar
   },
   methods: {
     closeApp () {
@@ -22,6 +32,20 @@ export default {
     },
     minimizeApp () {
       ipcRenderer.send('minimize-app')
+    },
+    goBack () {
+      this.$router.go(-1)
+    }
+  },
+  computed: {
+    routeHistoryLength () {
+      return this.$store.state.App.routeHistory.length
+    },
+    indexPercent () {
+      return this.$store.state.Library.indexProgress * 100
+    },
+    indexing () {
+      return this.$store.state.Library.indexing
     }
   }
 }
@@ -43,6 +67,7 @@ export default {
   .spacer {
     flex-grow: 1;
     height: 100%;
+    padding-top: 11px;
     -webkit-app-region: drag;
   }
   #window-buttons {

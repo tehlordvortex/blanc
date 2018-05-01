@@ -40,6 +40,12 @@
     height: 100%;
     background-color: #333;
   }
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
   * {
     box-sizing: border-box;
   }
@@ -49,8 +55,8 @@
   }
   ::-webkit-scrollbar
   {
-    width: 6px;  /* for vertical scrollbars */
-    height: 6px; /* for horizontal scrollbars */
+    width: 8px;  /* for vertical scrollbars */
+    height: 8px; /* for horizontal scrollbars */
   }
 
   ::-webkit-scrollbar-track

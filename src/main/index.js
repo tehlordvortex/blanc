@@ -1,7 +1,7 @@
 'use strict'
 
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { name } from '../../package.json'
+import { app, BrowserWindow, ipcMain as ipc, dialog } from 'electron'
+// import { name } from '../../package.json'
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -17,8 +17,8 @@ const winURL = process.env.NODE_ENV === 'development'
 /**
  * Set app name to 'blanc' and ensure we get our own config and cache directory
  */
-app.setName(name)
-app.setPath('userData', app.getPath('userData').replace(/electron/i, name))
+// app.setName(name)
+// app.setPath('userData', app.getPath('userData').replace(/electron/i, name))
 
 function createWindow () {
   /**
@@ -33,11 +33,14 @@ function createWindow () {
       nodeIntegrationInWorker: true,
       webSecurity: false
     },
-    icon: require('path').join(__static, 'icon.png')
+    icon: require('path').join(__static, 'icon.png'),
+    show: false
   })
 
   mainWindow.loadURL(winURL)
-
+  mainWindow.on('ready-to-show', () => {
+    mainWindow.show()
+  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -60,7 +63,7 @@ app.on('activate', () => {
 /**
  * IPC Requests from Renderer Process
  */
-ipcMain.on('sync-get-path', (event, path) => {
+ipc.on('sync-get-path', (event, path) => {
   try {
     let returnPath = app.getPath(path)
     event.returnValue = returnPath
@@ -68,10 +71,23 @@ ipcMain.on('sync-get-path', (event, path) => {
     event.returnValue = null
   }
 })
-ipcMain.on('close-app', (event) => {
+ipc.on('dialog-select-folder', (event, arg) => {
+  dialog.showOpenDialog({
+    properties: ['openDirectory']
+  }, function (files) {
+    if (files) event.sender.send('dialog-selected-folder', files) // TODO: Error checking
+    else event.sender.send('dialog-selected-folder', undefined)
+  })
+})
+ipc.on('set-progress', (event, progress) => {
+  if (mainWindow) {
+    mainWindow.setProgressBar(progress)
+  }
+})
+ipc.on('close-app', (event) => {
   mainWindow.close()
 })
-ipcMain.on('minimize-app', (event) => {
+ipc.on('minimize-app', (event) => {
   mainWindow.minimize()
 })
 

@@ -32,5 +32,6 @@ export default {
   .item-column--content {
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 </style>

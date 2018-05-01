@@ -1,11 +1,19 @@
 <template>
   <div id="wrapper">
-    <div class="side purple" ref="sideOne" :class="indexing || doneIndexing ? 'side--flatten' : ''">
-      <transition 
+    <div class="side blue" ref="sideOne" :class="indexing || doneIndexing ? 'side--flatten' : ''">
+      <transition
         appear
+        mode="out-in"
         name="slide-fade"
         >
-        <h1 v-if="!indexing">Welcome to Blanc</h1>
+        <img src="static/icon.png" class="icon" key="icon" v-if="!indexing"/>
+      </transition>
+      <transition
+        appear
+        mode="out-in"
+        name="slide-fade"
+        >
+        <h1 key="text" v-if="!indexing">blanc</h1>
       </transition>
     </div>
     <transition
@@ -13,12 +21,27 @@
     >
       <div class="side black" ref="sideTwo" v-if="showFirstStart" :class="indexing || doneIndexing ? 'side--fill' : showFirstStart ? '' : 'side--flatten'">
         <transition
+          appear
           mode="out-in"
           name="slide-fade"
           >
           <div class="flex-center" v-if="!(indexing || doneIndexing)" key="index-input">
-            <input type="text" v-model="libraryPath" id="library-path">
-            <input type="submit" value="Continue" id="continue-button" @click="startIndexing">
+            <h2>Drag and drop, or select a folder</h2>
+            <div id="input-path">
+              <input
+                @drop.stop.prevent="dropPath" 
+                @dragenter.stop.prevent
+                @dragover.stop.prevent="dragOver"
+                type="text"
+                v-model="libraryPath"
+                id="library-path">
+              <button @click="choosePath" id="select-button">
+                <i class="material-icons">folder</i>
+              </button>
+            </div>
+            <button type="submit" id="continue-button" @click="startIndexing">
+              <span>continue</span> <i class="material-icons">arrow_forward</i>
+            </button>
             <!-- <div class="done-icon"></div> -->
           </div>
           <div class="flex-center" v-else key="index-status">
@@ -35,11 +58,15 @@
               mode="out-in"
               name="animated-slide"
               enter-active-class="animated slideInUp animated--fast"
-              leave-active-class="animated slideOutDown animated--fast"
-              @afterEnter="leavePage"
+              leave-active-class="animated slideOutDown animated--fast"              
             >
-              <div class="loader" key="loader" v-if="!doneIndexing"></div>
-              <div class="done-icon" key="done-icon" v-else></div>
+              <progress-bar 
+                barColor="#3050ff"
+                class="near-fill" :val="indexPercent" key="loader" v-if="!doneIndexing"
+                ></progress-bar>
+              <div class="done-icon" key="done-icon" v-else>
+                <i class="material-icons">done</i>
+              </div>
             </transition>
           </div>
         </transition>
@@ -49,12 +76,16 @@
 </template>
 
 <script>
-  import { ipcRenderer } from 'electron'
-  import IndexerWorker from '@/indexer.worker'
+  import { ipcRenderer, remote } from 'electron'
+  // import IndexerWorker from '@/indexer.worker'
+  // import { loadAlbumArt, computedStyle } from '@/lazy-loaders'
   import db from '@/library.db'
+  import index from '@/indexer.lib'
+  import settings from '@/lib/settings'
+  import ProgressBar from 'vue-simple-progress'
+  const app = remote.app
   window.db = db
-  const userPath = ipcRenderer.sendSync('sync-get-path', 'music')
-  const defLibraryPath = userPath || ''
+  const defLibraryPath = app.getPath('music') || ''
   export default {
     name: 'landing-page',
     data: () => ({
@@ -65,53 +96,60 @@
       doneIndexing: false,
       showFirstStart: false
     }),
+    components: {
+      ProgressBar
+    },
+    computed: {
+      indexPercent () {
+        return this.$store.state.Library.indexProgress * 100
+      }
+    },
+    watch: {
+      indexPercent (value) {
+        // avoid Math.Infinity
+        if (value > 0) ipcRenderer.send('set-progress', value / 100)
+        else ipcRenderer.send('set-progress', value)
+      },
+      doneIndexing (value) {
+        if (value) this.leavePage(false)
+      }
+    },
     created () {
       this.$store.commit('HIDE_CHROME')
       this.$store.commit('HIDE_MUSIC_BAR')
-      db.find({}).limit(2).exec((err, res) => {
-        if (res && res.length > 0) {
-          this.leavePage(true)
-        } else {
-          this.showFirstStart = true
-        }
-        if (err) {
-          console.log(err)
-        }
-      })
+      if (settings.libraries.length === 0) this.showFirstStart = true
+      else this.leavePage()
     },
     methods: {
+      dragOver (event) {
+      },
+      dropPath (event) {
+        console.log(event)
+        let items = event.dataTransfer.files
+        this.libraryPath = items[0].path
+      },
       open (link) {
         this.$electron.shell.openExternal(link)
+      },
+      choosePath () {
+        ipcRenderer.once('dialog-selected-folder', (event, path) => {
+          this.libraryPath = path || this.libraryPath
+        })
+        ipcRenderer.send('dialog-select-folder', this.libraryPath)
       },
       startIndexing () {
         // this.$refs.sideOne.classList.toggle('side--flatten')
         this.indexing = !this.indexing
-        if (!this.worker) {
-          this.worker = new IndexerWorker()
-          this.worker.onmessage = (e) => {
-            if (e.data) {
-              if (e.data.command === 'add-item') {
-                db.insert(e.data.item)
-              } else if (e.data.command === 'finish-indexing') {
-                this.indexing = false
-                this.doneIndexing = true
-              } else if (e.data.command === 'add-items') {
-                e.data.items.forEach(item => {
-                  if (item) db.update({ filePath: item.filePath }, item, { upsert: true })
-                })
-              } else if (e.data.command === 'currently-indexing') {
-                this.currentPath = e.data.path
-              }
-            }
-          }
-        }
-        this.worker.postMessage({
-          command: 'index',
-          path: this.libraryPath
+        index(this.libraryPath).then(() => {
+          settings.addLibrary(this.libraryPath)
+          this.indexing = false
+          this.doneIndexing = true
+        }).catch(e => {
+          console.log(e)
         })
-        // this.$refs.sideTwo.classList.toggle('side--fill')
       },
       leavePage: function (immediate) {
+        console.log('leavePage')
         if (!immediate) {
           setTimeout(() => {
             this.$store.commit('SHOW_CHROME')
@@ -119,7 +157,7 @@
             this.$router.push({
               name: 'library-landing-page'
             })
-          }, 500)
+          }, 2000)
         } else {
           this.$store.commit('SHOW_CHROME')
           this.$store.commit('SHOW_MUSIC_BAR')
@@ -148,6 +186,15 @@
     align-items: center;
     justify-content: center;
   }
+  .near-fill {
+    width: 90%;
+    margin: 0 auto;
+  }
+  .icon {
+    width: 128px;
+    height: 128px;
+    margin: 0;
+  }
   .side {
     width: 50%;
     height: 100%;
@@ -156,13 +203,13 @@
     align-items: center;
     flex: 1 1 auto;
     justify-content: center;
-    transition: opacity 0.5s ease, width 0.5s ease;
+    transition: width 0.2s ease;
   }
   .slide-fade-enter-active {
-    transition: all .3s ease;
+    transition: all .5s ease;
   }
   .slide-fade-leave-active {
-    transition: all .3s ease;
+    transition: all .5s ease;
   }
   .slide-fade-enter, .slide-fade-leave-to
   /* .slide-fade-leave-active below version 2.1.8 */ {
@@ -191,40 +238,84 @@
     background: #8000ff;
     color: white;
   }
+  .side.blue {
+    background: #3050ff;
+    color: white;
+    animation: change-bg 10s linear alternate infinite forwards;
+  }
+  @keyframes change-bg {
+    0% {
+      background: #3050ff;
+    }
+    100% {
+      background: #8000ff;
+    }
+  }
   #library-path {
     height: 2em;
-    border: 1px solid grey;
-    border-radius: 3px;
+    border: none;
     width: 90%;
     padding: 0 5px;
-    margin: 1em 0;
+    margin: 0;
   }
-  input {
-    transition: box-shadow 0.3s;
-  }
-  input:hover, input:focus {
-    box-shadow: 0 0 3px 2px rgba(40, 130, 255, 0.3);
-    outline: none !important;
-  }
-  #continue-button {
+  #select-button {
     display: inline-block;
-    padding: 1em;
-    background-color: #8000ff;
+    padding: 0;
+    height: 2em;
+    width: 10%;
+    background-color: #3050ff;
     border: none;
     cursor: pointer;
     color: white;
     font-weight: bold;
     font-family: 'Courier New', Courier, monospace;
+    transition: box-shadow 0.3s;
+  }
+  #input-path {
+    width: 90%;
+    display: flex;
+    margin: 1em 0;
+    transition: box-shadow 0.3s;
+  }
+  input {
+    transition: box-shadow 0.3s;
+  }
+  input:focus, button:focus {
+    outline: none !important;
+  }
+  #input-path:hover, #input-path:focus {
+    box-shadow: 0 0 3px 2px rgba(40, 130, 255, 0.3);
+  }
+  #continue-button {
+    display: inline-block;
+    padding: 1em;
+    background-color: #3050ff;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    transition: box-shadow 0.3s;
+  }
+  #continue-button span {
+    float: left;
+    line-height: 24px;
+  }
+  #continue-button .material-icons {
+    float: left;
+    width: 24px;
+    height: 24px;
+    margin-left: 5px;
   }
   #continue-button:hover, #continue-button:focus {
-    box-shadow: 0 0 3px 1px #8000ff;
+    box-shadow: 0 0 3px 1px #3050ff;
   }
   .loader {
     width: 64px;
     height: 64px;
     border-radius: 50%;
     border: 4px solid #666;
-    border-top-color: #8000ff;
+    border-top-color: #3050ff;
     animation: rotate 0.3s linear infinite;
   }
   @keyframes rotate {
@@ -246,10 +337,14 @@
     height: 64px;
     border-radius: 50%;
     margin: 1em;
+    padding: 1em;
     background-color: #00FF30;
     position: relative;
   }
-  .done-icon::after {
+  .done-icon .material-icons {
+    font-size: 32px;
+  }
+  /* .done-icon::after {
     width: 24px;
     height: 24px;
     content: '';
@@ -260,5 +355,5 @@
     top: 50%;
     transform-origin: center;
     transform: translate(-50%, -70%) rotate(225deg) scaleY(1.3);
-  }
+  } */
 </style>

@@ -13,7 +13,7 @@ const mutations = {
       Vue.set(state.queues, state.currentQueue, [])
     }
     state.currentlyPlaying = music
-    state.currentlyPlayingIndex = state.queues[state.currentQueue].push(state.currentlyPlaying)
+    state.currentlyPlayingIndex = state.queues[state.currentQueue].push(state.currentlyPlaying) - 1
     state.status = 'playing'
   },
   PAUSE_MUSIC (state) {
@@ -24,6 +24,11 @@ const mutations = {
   },
   RESUME_MUSIC (state) {
     state.status = 'playing'
+  },
+  CLEAR_QUEUE (state) {
+    Vue.set(state.queues, state.currentQueue, [])
+    state.currentlyPlayingIndex = 0
+    state.currentlyPlaying = null
   }
 }
 

@@ -1,5 +1,5 @@
 import Vibrant from 'node-vibrant'
-import Color from 'color'
+// import Color from 'color'
 import { readFileSync } from 'fs'
 
 onmessage = (e) => {
@@ -14,8 +14,7 @@ onmessage = (e) => {
 onerror = (e) => {
   console.log(e)
   postMessage({
-    status: 'error',
-    error: e
+    status: 'error'
   })
 }
 
@@ -28,28 +27,39 @@ function getSwatches (image, invertColors, id) {
     base64Data = null
     buffer = readFileSync(image.replace('file://', ''))
   }
-  let v = Vibrant.from(buffer)
+  let v
+  try {
+    v = Vibrant.from(buffer)
     // .useQuantizer(Quantizer.WebWorker)
-    .getSwatches()
+      .getSwatches()
+  } catch (e) {
+    postMessage({
+      status: 'error',
+      error: e.toString(),
+      id: id
+    })
+    return
+  }
   v.then((swatches) => {
     // console.log(swatches)
-    let swatch = swatches.Vibrant || swatches.Muted
-    let bgColorText = 'rgb(' + swatch.getRgb().map(Math.floor).join(',') + ')'
-    let cssString = 'background-color: ' + bgColorText + ';'
-    let textColor = Color(bgColorText).isLight() ? Color.rgb(0, 0, 0) : Color.rgb(230, 230, 230)
-    if (invertColors) textColor = textColor.negate()
-    cssString += 'color: ' + textColor.rgb().string() + ';'
+    // let swatch = swatches.Vibrant || swatches.Muted
+    // let bgColorText = 'rgb(' + swatch.getRgb().map(Math.floor).join(',') + ')'
+    // let cssString = 'background-color: ' + bgColorText + ';'
+    // let textColor = Color(bgColorText).isLight() ? Color.rgb(0, 0, 0) : Color.rgb(230, 230, 230)
+    // if (invertColors) textColor = textColor.negate()
+    // cssString += 'color: ' + textColor.rgb().string() + ';'
     buffer = null
     postMessage({
       status: 'resolved',
-      result: cssString,
+      result: (swatches.Vibrant || swatches.Muted).getRgb(),
       id: id
     })
   }).catch((e) => {
     buffer = null
     postMessage({
       status: 'error',
-      error: e
+      error: e.toString(),
+      id: id
     })
   })
 }

@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import store from '@/store'
 
 Vue.use(Router)
 
-export default new Router({
+let router = new Router({
   routes: [
     {
       path: '/',
@@ -12,13 +13,36 @@ export default new Router({
     },
     {
       path: '/library',
-      name: 'library-landing-page',
-      component: require('@/components/Library/LandingPage').default
+      component: require('@/components/Library/LandingPage').default,
+      children: [
+        {
+          path: '',
+          name: 'library-landing-page',
+          component: require('@/components/Library/PreviewsPage').default
+        },
+        {
+          path: 'all',
+          name: 'library-all-songs-page',
+          component: require('@/components/Library/AllSongsPage').default
+        },
+        {
+          path: 'album/:album?',
+          name: 'library-album-page',
+          component: require('@/components/Library/AlbumPage').default
+        }
+      ]
     },
     {
-      path: '/library/album/:album',
-      name: 'library-album-page',
-      component: require('@/components/Library/AlbumPage').default
+      path: '/settings',
+      name: 'settings-page',
+      component: require('@/components/Settings/Index.vue').default,
+      children: [
+        {
+          path: 'library',
+          name: 'settings-library-page',
+          component: require('@/components/Settings/Library.vue').default
+        }
+      ]
     },
     {
       path: '*',
@@ -26,3 +50,19 @@ export default new Router({
     }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  let appState = store.state.App
+  let routeHistory = appState.routeHistory
+  let minimizedTo = { ...to, matched: null }
+  if (routeHistory.length !== 0) {
+    if (routeHistory.length > 2 && routeHistory[Math.max(0, routeHistory.length - 1)].fullPath === from.fullPath) {
+      store.commit('NAVIGATE_BACK')
+    } else {
+      store.commit('NAVIGATE_TO', minimizedTo)
+    }
+  } else store.commit('NAVIGATE_TO', minimizedTo)
+  next()
+})
+
+export default router

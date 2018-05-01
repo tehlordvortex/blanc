@@ -40,5 +40,6 @@ export default {
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
+    position: relative;
   }
 </style>

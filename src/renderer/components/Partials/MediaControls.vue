@@ -25,6 +25,7 @@
         >
         stop
       </i>
+      <settings-popup-button />
     </div>
     <transition
       name="animated-zoom-in"
@@ -44,7 +45,7 @@
           <p v-else>Nothing is playing.</p>
         </div>
         <div class="media-controls-seeker">
-          <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1" @change="seekSong"/>
+          <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1"/>
         </div>
         <div class="media-controls-actions">
           <i
@@ -65,13 +66,19 @@
 
 <script>
 import { mapState } from 'vuex'
+import settings from '@/lib/settings'
 // import { loadAlbumArt } from '@/lazy-loaders'
-import { Howl, Howler } from 'howler'
-import { computedImage, computedImageStyle, computedStyle } from '@/lazy-loaders'
+// import { Howl, Howler } from 'howler'
+import { loadAlbumArt, getColors, toColorString, getBackgroundImageCSS } from '@/lazy-loaders'
+import Player from '@/lib/player'
 // import Vibrant from 'node-vibrant'
 // import Color from 'color'
 // import * as fs from 'fs'
 // import * as mime from 'mime'
+
+import SettingsPopupButton from './SettingsPopupButton'
+
+window.appSettings = settings
 
 export default {
   name: 'media-controls',
@@ -86,10 +93,33 @@ export default {
     analyser: null,
     frequencyData: null
   }),
+  components: {
+    SettingsPopupButton
+  },
   mounted () {
-    if (Howler.usingWebAudio) {
-      this.ctx = Howler.ctx
+    // if (Howler.usingWebAudio) {
+    //   this.ctx = Howler.ctx
+    // }
+    if (!Player.getAudio()) Player.init()
+    let seek = () => {
+      this.position = Player.getCurrentTime()
+      if (this.duration !== 0 && this.position >= this.duration) {
+        console.log('stopping')
+        this.stop()
+      }
+      // console.log(this.position)
+      if (!Player.isPaused()) Player.nextAnimationFrame = requestAnimationFrame(seek)
     }
+    Player.getAudio().addEventListener('canplaythrough', ($e) => {
+      console.log('Loaded!')
+      this.duration = $e.target.duration
+      console.log(this.duration)
+      // console.log(Player.play().catch(e => console.warn(e)))
+    })
+    Player.getAudio().addEventListener('play', ($e) => {
+      console.log('Playing!!!')
+      Player.nextAnimationFrame = requestAnimationFrame(seek)
+    })
   },
   computed: {
     ...mapState({
@@ -98,11 +128,10 @@ export default {
     }),
     sliderPosition: {
       set (newVal) {
-        if (this.sound) this.sound.seek(newVal)
+        Player.seek(newVal)
       },
       get () {
-        if (this.sound) return this.position
-        else return 0
+        return this.position
       }
     },
     playing () {
@@ -110,56 +139,24 @@ export default {
     }
   },
   asyncComputed: {
-    // image () {
-    //   if (this.currentlyPlaying) {
-    //     return loadAlbumArt(this.currentlyPlaying.filePath)
-    //   } else {
-    //     return Promise.resolve('')
-    //   }
-    // },
-    // computedImageStyle () {
-    //   if (!this.image) {
-    //     return Promise.resolve('')
-    //   } else {
-    //     let cssString = 'background-image: url(' + this.image + ')'
-    //     return Promise.resolve(cssString)
-    //   }
-    // },
-    // computedStyle () {
-    //   // console.log(this.mounted, this.image)
-    //   // if (!this.mounted) return Promise.resolve('')
-    //   if (!this.image) return Promise.resolve('')
-    //   else {
-    //     return new Promise((resolve, reject) => {
-    //       let base64Data = this.image.substr(this.image.indexOf(','))
-    //       let buffer = Buffer.from(base64Data, 'base64')
-    //       let v = Vibrant.from(buffer)
-    //         // .useQuantizer(VibrantWorker)
-    //         .getSwatches()
-    //       v.then((swatches) => {
-    //         // console.log(swatches)
-    //         let swatch = swatches.Vibrant || swatches.Muted
-    //         let bgColorText = 'rgb(' + swatch.getRgb().join(',') + ')'
-    //         let cssString = 'background-color: ' + bgColorText + ';'
-    //         let textColor = Color(bgColorText).isLight() ? Color.rgb(0, 0, 0) : Color.rgb(230, 230, 230)
-    //         cssString += 'color: ' + textColor.rgb().string() + ';'
-    //         resolve(cssString)
-    //       })
-    //     })
-    //   }
-    // }
     image () {
       if (!this.currentlyPlaying) return Promise.resolve('')
-      else return computedImage(this.currentlyPlaying.filePath)()
+      else {
+        console.log(this.currentlyPlaying.filePath)
+        return Promise.resolve(loadAlbumArt(this.currentlyPlaying.filePath))
+      }
     },
     computedImageStyle () {
       // console.log(this.image)
       if (!this.image) return Promise.resolve('')
-      else return computedImageStyle(this.image)()
+      console.log(this.image)
+      return Promise.resolve(getBackgroundImageCSS(this.image))
     },
     computedStyle () {
-      if (!this.image) return Promise.resolve('')
-      else return computedStyle(this.image, true, this.currentlyPlaying.filePath)()
+      // console.log(this.image)
+      if (!this.currentlyPlaying) return Promise.resolve('')
+      if (this.currentlyPlaying.colors) return Promise.resolve(toColorString(this.currentlyPlaying.colors))
+      else return Promise.resolve('')
     }
   },
   watch: {
@@ -178,35 +175,32 @@ export default {
   },
   methods: {
     createSound (source, loop = true) {
-      let sound = new Howl({
-        src: [source],
-        autoplay: true,
-        html5: true,
-        loop: loop
-      })
-      sound.on('load', (id) => {
-        if (!this.ctx && Howler.usingWebAudio) {
-          this.ctx = Howler.ctx
-        }
-        if (!this.analyser) {
-          this.analyser = this.ctx.createAnalyser()
-        }
-        console.log(sound._sounds[0]._node)
-        this.duration = sound.duration(id)
-      })
-      sound.on('stop', (id) => {
-        if (sound.nextAnimationFrame) {
-          cancelAnimationFrame(sound.nextAnimationFrame)
-        }
-      })
-      let seek = () => {
-        this.position = sound.seek()
-        if (sound.playing()) sound.nextAnimationFrame = requestAnimationFrame(seek)
-      }
-      sound.on('play', (id) => {
-        sound.nextAnimationFrame = requestAnimationFrame(seek)
-      })
-      return sound
+      // let sound = new Howl({
+      //   src: [source],
+      //   autoplay: true,
+      //   html5: true,
+      //   loop: loop
+      // })
+      // sound.on('load', (id) => {
+      //   if (!this.ctx && Howler.usingWebAudio) {
+      //     this.ctx = Howler.ctx
+      //   }
+      //   if (!this.analyser) {
+      //     this.analyser = this.ctx.createAnalyser()
+      //   }
+      //   console.log(sound._sounds[0]._node)
+      //   this.duration = sound.duration(id)
+      // })
+      // sound.on('stop', (id) => {
+      //   if (sound.nextAnimationFrame) {
+      //     cancelAnimationFrame(sound.nextAnimationFrame)
+      //   }
+      // })
+      // return sound
+      source = source.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f')
+      source = 'file://' + source
+      Player.setSrc(source)
+      Player.play().catch(e => console.warn(e))
     },
     play (event) {
       if (event) {
@@ -216,14 +210,15 @@ export default {
       console.log(this.previousSong, this.currentlyPlaying)
       if (!this.previousSong) {
         this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
-        this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f'))
+        this.createSound(this.currentlyPlaying.filePath)
       } else {
         if (this.previousSong.filePath === this.currentlyPlaying.filePath) {
-          this.sound.play()
+          Player.play().catch(e => console.warn(e))
         } else {
           this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
-          this.sound.stop()
-          this.sound = this.createSound('file://' + this.currentlyPlaying.filePath.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f'))
+          Player.stop().then(() => {
+            this.createSound(this.currentlyPlaying.filePath)
+          }).catch(e => console.warn(e))
           // fs.readFile(this.currentlyPlaying.filePath, (err, contents) => {
           //   if (err) {
           //     alert('Couldn\'t play file:' + err)
@@ -242,15 +237,16 @@ export default {
       }
     },
     pause (event) {
-      if (this.sound) {
+      if (this.currentlyPlaying) {
         if (event) this.$store.commit('PAUSE_MUSIC')
-        this.sound.pause()
+        Player.pause()
       }
     },
     stop (event) {
-      if (this.sound) {
+      if (this.currentlyPlaying) {
         if (event) this.$store.commit('STOP_MUSIC')
-        this.sound.stop()
+        this.sliderPosition = 0
+        Player.stop()
       }
     },
     seekSong (e) {
@@ -283,7 +279,7 @@ export default {
     }
   },
   beforeDestroy () {
-    Howler.unload()
+    Player.destroy()
     this.$store.commit('STOP_MUSIC')
   }
 }
@@ -328,10 +324,11 @@ export default {
     margin: 1px 0;
     color: inherit;
     text-decoration: none;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
     /* padding: 1px; */
-  }
-  .media-controls-details--title:hover, .media-controls-details--artist:hover, .media-controls-details--album:hover {
-    filter: hue-rotate(180deg);
   }
   /* .media-controls-details p {
     margin: 0;

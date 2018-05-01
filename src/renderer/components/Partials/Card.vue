@@ -1,11 +1,11 @@
 <template>
-  <div class="card" :style="computedStyle">
+  <div @click="clicked" class="card" :style="computedStyle">
     <div class="card--image" v-if="hasImage">
       <slot name="image"></slot>
     </div>
-    <span class="card--contents">
+    <div class="card--contents" :class="center ? 'card--contents--center' : ''">
       <slot></slot>
-    </span>
+    </div>
   </div>
 </template>
 
@@ -15,7 +15,13 @@ console.log(Vibrant)
 export default {
   name: 'card',
   props: {
-    hasImage: Boolean
+    hasImage: Boolean,
+    center: Boolean
+  },
+  methods: {
+    clicked ($e) {
+      this.$emit('click', $e)
+    }
   },
   data: () => ({
     mounted: false
@@ -54,7 +60,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   .card {
     /* border-radius: 5px; */
     background-color: #666;
@@ -85,6 +91,11 @@ export default {
     word-wrap: break-word;
     /* white-space: pre-wrap; */
     flex-grow: 1;
-    width: 150px;
+    /* width: 150px; */
+  }
+  .card--contents.card--contents--center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div @click="$emit('click', $event)" class="music-item-tile" :style="active ? (computedStyle ? computedStyle : defaultActiveStyle) : ''">
+  <div @click="$emit(active ? 'pause' : 'play', $event)" class="music-item-tile" :style="active ? (computedStyle ? computedStyle : defaultActiveStyle) : ''">
     <div class="music-item-tile--art" v-if="showArt" :style="computedImageStyle">
     </div>
     <div class="music-item-tile--details">
@@ -15,7 +15,8 @@
 </template>
 
 <script>
-import { computedImage, computedImageStyle, computedStyle } from '@/lazy-loaders'
+import { loadAlbumArt, getColors, toColorString, getBackgroundImageCSS } from '@/lazy-loaders'
+
 export default {
   name: 'music-item-tile',
   data: () => ({
@@ -26,7 +27,10 @@ export default {
       type: Boolean,
       default: true
     },
-    artPath: String,
+    item: {
+      type: Object,
+      default: null
+    },
     active: {
       type: Boolean,
       default: false
@@ -34,17 +38,27 @@ export default {
   },
   asyncComputed: {
     image () {
-      if (!this.artPath) return Promise.resolve('')
-      else return computedImage(this.artPath)()
+      if (!this.showArt) return ''
+      if (!this.item) return Promise.resolve('')
+      if (this.item.albumArt) return Promise.resolve('file://' + this.item.albumArt)
+      else return loadAlbumArt(this.item.filePath)
     },
     computedImageStyle () {
       // console.log(this.image)
       if (!this.image) return Promise.resolve('')
-      else return computedImageStyle(this.image)()
+      else return getBackgroundImageCSS(this.image)
     },
     computedStyle () {
-      if (!this.image) return Promise.resolve('')
-      else return computedStyle(this.image, false, this.artPath)()
+      // console.log(this.image)
+      if (!this.item) return Promise.resolve('')
+      if (this.item.colors) return Promise.resolve(toColorString(this.item.colors))
+      else {
+        // if (!this.showArt) return this.defaultActiveStyle
+        return getColors(this.image).then((colors) => {
+          console.log(colors)
+          return toColorString(colors)
+        })
+      }
     }
   }
 }

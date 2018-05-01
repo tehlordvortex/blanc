@@ -1,105 +1,129 @@
 <template>
   <div class="album-page">
-    <div class="album-banner" :style="computedStyle" v-if="album">
-      <!-- <div class="back-button" @click="goBack"><i class="material-icons">arrow_back</i></div> -->
-      <back-button />
-      <div class="album-banner-fullimage" :style="computedImageStyle"></div>
-      <div class="album-banner--text">
-        <transition
+    <template v-if="$route.params.album">
+      <div class="album-banner" :style="computedStyle" v-if="album">
+        <!-- <div class="back-button" @click="goBack"><i class="material-icons">arrow_back</i></div> -->
+        <back-button />
+        <div class="album-banner-fullimage" :style="computedImageStyle"></div>
+        <div class="album-banner--text">
+          <transition
+            name="animated-slide-in"
+            appear
+            enter-active-class="animated slideInLeft"
+            leave-active-class="animated slideOutLeft"
+          >
+            <div class="album-image" :style="computedImageStyle">
+              <loading-indicator v-if="!computedImageStyle" />
+            </div>
+          </transition>
+          <transition
+            name="animated-slide-in-up"
+            appear
+            enter-active-class="animated slideInUp"
+            leave-active-class="animated slideOutDown"
+          >
+            <div class="album-details">
+              <p>{{ album.name }}</p>
+              <p>{{ albumArtists }}</p>
+            </div>
+          </transition>
+        </div>
+      </div>
+      <loading-indicator v-else />
+      <!-- <div class="album-songs" v-if="album"> -->
+        <transition-group
           name="animated-slide-in"
           appear
+          mode="out-in"
           enter-active-class="animated slideInLeft"
           leave-active-class="animated slideOutLeft"
+          class="album-songs"
+          tag="div"
+          @enter="stagger"
+          @leave="stagger"
+          v-if="album"
         >
-          <div class="album-image" :style="computedImageStyle"></div>
-        </transition>
-        <transition
-          name="animated-slide-in-up"
-          appear
-          enter-active-class="animated slideInUp"
-          leave-active-class="animated slideOutDown"
-        >
-          <div class="album-details">
-            <p>{{ album.name }}</p>
-            <p>{{ albumArtists }}</p>
-          </div>
-        </transition>
-      </div>
-    </div>
-    <!-- <div class="album-songs" v-if="album"> -->
-      <transition-group
-        name="animated-slide-in"
-        appear
-        enter-active-class="animated slideInLeft"
-        leave-active-class="animated slideOutLeft"
-        class="album-songs"
-        tag="div"
-        @enter="stagger"
-        @leave="stagger"
-        v-if="album"
-      >
-        <music-item-tile
-          v-for="(item, index) in album.songs"
-          :key="item.filePath"
-          :showArt="false"
-          :artPath="item.filePath"
-          @play="play(item)"
-          @pause="pause()"
-          :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
-          :data-index="index"
-        >
-          {{ item.title || item.fileName }}
-        </music-item-tile>
-      </transition-group>
+          <music-item-tile
+            v-for="(item, index) in album.songs"
+            :key="item.filePath"
+            :showArt="false"
+            :item="item"
+            @play="play(item)"
+            @pause="pause()"
+            :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
+            :data-index="index"
+          >
+            {{ item.title || item.fileName }}
+          </music-item-tile>
+        </transition-group>
+    </template>
+    <template v-else>
+      <back-button />
+      <item-column title="albums">
+        <template v-if="albums">
+          <transition-group
+            name="animated-slide-in"
+            appear
+            mode="in-out"
+            enter-active-class="animated slideInLeft"
+            tag="div"
+            @enter="stagger"
+            @leave="disappear"
+          >
+            <album-art-card
+              @click="gotoAlbum(item)"
+              v-for="(item, index) in albums"
+              v-if="item.name"
+              :key="'albums-' + item.name"
+              hasImage
+              :data-index="index"
+              :colors="item.colors"
+              :artPath="item.art">
+              <p>{{ item.name }}</p>
+              <p>{{ item.artists.join(", ") }}</p>
+            </album-art-card>
+          </transition-group>
+        </template>
+        <loading-indicator v-else />
+      </item-column>
+    </template>
     <!-- </div> -->
   </div>
 </template>
 
 <script>
-import { computedImage, computedImageStyle, computedStyle } from '@/lazy-loaders'
-import db from '@/library.db'
+import { getAlbums, getAlbum, getBackgroundImageCSS, toColorString } from '@/lazy-loaders'
+// import db from '@/library.db'
 import MusicItemTile from '@/components/Partials/MusicItemTile'
+import AlbumArtCard from '@/components/Partials/AlbumArtCard'
 import BackButton from '@/components/Partials/BackButton'
+import ItemColumn from '@/components/Partials/ItemColumn'
+import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 
 export default {
   name: 'album-page',
   asyncComputed: {
     album () {
       if (!this.$route.params.album) return null
-      return new Promise((resolve, reject) => {
-        db.find({ album: this.$route.params.album }).exec((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            let album = {}
-            album.name = this.$route.params.album
-            album.artists = []
-            album.artPath = res[0].filePath
-            album.songs = res
-            res.forEach(song => {
-              song.artists.forEach(artist => {
-                if (!album.artists.includes(artist)) {
-                  album.artists.push(artist)
-                }
-              })
-            })
-            resolve(album)
-          }
-        })
-      })
+      return getAlbum(this.$route.params.album)
     },
     image () {
       if (!this.album) return Promise.resolve('')
-      else return computedImage(this.album.artPath)()
+      // console.log(this.album.art)
+      return 'file://' + this.album.art
     },
     computedImageStyle () {
       // console.log(this.image)
       if (!this.image) return Promise.resolve('')
-      else return computedImageStyle(this.image)()
+      else return getBackgroundImageCSS(this.image)
     },
     computedStyle () {
-      if (!this.image) return Promise.resolve('')
-      else return computedStyle(this.image, true, this.album.artPath)()
+      if (!this.album) return Promise.resolve('')
+      else if (!this.album.colors) return ''
+      else return toColorString(this.album.colors)
+    },
+    albums () {
+      return getAlbums(0, 100)
     }
   },
   computed: {
@@ -126,15 +150,30 @@ export default {
       this.$store.commit('PAUSE_MUSIC')
     },
     stagger (el, done) {
-      let delay = el.dataset.index * 0.1
+      // console.log('staggering')
+      let delay = el.dataset.index * 0.03
       el.style.animationDelay = el.dataset.index * 0.1 + 's'
       // console.log(el.dataset.index * 0.3)
       setTimeout(done, 1000 + (delay * 1000))
+    },
+    disappear (el, done) {
+      done()
+    },
+    gotoAlbum (item) {
+      this.$router.push({
+        name: 'library-album-page',
+        params: {
+          album: item.name
+        }
+      })
     }
   },
   components: {
     MusicItemTile,
-    BackButton
+    BackButton,
+    AlbumArtCard,
+    ItemColumn,
+    LoadingIndicator
   }
 }
 </script>
@@ -203,7 +242,7 @@ export default {
   }
 
   .album-details p {
-    max-width: 230px;
+    max-width: 200px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;

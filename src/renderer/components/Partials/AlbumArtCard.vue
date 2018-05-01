@@ -1,5 +1,5 @@
 <template>
-  <div @click="clicked" class="card" :style="computedStyle">
+  <div @click="clicked" class="card" :class="small ? 'card--small' : ''" :style="computedStyle">
     <div class="card--image" :style="computedImageStyle">
       <!-- <img :src="image" class="album-art" /> -->
     </div>
@@ -16,15 +16,24 @@
 // import { parseFile } from 'music-metadata'
 // import mime from 'mime'
 // import * as Color from 'color'
-import { computedImage, computedImageStyle, computedStyle } from '@/lazy-loaders'
+import { loadAlbumArt, getColors, getBackgroundImageCSS, toColorString } from '@/lazy-loaders'
 
 // console.log(VibrantWorker)
 
 export default {
   name: 'album-art-card',
   props: {
-    hasImage: Boolean,
-    filePath: String
+    filePath: String,
+    artPath: String,
+    art: String,
+    colors: {
+      type: Object,
+      default: null
+    },
+    small: {
+      type: Boolean,
+      default: false
+    }
   },
   data: () => ({
     mounted: false
@@ -82,17 +91,24 @@ export default {
     //   }
     // }
     image () {
+      // console.log(this.art)
+      if (this.art) return this.art
+      if (this.artPath) return Promise.resolve('file://' + this.artPath)
       if (!this.filePath) return Promise.resolve('')
-      else return computedImage(this.filePath)()
+      else return loadAlbumArt(this.filePath)
     },
     computedImageStyle () {
       // console.log(this.image)
       if (!this.image) return Promise.resolve('')
-      else return computedImageStyle(this.image)()
+      else return getBackgroundImageCSS(this.image)
     },
     computedStyle () {
+      // console.log(this.cachedColor)
+      if (this.colors) {
+        return toColorString(this.colors)
+      }
       if (!this.image) return Promise.resolve('')
-      else return computedStyle(this.image, false, this.filePath)()
+      else return getColors(this.image).then(toColorString)
     }
   },
   watch: {
@@ -119,6 +135,17 @@ export default {
     position: relative;
     cursor: pointer;
   }
+
+  .card.card--small {
+    max-width: 350px;
+  }
+
+  .card.card--small .card--contents p {
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   
   .card:focus, .card:hover {
     outline: none;
@@ -127,18 +154,15 @@ export default {
     box-shadow: 0 6px 10px 0 rgba(200, 200, 200, 0.2);
   }
   .card--image {
-    height: 100%;
+    /* height: 100%; */
     padding: 0;
     flex-shrink: 0;
     flex-grow: 0;
     width: 128px;
-    height: 128px;
+    /* height: 128px; */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-  }
-  .card--image {
-    height: 100%;
   }
 
   .card--blur {

@@ -1,168 +1,81 @@
 <template>
-  <div id="wrapper">
+  <div class="wrapper">
+    <sweet-modal
+      modal-theme="dark"
+      overlay-theme="dark"
+      blocking
+      hide-close-button
+      icon="warning"
+      ref="modal"
+    >
+      <h1>There are no files in your library!</h1>
+      <material-button to="/settings/library" slot="button">Manage Library</material-button>
+    </sweet-modal>
     <!-- <div class="item-row">
       <span class="item-row--title">Albums</span>
       <div class="item-row--content" v-if="albums"> -->
-      <item-row title="albums">
-        <album-art-card @click="gotoAlbum(item)" v-for="item in albums" :key="'albums-' + item.filePath" hasImage :filePath="item.filePath">
-          {{ item.name }}
-        </album-art-card>
-        <card>
-          <p>View all</p>
-        </card>
-      </item-row>
-    <!-- </div> -->
-    <!-- <div class="item-column">
-      <span class="item-column--title">Songs</span> -->
-    <item-column title="songs">
-      <staggered-slide-in tag="div" class="item-column--content" v-if="library">
-        <music-item-tile
-          v-for="(item, index) in library" :key="'all-songs-' + item.filePath"
-          :artPath="item.filePath"
-          :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
-          @play="play(item)"
-          @pause="pause()"
-          @click="play(item)"
-          :scale="0.05"
-          :data-staggered-index="index"
-          >
-          {{ item.title }}
-        </music-item-tile>
-      </staggered-slide-in>
-    </item-column>
+    <loading-indicator v-if="loading" />
+    <transition
+      mode="out-in"
+      @enter="entering"
+      @leave="leaving"
+      >
+      <router-view />
+    </transition>
   </div>
 </template>
 
 <script>
 // import AlbumArt from '@/components/Partials/AlbumArt'
-import AlbumArtCard from '@/components/Partials/AlbumArtCard'
-import MusicItemTile from '@/components/Partials/MusicItemTile'
-import Card from '@/components/Partials/Card'
-import StaggeredSlideIn from '@/components/Transitions/StaggeredSlideIn'
-import ItemRow from '@/components/Partials/ItemRow'
-import ItemColumn from '@/components/Partials/ItemColumn'
+import MaterialButton from '@/components/Partials/MaterialButton'
+import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import db from '@/library.db'
 
+// import { getAlbumArt } from '@/lazy-loaders'
 window.db = db
 
 export default {
   name: 'library-landing-page',
   data: () => ({
+    loading: false
   }),
+  watch: {
+    library (newVal) {
+      console.log(newVal)
+      if (newVal != null && newVal === 0) {
+        console.log(this.$refs)
+        this.$refs.modal.open()
+      }
+    }
+  },
   asyncComputed: {
     library () {
-      return new Promise((resolve, reject) => {
-        db.find({ title: { $ne: '' } }).sort({ title: 1 }).exec((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            let startIndex = Math.floor(Math.random() * (res.length - 30))
-            let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-            if (endIndex > res.length) endIndex = res.length
-            let slicedLibrary = res.slice(startIndex, endIndex)
-            res = undefined
-            resolve(slicedLibrary)
-          }
-        })
-      })
-    },
-    albums () {
-      return new Promise((resolve, reject) => {
-        let albums = []
-        db.find({ album: { $ne: null } }).sort({ album: 1 }).exec((err, docs) => {
-          if (err) reject(err)
-          else {
-            docs.forEach(doc => {
-              if (!albums.some(album => album.name === doc.album)) {
-                albums.push({
-                  name: doc.album,
-                  filePath: doc.filePath
-                })
-              }
-            })
-            let startIndex = Math.floor(Math.random() * (albums.length / 2))
-            let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-            if (endIndex > albums.length) endIndex = albums.length
-            let sortedAlbums = albums.sort((a, b) => a.name < b.name)
-            let slicedAlbums = sortedAlbums.slice(startIndex, endIndex)
-            albums = undefined
-            sortedAlbums = undefined
-            resolve(slicedAlbums)
-          }
-        })
-      })
+      return db.count({})
     }
   },
   components: {
-    Card,
-    AlbumArtCard,
-    MusicItemTile,
-    StaggeredSlideIn,
-    ItemRow,
-    ItemColumn
+    MaterialButton,
+    LoadingIndicator
   },
   methods: {
-    play (item) {
-      console.log('Playing', item)
-      this.$store.commit('PLAY_MUSIC', item)
+    entering (el) {
+      console.log('enter')
+      this.loading = false
     },
-    pause () {
-      this.$store.commit('PAUSE_MUSIC')
-    },
-    gotoAlbum (item) {
-      this.$router.push({
-        name: 'library-album-page',
-        params: {
-          album: item.name
-        }
-      })
-    }
-  },
-  computed: {
-    currentlyPlaying () {
-      return this.$store.state.Music.currentlyPlaying
-    },
-    musicStatus () {
-      return this.$store.state.Music.status
+    leaving (el) {
+      console.log('leave')
+      this.loading = true
     }
   }
 }
 </script>
 
 <style>
-  #wrapper {
+  .wrapper {
     width: 100%;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: #333;
-  }
-  .item-row, .item-column {
-    padding: 1em;
-    width: 100%;
-    overflow-x: auto;
-  }
-  .item-row ::-webkit-scrollbar-thumb,  .item-row ::-webkit-scrollbar-track {
-    background-color: rgba(0, 0, 0, 0);
-  }
-  .item-row:hover ::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-  .item-row--title, .item-column--title {
-    font-weight: lighter;
-    color: gray;
-    text-transform: uppercase;
-    margin-bottom: 1em;
-    display: block;
-  }
-  .item-row--content {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .item-column--content {
-    display: flex;
-    flex-direction: column;
   }
 </style>

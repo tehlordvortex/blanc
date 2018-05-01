@@ -6,11 +6,15 @@ import store from './store'
 import VueAsyncComputed from 'vue-async-computed'
 import './animate.css'
 import '../../static/material-icons/material-icons.css'
+import Spinner from 'vue-spinkit'
+import SweetModal from 'sweet-modal-vue/src/plugin.js'
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false
 
 Vue.use(VueAsyncComputed)
+Vue.use(SweetModal)
+Vue.component('Spinner', Spinner)
 
 /* eslint-disable no-new */
 new Vue({

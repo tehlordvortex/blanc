@@ -1,10 +1,20 @@
-const Datastore = require('nedb')
-const appDataPath = require('electron').ipcRenderer.sendSync('sync-get-path', 'userData')
+const Datastore = require('nedb-promise')
+export const appDataPath = require('electron').ipcRenderer.sendSync('sync-get-path', 'userData')
 const join = require('path').join
-console.log('Library db at', join(appDataPath, 'library.db'))
+export const libraryDBPath = join(appDataPath, 'library.db')
+export const albumsDBPath = join(appDataPath, 'albums.db')
+console.log('Library db at', libraryDBPath)
+console.log('Albums db at', albumsDBPath)
 const db = new Datastore({
-  filename: join(appDataPath, 'library.db'),
+  filename: libraryDBPath,
   autoload: true
 })
-
+db.ensureIndex({
+  fieldName: 'filePath',
+  unique: true
+})
+export const albumsDB = new Datastore({
+  filename: albumsDBPath,
+  autoload: true
+})
 export default db
