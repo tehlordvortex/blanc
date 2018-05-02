@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow, ipcMain as ipc, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain as ipc, dialog, globalShortcut } from 'electron'
 // import { name } from '../../package.json'
 /**
  * Set `__static` path to static files in production
@@ -39,6 +39,7 @@ function createWindow () {
 
   mainWindow.loadURL(winURL)
   mainWindow.on('ready-to-show', () => {
+    registerShortcuts()
     mainWindow.show()
   })
   mainWindow.on('closed', () => {
@@ -46,7 +47,25 @@ function createWindow () {
   })
 }
 
+function registerShortcuts () {
+  globalShortcut.register('MediaPlayPause', () => {
+    mainWindow.webContents.send('music-play-pause')
+  })
+  globalShortcut.register('MediaPreviousTrack', () => {
+    mainWindow.webContents.send('music-previous')
+  })
+  globalShortcut.register('MediaNextTrack', () => {
+    mainWindow.webContents.send('music-next')
+  })
+}
+
+function unregisterShortcuts () {
+  globalShortcut.unregisterAll()
+}
+
 app.on('ready', createWindow)
+
+app.on('will-quit', unregisterShortcuts)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

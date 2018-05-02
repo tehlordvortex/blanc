@@ -202,6 +202,8 @@ import Queue from './Queue'
 import VolumeSlider from './VolumeSlider'
 import MaterialButton from './MaterialButton'
 
+import { ipcRenderer as ipc } from 'electron'
+
 window.appSettings = settings
 
 export default {
@@ -223,11 +225,27 @@ export default {
     VolumeSlider,
     MaterialButton
   },
+  created () {
+    if (!Player.getAudio()) Player.init()
+    if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
+    ipc.removeAllListeners('music-play-pause')
+    ipc.removeAllListeners('music-previous')
+    ipc.removeAllListeners('music-next')
+    ipc.on('music-play-pause', () => {
+      if (this.playing) this.pause()
+      else this.play()
+    })
+    ipc.on('music-previous', () => {
+      this.playPrevious()
+    })
+    ipc.on('music-next', () => {
+      this.playNext()
+    })
+  },
   mounted () {
     // if (Howler.usingWebAudio) {
     //   this.ctx = Howler.ctx
     // }
-    if (!Player.getAudio()) Player.init()
     // let audioCtx = new AudioContext()
     // let source = audioCtx.createMediaElementSource(Player.getAudio())
     // this.visualizer = new Oscilloscope(source)
@@ -236,7 +254,6 @@ export default {
     // ctx.strokeStyle = 'white'
     // this.visualizer.animate(ctx)
     // source.connect(audioCtx.destination)
-    if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
     Player.getAudio().addEventListener('timeupdate', () => {
       this.position = Player.getCurrentTime()
     })
