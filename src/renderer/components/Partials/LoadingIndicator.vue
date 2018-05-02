@@ -23,6 +23,10 @@ export default {
     fullHeight: {
       type: Boolean,
       default: true
+    },
+    small: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -30,6 +34,7 @@ export default {
       let c = []
       if (this.fullWidth) c.push('full-width')
       if (this.fullHeight) c.push('full-height')
+      if (this.small) c.push('small')
       return c
     },
     currentlyPlaying () {
@@ -47,8 +52,8 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 128px;
-    width: 128%;
+    height: 84px;
+    width: 84px;
   }
 
   .loading-indicator.full-width {
@@ -56,6 +61,13 @@ export default {
   }
   .loading-indicator.full-height {
     height: 100%;
+  }
+
+  .loading-indicator.small {
+    display: inline-block;
+    transform: scale(0.5);
+    width: unset;
+    height: unset;
   }
 
 </style>

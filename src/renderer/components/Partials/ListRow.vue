@@ -1,6 +1,6 @@
 <template>
   <div class="list-row">
-    <div class="list-row-content">
+    <div class="list-row-content" @click.stop="$emit('click', $event)">
       <slot></slot>
     </div>
     <div class="list-row-actions">
@@ -8,7 +8,7 @@
       <material-button
         v-if="!hideDelete"
         flat
-        @click="$emit('delete', $event)"
+        @click.stop="$emit('delete', $event)"
       >
         <i class="material-icons">clear</i>
       </material-button>
@@ -37,13 +37,15 @@ export default {
   .list-row {
     width: 100%;
     display: flex;
-    height: 1.8em;
+    min-height: 2em;
     background-color: #222;
-    margin: 5px 0;
+    color: white;
+    /* margin: 5px 0; */
   }
   .list-row .list-row-content {
     flex-grow: 1;
     padding: 5px 1em;
+    cursor: pointer;
   }
   .list-row .list-row-content p {
     margin: 0;
@@ -52,5 +54,7 @@ export default {
     padding: 2px 5px;
     margin: 0;
     height: 100%;
+    align-items: center;
+    display: flex;
   }
 </style>

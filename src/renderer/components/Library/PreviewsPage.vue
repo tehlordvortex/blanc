@@ -39,6 +39,7 @@
           <p>{{ item.artist }}</p>
         </music-item-tile>
       </staggered-slide-in>
+      <loading-indicator v-else />
     </item-column>
     <material-button
       @click="gotoAllSongs"
@@ -55,8 +56,8 @@ import StaggeredSlideIn from '@/components/Transitions/StaggeredSlideIn'
 import ItemRow from '@/components/Partials/ItemRow'
 import ItemColumn from '@/components/Partials/ItemColumn'
 import MaterialButton from '@/components/Partials/MaterialButton'
-import db from '@/library.db'
-import { getAlbums } from '@/lazy-loaders'
+// import db from '@/library.db'
+// import { getAlbums, getLibrary } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 
 // import { getAlbumArt } from '@/lazy-loaders'
@@ -65,18 +66,23 @@ export default {
   name: 'library-landing-page',
   data: () => ({
   }),
-  asyncComputed: {
+  computed: {
+    currentlyPlaying () {
+      return this.$store.state.Music.currentlyPlaying
+    },
+    musicStatus () {
+      return this.$store.state.Music.status
+    },
+    rawLibrary () {
+      return this.$store.state.Library.library
+    },
     library () {
-      return new Promise((resolve, reject) => {
-        db.cfind({ title: { $ne: '' } }).sort({ title: 1 }).exec().then((res) => {
-          let startIndex = Math.floor(Math.random() * (res.length - 30))
-          let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-          if (endIndex > res.length) endIndex = res.length
-          let slicedLibrary = res.slice(startIndex, endIndex)
-          res = undefined
-          resolve(slicedLibrary)
-        })
-      })
+      if (!this.rawLibrary) return null
+      let startIndex = Math.floor(Math.random() * (this.rawLibrary.length - 30))
+      let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
+      if (endIndex > this.rawLibrary.length || endIndex === 0) endIndex = this.rawLibrary.length
+      let slicedLibrary = this.rawLibrary.slice(startIndex, endIndex)
+      return slicedLibrary
     },
     albums () {
       // return new Promise((resolve, reject) => {
@@ -113,7 +119,8 @@ export default {
       //   })
       //   return Promise.all(albums)
       // })
-      return getAlbums(0, 20)
+      if (!this.$store.state.Library.albums) return null
+      else return this.$store.state.Library.albums.slice(0, 10)
     }
   },
   components: {
@@ -151,14 +158,6 @@ export default {
       this.$router.push({
         name: 'library-all-songs-page'
       })
-    }
-  },
-  computed: {
-    currentlyPlaying () {
-      return this.$store.state.Music.currentlyPlaying
-    },
-    musicStatus () {
-      return this.$store.state.Music.status
     }
   }
 }

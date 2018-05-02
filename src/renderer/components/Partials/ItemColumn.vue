@@ -26,6 +26,7 @@ export default {
     font-weight: lighter;
     color: gray;
     text-transform: uppercase;
+    height: 1em;
     margin-bottom: 1em;
     display: block;
   }
@@ -33,5 +34,7 @@ export default {
     display: flex;
     flex-direction: column;
     position: relative;
+    width: 100%;
+    height: calc(100% - 2em);
   }
 </style>

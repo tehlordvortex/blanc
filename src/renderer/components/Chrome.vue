@@ -1,15 +1,16 @@
 <template>
   <div id="top-bar" v-if="visible">
     <div id="window-buttons">
-      <button v-if="routeHistoryLength > 2" @click="goBack"><i class="material-icons">arrow_back</i></button>
+      <button @click="goBack"><i class="material-icons">arrow_back</i></button>
       <span class="spacer">
         <progress-bar
           v-if="indexing"
           :val="indexPercent"
+          :barColor="barColor"
         ></progress-bar>
       </span>
-      <button @click="minimizeApp"><i class="material-icons">remove</i></button>
-      <button @click="closeApp"><i class="material-icons">close</i></button>
+      <button tabindex="-1" @click="minimizeApp"><i class="material-icons">remove</i></button>
+      <button tabindex="-1" @click="closeApp" id="close-btn"><i class="material-icons">close</i></button>
     </div>
   </div>
 </template>
@@ -46,6 +47,16 @@ export default {
     },
     indexing () {
       return this.$store.state.Library.indexing
+    },
+    currentlyPlaying () {
+      return this.$store.state.Music.currentlyPlaying
+    },
+    barColor () {
+      if (this.currentlyPlaying && this.currentlyPlaying.colors && this.currentlyPlaying.colors.background) {
+        return this.currentlyPlaying.colors.background
+      } else {
+        return '#3080ff'
+      }
     }
   }
 }
@@ -88,10 +99,15 @@ export default {
     -webkit-app-region: no-drag;
   }
   #window-buttons button:focus {
+    background: #666;
     outline: none;
   }
   #window-buttons button:hover {
     background: #666;
+  }
+
+  #window-buttons #close-btn:hover {
+    background: #DD0000;
   }
 
 </style>

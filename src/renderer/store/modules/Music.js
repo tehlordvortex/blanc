@@ -1,19 +1,22 @@
-import Vue from 'vue'
 const state = {
   status: 'stopped',
-  queues: [],
-  currentQueue: 0,
+  queue: [],
   currentlyPlayingIndex: 0,
-  currentlyPlaying: null
+  currentlyPlaying: null,
+  volume: 1,
+  muted: false,
+  playbackRate: 1,
+  loop: 'all'
 }
 
 const mutations = {
   PLAY_MUSIC (state, music) {
-    if (!state.queues[state.currentQueue]) {
-      Vue.set(state.queues, state.currentQueue, [])
-    }
     state.currentlyPlaying = music
-    state.currentlyPlayingIndex = state.queues[state.currentQueue].push(state.currentlyPlaying) - 1
+    if (!state.queue.some(item => item.filePath === music.filePath)) {
+      state.currentlyPlayingIndex = state.queue.push(music) - 1
+    } else {
+      state.currentlyPlayingIndex = state.queue.findIndex(item => item.filePath === music.filePath)
+    }
     state.status = 'playing'
   },
   PAUSE_MUSIC (state) {
@@ -26,9 +29,52 @@ const mutations = {
     state.status = 'playing'
   },
   CLEAR_QUEUE (state) {
-    Vue.set(state.queues, state.currentQueue, [])
-    state.currentlyPlayingIndex = 0
-    state.currentlyPlaying = null
+    state.queue = []
+    if (state.currentlyPlaying) {
+      state.currentlyPlaying = null
+      state.currentlyPlayingIndex = 0
+      state.status = 'stopped'
+    }
+  },
+  SET_QUEUE (state, queue) {
+    state.queue = queue
+  },
+  REMOVE_FROM_QUEUE (state, music) {
+    if (state.queue.some(item => item.filePath === music.filePath)) {
+      state.queue = state.queue.filter(item => item.filePath !== music.filePath)
+      if (state.currentlyPlaying && state.currentlyPlaying.filePath === music.filePath) {
+        state.currentlyPlaying = null
+        state.currentlyPlayingIndex = 0
+        state.status = 'stopped'
+      } else {
+        state.currentlyPlayingIndex = state.queue.findIndex(item => item.filePath === music.filePath)
+      }
+    }
+  },
+  PLAY_NEXT (state, music) {
+    state.queue.push(music)
+  },
+  CHANGE_VOLUME (state, volume) {
+    state.volume = volume
+  },
+  PLAY_NEXT_SONG (state) {
+    if (self.loop !== 'all' && state.currentlyPlayingIndex !== state.queue.length - 1) {
+      state.currentlyPlaying = state.queue[++state.currentlyPlayingIndex]
+    } else if (self.loop === 'all') {
+      state.currentlyPlayingIndex = 0
+      state.currentlyPlaying = state.queue[0]
+    }
+  },
+  PLAY_PREVIOUS_SONG (state) {
+    if (self.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
+      state.currentlyPlaying = state.queue[--state.currentlyPlayingIndex]
+    } else if (self.loop === 'all') {
+      state.currentlyPlayingIndex = state.queue.length - 1
+      state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
+    }
+  },
+  SET_LOOP (state, loop) {
+    state.loop = loop
   }
 }
 

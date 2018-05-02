@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="wrapper" :class="partial ? 'no-fill-height' : ''">
     <section>
       <p class="section-header">Libraries</p>
       <dropzone
@@ -7,6 +7,7 @@
         @click="choosePath">
         <p class="large-icon"><i class="material-icons">folder</i></p>
         <p>Drop a folder here to add it to your library</p>
+        <p>Or click here to select a folder</p>
       </dropzone>
       <material-button
         :disabled="indexing"
@@ -43,6 +44,9 @@ import { ipcRenderer } from 'electron'
 
 export default {
   name: 'library-settings',
+  props: {
+    partial: Boolean
+  },
   components: {
     Dropzone,
     ListRow,
@@ -73,12 +77,16 @@ export default {
     dropPath (event) {
       if (this.indexing) return
       let files = event.dataTransfer.files
+      if (this.librariesClone.indexOf(files[0].path) > -1) return
       this.librariesClone.push(files[0].path)
     },
     choosePath () {
       if (this.indexing) return
       ipcRenderer.once('dialog-selected-folder', (event, path) => {
-        if (path) this.librariesClone.push(path)
+        if (path) {
+          if (this.librariesClone.indexOf(path[0]) > -1) return
+          this.librariesClone.push(path[0])
+        }
       })
       ipcRenderer.send('dialog-select-folder', this.libraryPath)
     },
@@ -101,6 +109,9 @@ export default {
 <style scoped>
   section {
     margin: 1em;
+  }
+  .large-icon .material-icons {
+    font-size: 4em;
   }
   .section-header {
     text-transform: uppercase;

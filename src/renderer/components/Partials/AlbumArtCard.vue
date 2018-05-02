@@ -5,7 +5,12 @@
     </div>
     <!-- <div class="card--blur" :style="computedStyle"></div> -->
     <span class="card--contents">
-      <slot></slot>
+      <p class="card--contents--title">
+        <slot name="title"></slot>
+      </p>
+      <p class="card--contents--text">
+        <slot></slot>
+      </p>
     </span>
   </div>
 </template>
@@ -119,7 +124,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .card {
     /* border-radius: 5px; */
     background-color: #666;
@@ -129,17 +134,18 @@ export default {
     display: flex;
     flex-direction: row;
     padding: 0;
-    min-height: 128px;
+    height: 128px;
+    min-width: 300px;
     transition: box-shadow 0.3s;
     border: none;
     position: relative;
+    overflow: hidden;
     cursor: pointer;
   }
 
   .card.card--small {
     max-width: 350px;
   }
-
   .card.card--small .card--contents p {
     max-width: 150px;
     overflow: hidden;
@@ -147,12 +153,29 @@ export default {
     text-overflow: ellipsis;
   }
   
+  $font-size: 1em;
+  $line-height: 1;
+  $lines-to-show: 4;
+  .card--contents--title, .card--contents--title p {
+    margin: 0;
+  }
+  .card--contents--text {
+    display: block; /* Fallback for non-webkit */
+    display: -webkit-box;
+    max-width: 100%;
+    height: $font-size*$line-height*$lines-to-show; /* Fallback for non-webkit */
+    margin: 0;
+    font-size: $font-size;
+    line-height: $line-height;
+    -webkit-line-clamp: $lines-to-show;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .card:focus, .card:hover {
     outline: none;
   }
-  .card:hover, .card:focus {
-    box-shadow: 0 6px 10px 0 rgba(200, 200, 200, 0.2);
-  }
+  
   .card--image {
     /* height: 100%; */
     padding: 0;
@@ -186,5 +209,41 @@ export default {
     width: 128px;
     height: 100%;
     /* height: auto; */
+  }
+  .card::after {
+    content: 'keyboard_arrow_right';
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    padding-top: 0.5em;
+    font-size: 4em;
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    position: absolute;
+    right: -5em;
+    transition: all 0.3s;
+    background-color: rgba(0, 0, 0, 0.1);
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+  }
+  .card:hover::after, .card:focus::after {
+    right: 0;
   }
 </style>

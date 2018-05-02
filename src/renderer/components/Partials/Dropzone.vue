@@ -34,6 +34,7 @@ export default {
     align-items: center;
     justify-content: center;
     border: 4px dashed #666;
+    border-radius: 4px;
     color: white;
     cursor: pointer;
   }

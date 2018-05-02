@@ -90,6 +90,12 @@ ipc.on('close-app', (event) => {
 ipc.on('minimize-app', (event) => {
   mainWindow.minimize()
 })
+ipc.on('open-dev-tools', (event) => {
+  if (mainWindow) mainWindow.webContents.openDevTools()
+})
+ipc.on('close-dev-tools', (event) => {
+  if (mainWindow) mainWindow.webContents.closeDevTools()
+})
 
 /**
  * Auto Updater

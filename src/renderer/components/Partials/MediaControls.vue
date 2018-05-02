@@ -1,7 +1,13 @@
 <template>
   <div class="media-controls" :style="computedStyle">
-    <div class="media-controls-art" :style="computedImageStyle" @click="goFullscreen">
+    <div class="media-controls-art" :style="computedImageStyle" @click.stop="goFullscreen">
       <!-- <img :src="currentlyPlaying ? image : ''" /> -->
+      <i
+        class="material-icons icon-button"
+        tabindex="0"
+        @click.stop="playing ? pause($event) : play($event)"
+        @keyup.enter="playing ? pause($event) : play($event)"
+        >{{ playing ? 'pause' : 'play_arrow' }}</i>
     </div>
     <div class="media-controls-details">
       <div v-if="currentlyPlaying">
@@ -12,27 +18,85 @@
       <p v-else>Nothing is playing.</p>
     </div>
     <div class="media-controls-seeker">
+      <material-button
+        icon
+        flat
+        @click="playPrevious"
+      >
+        <i class="material-icons">skip_previous</i>
+      </material-button>
+      <span>{{ positionText }}</span>
       <input type="range" min="0" :max="duration" v-model="sliderPosition" step="1" @change="seekSong"/>
+      <span>{{ durationText }}</span>
+      <material-button
+        icon
+        flat
+        @click="playNext"
+      >
+        <i class="material-icons">skip_next</i>
+      </material-button>
     </div>
     <div class="media-controls-actions">
-      <i
+      <!-- <i
         class="material-icons icon-button"
+        tabindex="0"
         @click="playing ? pause($event) : play($event)"
-        >{{ playing ? 'pause' : 'play_arrow' }}</i>
-      <i
+        @keyup.enter="playing ? pause($event) : play($event)"
+        >{{ playing ? 'pause' : 'play_arrow' }}</i> -->
+      <!-- <i
         class="material-icons icon-button"
         @click="stop"
+        @keyup.enter="stop"
+        tabindex="0"
         >
         stop
+      </i> -->
+      <material-button
+        icon
+        flat
+        @click="toggleLoop"
+      >
+        <i class="material-icons">{{ loopIcon }}</i>
+      </material-button>
+      <i
+        class="material-icons icon-button"
+        @click.stop="toggleQueue"
+        @keyup.enter="toggleQueue"
+        tabindex="0"
+        >
+        queue_music
       </i>
+      <div class="media-controls-volume-slider-container">
+        <material-button
+          @click="showVolume = !showVolume"
+          icon
+          flat
+        >
+          <i class="material-icons">{{ this.volume > 0.5 ? 'volume_up' : 'volume_down' }}</i>
+        </material-button>
+        <transition
+          appear
+          name="animated-vertical-slide-fade"
+          enter-active-class="animated fadeInLeft"
+          leave-active-class="animated fadeOutLeft"
+        >
+          <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
+        </transition>
+      </div>
       <settings-popup-button />
     </div>
+    <transition
+      name="animated-slide-in"
+      enter-active-class="animated slideInRight"
+      leave-active-class="animated slideOutRight">
+      <queue v-show="showQueue" class="media-controls-queue" @close="showQueue = false" />
+    </transition>
     <transition
       name="animated-zoom-in"
       enter-active-class="animated zoomInUp"
       leave-active-class="animated zoomOutDown"
     >
-      <div class="media-controls-fullscreen" v-if="fullscreen" @click="leaveFullscreen" :style="computedStyle">
+      <div class="media-controls-fullscreen" v-show="fullscreen" @click="leaveFullscreen" :style="computedStyle" @keyup.esc="fullscreen = false" ref="fullscreen">
         <div class="media-controls-fullscreen--background" :style="computedImageStyle"></div>
         <!-- <div class="media-controls-art media-controls-art--large" :style="computedImageStyle">
         </div> -->
@@ -43,21 +107,77 @@
             <p class="media-controls-details--album">{{ currentlyPlaying.album }}</p>
           </div>
           <p v-else>Nothing is playing.</p>
-        </div>
-        <div class="media-controls-seeker">
-          <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1"/>
-        </div>
-        <div class="media-controls-actions">
-          <i
-            class="material-icons icon-button"
-            @click.stop="playing ? pause($event) : play($event)"
-            >{{ playing ? 'pause' : 'play_arrow' }}</i>
-          <i
-            class="material-icons icon-button"
-            @click.stop="stop"
+          <div class="media-controls-seeker">
+            <material-button
+              icon
+              flat
+              @click="playPrevious"
             >
-            stop
-          </i>
+              <i class="material-icons">skip_previous</i>
+            </material-button>
+            <span>{{ positionText }}</span>
+            <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1"/>
+            <span>{{ durationText }}</span>
+            <material-button
+              icon
+              flat
+              @click="playNext"
+            >
+              <i class="material-icons">skip_next</i>
+            </material-button>
+          </div>
+          <div class="media-controls-actions">
+            <i
+              class="material-icons icon-button"
+              @click.stop="playing ? pause($event) : play($event)"
+              >
+              {{ playing ? 'pause' : 'play_arrow' }}
+            </i>
+            <material-button
+              icon
+              flat
+              @click="toggleLoop"
+            >
+              <i class="material-icons">{{ loopIcon }}</i>
+            </material-button>
+            <div class="media-controls-volume-slider-container">
+              <material-button
+                @click="showVolume = !showVolume"
+                icon
+                flat
+              >
+                <i class="material-icons">{{ this.volume > 0.5 ? 'volume_up' : 'volume_down' }}</i>
+              </material-button>
+              <transition
+                appear
+                name="animated-vertical-slide-fade"
+                enter-active-class="animated fadeInLeft"
+                leave-active-class="animated fadeOutLeft"
+              >
+                <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
+              </transition>
+            </div>
+            <i
+              class="material-icons icon-button"
+              @click.stop="showFullscreenQueue = !showFullscreenQueue"
+              tabindex="0"
+              >
+              queue_music
+            </i>
+            <i
+            class="icon-button material-icons"
+            @click.stop="toggleWindowFullscreen"
+            >
+              fullscreen
+            </i>
+          </div>
+          <transition
+            name="animated-slide-in"
+            enter-active-class="animated slideInUp"
+            leave-active-class="animated slideOutDown">
+            <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
+          </transition>
+          <!-- <canvas ref="visualizer"></canvas> -->
         </div>
       </div>
     </transition>
@@ -69,14 +189,18 @@ import { mapState } from 'vuex'
 import settings from '@/lib/settings'
 // import { loadAlbumArt } from '@/lazy-loaders'
 // import { Howl, Howler } from 'howler'
-import { loadAlbumArt, toColorString, getBackgroundImageCSS } from '@/lazy-loaders'
+import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import Player from '@/lib/player'
+// import * as Oscilloscope from 'oscilloscope'
 // import Vibrant from 'node-vibrant'
 // import Color from 'color'
 // import * as fs from 'fs'
 // import * as mime from 'mime'
 
 import SettingsPopupButton from './SettingsPopupButton'
+import Queue from './Queue'
+import VolumeSlider from './VolumeSlider'
+import MaterialButton from './MaterialButton'
 
 window.appSettings = settings
 
@@ -88,43 +212,65 @@ export default {
     position: 0,
     duration: 0,
     fullscreen: false,
-    ctx: null,
-    source: null,
-    analyser: null,
-    frequencyData: null
+    windowFullscreen: false,
+    showQueue: false,
+    showFullscreenQueue: false,
+    showVolume: false
   }),
   components: {
-    SettingsPopupButton
+    SettingsPopupButton,
+    Queue,
+    VolumeSlider,
+    MaterialButton
   },
   mounted () {
     // if (Howler.usingWebAudio) {
     //   this.ctx = Howler.ctx
     // }
     if (!Player.getAudio()) Player.init()
-    let seek = () => {
+    // let audioCtx = new AudioContext()
+    // let source = audioCtx.createMediaElementSource(Player.getAudio())
+    // this.visualizer = new Oscilloscope(source)
+    // let ctx = this.$refs.visualizer.getContext('2d')
+    // ctx.fillStyle = 'white'
+    // ctx.strokeStyle = 'white'
+    // this.visualizer.animate(ctx)
+    // source.connect(audioCtx.destination)
+    if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
+    Player.getAudio().addEventListener('timeupdate', () => {
       this.position = Player.getCurrentTime()
-      if (this.duration !== 0 && this.position >= this.duration) {
-        console.log('stopping')
-        this.stop()
-      }
-      // console.log(this.position)
-      if (!Player.isPaused()) Player.nextAnimationFrame = requestAnimationFrame(seek)
-    }
+    })
     Player.getAudio().addEventListener('canplaythrough', ($e) => {
-      console.log('Loaded!')
-      this.duration = $e.target.duration
-      console.log(this.duration)
+      // this.duration = $e.target.duration
       // console.log(Player.play().catch(e => console.warn(e)))
     })
     Player.getAudio().addEventListener('play', ($e) => {
-      console.log('Playing!!!')
-      Player.nextAnimationFrame = requestAnimationFrame(seek)
+      if (!document.hasFocus()) {
+        Notification.requestPermission().then((perms) => {
+          let path = 'file://' + this.currentlyPlaying.albumArt
+          if (path === 'file://' || !path) path = __static + '/albumart-placeholder.png'
+          let body = this.currentlyPlaying.artist || 'Unknown Artist'
+          body += '\n'
+          body += this.currentlyPlaying.album || 'Unknown Album'
+          /* eslint-disable no-new */
+          new Notification(this.currentlyPlaying.title, {
+            icon: path,
+            body: body
+          })
+        })
+      }
+    })
+    Player.getAudio().addEventListener('ended', ($e) => {
+      if (this.loop === 'one') this.play()
+      else if (this.loop === 'all') this.playNext()
     })
   },
   computed: {
     ...mapState({
       currentlyPlaying: state => state.Music.currentlyPlaying,
-      status: state => state.Music.status
+      status: state => state.Music.status,
+      volume: state => state.Music.volume,
+      loop: state => state.Music.loop
     }),
     sliderPosition: {
       set (newVal) {
@@ -136,6 +282,22 @@ export default {
     },
     playing () {
       return this.status === 'playing'
+    },
+    durationText () {
+      return this.toHHMMSS(this.duration)
+    },
+    positionText () {
+      return this.toHHMMSS(this.position)
+    },
+    loopIcon () {
+      switch (this.loop) {
+        case 'all':
+          return 'repeat'
+        case 'one':
+          return 'repeat_one'
+        case 'none':
+          return 'remove'
+      }
     }
   },
   asyncComputed: {
@@ -143,20 +305,25 @@ export default {
       if (!this.currentlyPlaying) return Promise.resolve('')
       else {
         console.log(this.currentlyPlaying.filePath)
-        return Promise.resolve(loadAlbumArt(this.currentlyPlaying.filePath))
+        if (this.currentlyPlaying.albumArt) return Promise.resolve('file://' + this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath)
       }
     },
     computedImageStyle () {
       // console.log(this.image)
-      if (!this.image) return Promise.resolve('')
-      console.log(this.image)
+      // if (!this.image) return Promise.resolve('')
+      // console.log(this.image)
       return Promise.resolve(getBackgroundImageCSS(this.image))
     },
     computedStyle () {
       // console.log(this.image)
       if (!this.currentlyPlaying) return Promise.resolve('')
-      if (this.currentlyPlaying.colors) return Promise.resolve(toColorString(this.currentlyPlaying.colors))
-      else return Promise.resolve('')
+      if (this.currentlyPlaying.colors) {
+        return Promise.resolve({
+          background: this.currentlyPlaying.colors.background || '',
+          color: this.currentlyPlaying.colors.foreground || ''
+        })
+      } else return Promise.resolve('')
     }
   },
   watch: {
@@ -170,10 +337,28 @@ export default {
       }
     },
     currentlyPlaying (newVal) {
-      this.play()
+      if (newVal) {
+        this.play()
+      } else {
+        this.stop()
+      }
+    },
+    volume (val) {
+      Player.setVolume(val)
     }
   },
   methods: {
+    toHHMMSS (string) {
+      var secNum = parseInt(string, 10) // don't forget the second param
+      var hours = Math.floor(secNum / 3600)
+      var minutes = Math.floor((secNum - (hours * 3600)) / 60)
+      var seconds = secNum - (hours * 3600) - (minutes * 60)
+
+      if (hours < 10) hours = '0' + hours
+      if (minutes < 10) minutes = '0' + minutes
+      if (seconds < 10) seconds = '0' + seconds
+      return (hours !== '00' ? hours + ':' : '') + minutes + ':' + seconds
+    },
     createSound (source, loop = true) {
       // let sound = new Howl({
       //   src: [source],
@@ -203,6 +388,7 @@ export default {
       Player.play().catch(e => console.warn(e))
     },
     play (event) {
+      if (!this.currentlyPlaying) return
       if (event) {
         this.$store.commit('RESUME_MUSIC', this.currentlyPlaying)
         return
@@ -210,6 +396,7 @@ export default {
       console.log(this.previousSong, this.currentlyPlaying)
       if (!this.previousSong) {
         this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
+        this.duration = this.currentlyPlaying.duration
         this.createSound(this.currentlyPlaying.filePath)
       } else {
         if (this.previousSong.filePath === this.currentlyPlaying.filePath) {
@@ -217,6 +404,7 @@ export default {
         } else {
           this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
           Player.stop().then(() => {
+            this.duration = this.currentlyPlaying.duration
             this.createSound(this.currentlyPlaying.filePath)
           }).catch(e => console.warn(e))
           // fs.readFile(this.currentlyPlaying.filePath, (err, contents) => {
@@ -243,11 +431,10 @@ export default {
       }
     },
     stop (event) {
-      if (this.currentlyPlaying) {
-        if (event) this.$store.commit('STOP_MUSIC')
-        this.sliderPosition = 0
-        Player.stop()
-      }
+      if (event) this.$store.commit('STOP_MUSIC')
+      this.sliderPosition = 0
+      this.duration = 0
+      Player.stop()
     },
     seekSong (e) {
       console.log(e.target.value)
@@ -276,6 +463,41 @@ export default {
       console.log(this.frequencyData)
       // render frame based on values in frequencyData
       // console.log(frequencyData)
+    },
+    toggleWindowFullscreen () {
+      if (!document.webkitFullscreenElement) {
+        this.windowFullscreen = true
+        document.documentElement.webkitRequestFullscreen()
+      } else {
+        this.windowFullscreen = false
+        document.webkitExitFullscreen()
+      }
+    },
+    toggleQueue () {
+      this.showQueue = !this.showQueue
+    },
+    playPrevious () {
+      this.$store.commit('PLAY_PREVIOUS_SONG')
+    },
+    playNext () {
+      this.$store.commit('PLAY_NEXT_SONG')
+    },
+    toggleLoop () {
+      switch (this.loop) {
+        case 'all':
+          this.$store.commit('SET_LOOP', 'one')
+          break
+        case 'one':
+          this.$store.commit('SET_LOOP', 'none')
+          break
+        case 'none':
+          this.$store.commit('SET_LOOP', 'all')
+          break
+        default:
+          // wut
+          console.warn('Invalid loop state', this.loop)
+          this.$store.commit('SET_LOOP', 'none')
+      }
     }
   },
   beforeDestroy () {
@@ -285,7 +507,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   .media-controls {
     height: 70px;
     position: fixed;
@@ -299,12 +521,32 @@ export default {
     flex-direction: row;
     transition: background-color 0.5s;
     box-shadow: 0 -3px 5px 0 rgba(0, 0, 0, 0.2);
+    z-index: 900;
+    user-select: none;
+  }
+  .bottom-right {
+    position: absolute;
+    bottom: 0;
+    right: 0;
   }
   .media-controls-art {
     width: 64px;
     background-size: cover;
     background-position: center;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .media-controls-art .icon-button {
+    display: none;
+  }
+  .media-controls-art .icon-button:focus {
+    display: inline-block;
+  }
+  .media-controls-art:hover .icon-button {
+    display: inline-block;
   }
 
   .media-controls-art.media-controls-art--large {
@@ -315,7 +557,14 @@ export default {
     max-width: 300px;
     margin-left: 1em;
     cursor: pointer;
-    font-size: 0.8em;
+    /* font-size: 0.8em; */
+    margin-right: 1em; 
+    color: white;
+  }
+  @media only screen and (max-width: 900px) {
+    .media-controls-details {
+      max-width: 200px;
+    }
   }
   .media-controls-details--title {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -333,9 +582,19 @@ export default {
   /* .media-controls-details p {
     margin: 0;
   } */
+  .media-controls-volume-slider-container {
+    position: relative;
+  }
+  .media-controls-volume-slider {
+    position: absolute;
+    left: -120px;
+    top: 0;
+  }
   .media-controls-seeker {
     flex-grow: 1;
-    padding: 1em;
+    display: flex;
+    align-items: center;
+    color: white;
   }
   .media-controls-seeker input[type="range"] {
     width: 100%;
@@ -365,7 +624,7 @@ export default {
   }
   input[type=range]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 2px;
+    height: 3px;
     cursor: pointer;
     /* box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; */
     background: white;
@@ -377,9 +636,10 @@ export default {
   input[type=range]:hover::-webkit-slider-runnable-track,
   input[type=range]:hover::-webkit-slider-thumb,
   input[type=range]:focus::-webkit-slider-thumb {
-    box-shadow: 0 1px 5px rgba(255, 0, 0, 0.9);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.9), 0 -1px 5px rgba(0, 0, 0, 0.9);
     /* border: 1px solid black; */
   }
+
   .media-controls-actions {
     display: flex;
     align-items: center;
@@ -396,7 +656,7 @@ export default {
     user-select: none;
   }
 
-  .icon-button:hover, .icon-button:focus {
+  .icon-button:hover {
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
   }
@@ -407,22 +667,39 @@ export default {
     top: 0;
     left: 0;
     /* filter: blur(3px); */
-    z-index: 2000;
+    z-index: 2001;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     color: black;
   }
+  .media-controls-queue {
+    position: absolute;
+    right: 0;
+    bottom: 70px;
+    max-width: 400px;
+    z-index: 1000;
+  }
+  .media-controls-fullscreen-queue {
+    position: absolute;
+    left: calc(50% - 200px);
+    /* transform: translateX(-50%); */
+    bottom: 0;
+    width: 400px;
+  }
+  .media-controls-fullscreen .media-controls-actions .icon-button:focus {
+    outline: none;
+  }
   .media-controls-fullscreen * {
     z-index: 2003;
     flex-grow: 0;
   }
   .media-controls-fullscreen .media-controls-details {
-    min-width: 300px;
+    min-width: 500px;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
-    padding: 0 1em;
+    padding: 1em;
   }
   .media-controls-fullscreen .media-controls-details p {
     margin: 10px 0;
@@ -441,5 +718,19 @@ export default {
     background-size: cover;
     /* z-index: 1001; */
     /* cursor: pointer; */
+  }
+  .vertical-slide-fade-enter-active {
+    transition: all .5s ease;
+  }
+  .vertical-slide-fade-leave-active {
+    transition: all .5s ease;
+  }
+  .vertical-slide-fade-enter, .vertical-slide-fade-leave-to {
+    transform: translateY(-10px) rotate(-90deg);
+  }
+  .vertical-slide-fade-enter-to
+  /* .slide-fade-leave-active below version 2.1.8 */ {
+    transform: translateY(0px) rotate(-90deg);
+    opacity: 1;
   }
 </style>

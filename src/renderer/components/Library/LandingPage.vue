@@ -14,13 +14,16 @@
     <!-- <div class="item-row">
       <span class="item-row--title">Albums</span>
       <div class="item-row--content" v-if="albums"> -->
-    <loading-indicator v-if="loading" />
+    <div class="wrapper-message" v-if="indexing">
+      <h1>Indexing library, please wait...</h1>
+      <loading-indicator :fullHeight="false" />
+    </div>
     <transition
       mode="out-in"
-      @enter="entering"
-      @leave="leaving"
+      enter-active-class="animated slideInLeft"
+      leave-active-class="animated slideOutRight"
       >
-      <router-view />
+      <router-view v-if="!indexing"/>
     </transition>
   </div>
 </template>
@@ -48,6 +51,11 @@ export default {
       }
     }
   },
+  computed: {
+    indexing () {
+      return this.$store.state.Library.indexing
+    }
+  },
   asyncComputed: {
     library () {
       return db.count({})
@@ -71,11 +79,18 @@ export default {
 </script>
 
 <style>
-  .wrapper {
+  .wrapper, .wrapper-message {
     width: 100%;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: #333;
+    color: white;
+  }
+  .wrapper-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 </style>

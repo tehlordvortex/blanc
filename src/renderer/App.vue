@@ -1,7 +1,12 @@
 <template>
-  <div id="app" :class="showChrome ? 'pad-body' : ''">
+  <div id="app" @dragover.prevent @dragenter.prevent @dragleave.prevent @drop.prevent :class="showChrome ? 'pad-body' : ''">
     <chrome :visible="showChrome" />
-    <router-view></router-view>
+    <transition
+      mode="out-in"
+      enter-active-class="animated slideInLeft"
+      leave-active-class="animated slideOutRight">
+      <router-view></router-view>
+    </transition>
     <media-controls v-if="showMusicBar" />
   </div>
 </template>
@@ -9,18 +14,40 @@
 <script>
   import MediaControls from './components/Partials/MediaControls'
   import Chrome from './components/Chrome'
+  import { getLibrary, getAlbums } from '@/lazy-loaders'
+  import { mapState } from 'vuex'
+  import { ipcRenderer as ipc } from 'electron'
+  import { addFiles } from '@/indexer.lib'
+  import settings from '@/lib/settings'
+
   export default {
     name: 'blanc',
     components: {
       Chrome,
       MediaControls
     },
-    computed: {
-      showChrome () {
-        return this.$store.state.App.showChrome
-      },
-      showMusicBar () {
-        return this.$store.state.App.showMusicBar
+    created () {
+      if (!this.library) getLibrary()
+      if (!this.albums) getAlbums()
+      if (this.devMode) {
+        ipc.send('open-dev-tools')
+      }
+      settings.libraries.map(library => addFiles(library))
+    },
+    computed: mapState({
+      showMusicBar: state => state.App.showMusicBar,
+      showChrome: state => state.App.showChrome,
+      library: state => state.Library.library,
+      albums: state => state.Library.albums,
+      devMode: state => state.App.devMode
+    }),
+    watch: {
+      devMode (newVal) {
+        if (newVal) {
+          ipc.send('open-dev-tools')
+        } else {
+          ipc.send('close-dev-tools')
+        }
       }
     }
   }
@@ -34,17 +61,26 @@
     margin: 0;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 1em;
   }
   #app {
     width: 100%;
     height: 100%;
     background-color: #333;
+    color: white;
   }
   .wrapper {
     width: 100%;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+  }
+  .wrapper.no-fill-height {
+    height: auto;
+    overflow: none;
+  }
+  .wrapper.no-scroll {
+    overflow: hidden;
   }
   * {
     box-sizing: border-box;
@@ -69,6 +105,9 @@
   {
     background: rgba(0, 0, 0, 0.5);
     transition: all 0.3s;
+  }
+  .animated {
+    animation-duration: 0.5s !important;
   }
   /* CSS */
 </style>

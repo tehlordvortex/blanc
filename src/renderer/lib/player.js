@@ -1,4 +1,5 @@
-import settings from './settings'
+import store from '@/store'
+const musicState = store.state.Music
 
 class Player {
   constructor (options) {
@@ -106,7 +107,7 @@ class Player {
 }
 
 export default new Player({
-  volume: settings.volume,
-  playbackRate: settings.playbackRate,
-  muted: settings.muted
+  volume: musicState.volume,
+  playbackRate: musicState.playbackRate,
+  muted: musicState.muted
 })

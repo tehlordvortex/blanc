@@ -45,6 +45,7 @@ export default {
       return this.$store.state.Music.currentlyPlaying
     },
     buttonColor () {
+      if (this.flat && this.icon) return ''
       if (this.currentlyPlaying && this.currentlyPlaying.colors) {
         return toColorString(this.currentlyPlaying.colors)
       } else {
@@ -55,7 +56,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 
   .button {
     background-color: #3080ff;
@@ -71,7 +72,7 @@ export default {
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
   }
-  .button:hover, .button:focus {
+  .button:hover {
     box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.6);
     background-color: #3585ff;
   }
@@ -88,7 +89,7 @@ export default {
     display: inline-block;
   }
 
-  .icon-button:hover, .icon-button:focus {
+  .icon-button:hover {
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
   }

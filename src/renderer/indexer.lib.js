@@ -4,16 +4,19 @@ import db from '@/library.db'
 import Queue from 'queue'
 import { promiseFiles } from 'node-dir'
 import { parseFile } from 'music-metadata'
-import { posix, pathSep } from 'path'
+import { posix, sep as pathSep } from 'path'
 import * as mime from 'mime'
-import { toDataURI, getColors } from '@/lazy-loaders'
+import { toDataURI, getColors, getLibrary, getAlbums } from '@/lazy-loaders'
 import store from '@/store'
 export function removeFiles (libPath) {
   let r = new RegExp('^' + libPath)
-  return db.remove({ filePath: r }, { multi: true })
+  return db.remove({ filePath: r }, { multi: true }).then(() => {
+    getLibrary()
+    getAlbums()
+  })
 }
 export function getMetadata (file) {
-  return parseFile(file, {native: true, duration: true})
+  return parseFile(file, {native: false, duration: true})
 }
 export function indexFile (file) {
   return getMetadata(file)
@@ -28,14 +31,18 @@ export function indexFile (file) {
       libraryItem.album = ''
       libraryItem.duration = metadata.format.duration
       libraryItem.folderBasedAlbum = false
-      libraryItem.title = metadata.common.title || ''
-      libraryItem.artist = metadata.common.artist || ''
-      libraryItem.artists = metadata.common.artists || []
+      libraryItem.title = metadata.common.title || libraryItem.fileName
+      libraryItem.artist = metadata.common.artist || 'Unknown'
+      libraryItem.artists = metadata.common.artists || ['Unknown']
       libraryItem.album = metadata.common.album || ''
       if (!libraryItem.album) {
-        let sections = file.split(pathSep)
+        let sections = libraryItem.filePath.split(pathSep)
         libraryItem.album = sections[sections.length - 2]
         libraryItem.folderBasedAlbum = true
+      }
+      if (!libraryItem.album) {
+        libraryItem.album = 'Unknown'
+        libraryItem.folderBasedAlbum = false
       }
       let picture = metadata.common.picture && metadata.common.picture[0]
       let res = Promise.resolve()
@@ -48,7 +55,7 @@ export function indexFile (file) {
           })
           .catch((e) => {
             console.log('Error getting colors for', file)
-            libraryItem.colors = {}
+            // libraryItem.colors = undefined
           })
       }
       res.then(() => db.update({filePath: file}, libraryItem, {upsert: true}))
@@ -69,8 +76,15 @@ export function addFiles (path) {
       indexDetails.processed = 0
       indexDetails.total = 0
 
-      store.commit('FINISH_INDEXING')
-      resolve()
+      getLibrary()
+        .then(getAlbums)
+        .then(() => store.commit('FINISH_INDEXING'))
+        .then(() => resolve())
+        .catch(e => {
+          console.warn(e)
+          store.commit('FINISH_INDEXING')
+          reject(e)
+        })
     }
     indexQueue.on('end', finish)
     indexQueue.on('success', (_, job) => {
@@ -93,6 +107,9 @@ export function addFiles (path) {
                       indexDetails.processed++
                       // console.log(indexDetails)
                       store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
+                      cb()
+                    }).catch((e) => {
+                      console.warn('Error indexing', file, e)
                       cb()
                     })
                 } else {
@@ -119,7 +136,15 @@ export default function index (path) {
       indexDetails.total = 0
 
       store.commit('FINISH_INDEXING')
-      resolve()
+      getLibrary()
+        .then(getAlbums)
+        .then(() => store.commit('FINISH_INDEXING'))
+        .then(() => resolve())
+        .catch(e => {
+          console.warn(e)
+          store.commit('FINISH_INDEXING')
+          reject(e)
+        })
     }
     indexQueue.on('end', finish)
     promiseFiles(path)

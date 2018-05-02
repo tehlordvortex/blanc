@@ -1,7 +1,8 @@
 const state = {
   showChrome: true,
   showMusicBar: true,
-  routeHistory: []
+  routeHistory: [],
+  devMode: false
 }
 
 const mutations = {
@@ -25,6 +26,12 @@ const mutations = {
   },
   NAVIGATE_REPLACE (state, route) {
     state.routeHistory[Math.max(0, state.routeHistory.length - 1)] = route
+  },
+  ENABLE_DEV_MODE (state) {
+    state.devMode = true
+  },
+  DISABLE_DEV_MODE (state) {
+    state.devMode = false
   }
 }
 

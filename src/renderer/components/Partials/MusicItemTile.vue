@@ -1,5 +1,15 @@
 <template>
-  <div @click="$emit(active ? 'pause' : 'play', $event)" class="music-item-tile" :style="active ? (computedStyle ? computedStyle : defaultActiveStyle) : ''">
+  <div @click="$emit(isActive ? 'pause' : 'play', $event)" class="music-item-tile" :style="isActive ? (computedStyle ? computedStyle : defaultActiveStyle) : ''" @contextmenu="$emit('contextmenu', $event)">
+    <div class="music-item-tile--active-indicator">
+      <loading-indicator
+      :fullWidth="false"
+      :fullHeight="false"
+      v-if="isActive"
+      :color="this.item.colors && this.item.colors.foreground || 'white'"
+      small
+      name="line-scale-pulse-out-rapid"
+       />
+    </div>
     <div class="music-item-tile--art" v-if="showArt" :style="computedImageStyle">
     </div>
     <div class="music-item-tile--details">
@@ -8,14 +18,15 @@
     <div class="music-item-tile--actions">
       <i
         class="material-icons icon-button"
-        @click.stop="$emit(active ? 'pause' : 'play', $event)"
-        >{{ active ? 'pause' : 'play_arrow' }}</i>
+        @click.stop="$emit(isActive ? 'pause' : 'play', $event)"
+        >{{ isActive ? 'pause' : 'play_arrow' }}</i>
     </div>
   </div>
 </template>
 
 <script>
-import { loadAlbumArt, getColors, toColorString, getBackgroundImageCSS } from '@/lazy-loaders'
+import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
+import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 
 export default {
   name: 'music-item-tile',
@@ -33,7 +44,7 @@ export default {
     },
     active: {
       type: Boolean,
-      default: false
+      default: null
     }
   },
   asyncComputed: {
@@ -51,15 +62,34 @@ export default {
     computedStyle () {
       // console.log(this.image)
       if (!this.item) return Promise.resolve('')
-      if (this.item.colors) return Promise.resolve(toColorString(this.item.colors))
-      else {
-        // if (!this.showArt) return this.defaultActiveStyle
-        return getColors(this.image).then((colors) => {
-          console.log(colors)
-          return toColorString(colors)
+      if (this.item.colors) {
+        return Promise.resolve({
+          background: this.item.colors.background || '',
+          color: this.item.colors.foreground || ''
         })
+      } else {
+        // if (!this.showArt) return this.defaultActiveStyle
+        return Promise.resolve('')
       }
     }
+  },
+  computed: {
+    isActive () {
+      if (!this.item) return false
+      if (this.active !== null) return this.active
+      else {
+        return this.musicStatus === 'playing' && this.currentlyPlaying && this.item.filePath === this.currentlyPlaying.filePath
+      }
+    },
+    currentlyPlaying () {
+      return this.$store.state.Music.currentlyPlaying
+    },
+    musicStatus () {
+      return this.$store.state.Music.status
+    }
+  },
+  components: {
+    LoadingIndicator
   }
 }
 </script>
@@ -67,13 +97,19 @@ export default {
 <style scoped>
   .music-item-tile {
     background-color: #222;
-    padding: 5px 1em;
+    padding: 10px;
     display: flex;
     border-bottom: 1px solid grey;
-    min-height: 74px;
+    height: 4.5em;
     color: white;
     transition: background-color 0.5s;
     cursor: pointer;
+    align-items: center;
+  }
+  .music-item-tile--active-indicator {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
   }
   .music-item-tile--art {
     padding: 0;
@@ -82,19 +118,34 @@ export default {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    flex-shrink: 0;
   }
   .music-item-tile--details {
     flex-grow: 1;
-    padding: 1em;
+    padding: 0 1em;
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+  }
+  .music-item-tile--details p {
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .music-item-tile--actions {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
+    max-width: 10%;
   }
   .icon-button {
     background-color: transparent;
-    color: white;
+    /* color: white; */
     border: none;
     transition: background-color 0.3s;
     border-radius: 50%;

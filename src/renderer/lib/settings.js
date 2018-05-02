@@ -34,13 +34,14 @@ class Settings {
   }
   addLibrary (lib) {
     let libs = this.libraries
+    if (libs.indexOf(lib) > -1) return
     libs.push(lib)
-    this.libraries = lib
+    this.libraries = libs
   }
   removeLibrary (lib) {
     let libs = this.libraries
-    libs.remove(lib)
-    this.libraries = lib
+    libs = libs.filter(l => l !== lib)
+    this.libraries = libs
   }
 }
 export const settingsProvider = settingsStore

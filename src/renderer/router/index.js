@@ -34,13 +34,22 @@ let router = new Router({
     },
     {
       path: '/settings',
-      name: 'settings-page',
       component: require('@/components/Settings/Index.vue').default,
       children: [
+        {
+          path: '',
+          name: 'settings-page',
+          component: require('@/components/Settings/All.vue').default
+        },
         {
           path: 'library',
           name: 'settings-library-page',
           component: require('@/components/Settings/Library.vue').default
+        },
+        {
+          path: 'development',
+          name: 'settings-development-page',
+          component: require('@/components/Settings/Development.vue').default
         }
       ]
     },

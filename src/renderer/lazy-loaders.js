@@ -12,6 +12,8 @@ import db from '@/library.db'
 import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
+import store from '@/store'
+
 // import Color from 'color'
 const app = remote.app
 let userData = app.getPath('userData')
@@ -29,6 +31,10 @@ stat(artsCachePath, (err, details) => {
 let colorQueue = new Queue()
 colorQueue.concurrency = 16
 colorQueue.autostart = true
+
+// let albumsCache = null
+// let libraryCache = null
+// let libState = store.state.Library
 
 export function toColorString (color) {
   if (color.background && color.foreground) return 'background-color:' + color.background + ';color:' + color.foreground
@@ -61,6 +67,7 @@ export function getAlbumArt (filePath) {
   return cacheAlbumArt(filePath).then((path) => Promise.resolve('file://' + path))
 }
 export function getAlbum (name) {
+  // if (!libState.refreshed && albumsCache && albumsCache.some(album => album.name === name)) return albumsCache.find(album => album.name === name)
   return new Promise((resolve, reject) => {
     db.cfind({ album: name }).sort({ album: 1, title: 1 }).exec().then((res) => {
       if (!res || res.length === 0) return resolve({})
@@ -91,11 +98,11 @@ export function getAlbum (name) {
           }
         })
         if (!album.art) {
-          resolves.push(cacheAlbumArt(song.filePath).then((art) => {
+          resolves.push(loadAlbumArt(song.filePath).then((art) => {
             if (art && !album.art) {
               // console.log(art)
               if (album.art) return
-              album.art = art
+              album.art = art.replace('file://', '')
             }
           }))
         }
@@ -104,7 +111,14 @@ export function getAlbum (name) {
     })
   })
 }
+
+export function getLibrary () {
+  return db.find({}).then(library => {
+    store.commit('UPDATE_LIBRARY', library)
+  })
+}
 export function getAlbums (skip = 0, limit = 0, deep = true) {
+  // if (!libState.refreshedAlbums && albumsCache) return Promise.resolve(albumsCache)
   let p = db.cfind({ album: { $nin: ['', null, undefined] } })
   p = p.exec().then((docs) => {
     let albums = []
@@ -121,18 +135,37 @@ export function getAlbums (skip = 0, limit = 0, deep = true) {
   })
   p = p.then((albums) => {
     return albums.sort((a, b) => {
-      return a.name && b.name && (a.name.toLowerCase() > b.name.toLowerCase())
+      if (!a.name && !b.name) return 0
+      if (!a.name && b.name) return -1
+      else if (a.name && !b.name) return 1
+      else {
+        let al = a.name.toLowerCase().trim()
+        let bl = b.name.toLowerCase().trim()
+        if (al < bl) {
+          return -1
+        } else if (al > bl) {
+          return 1
+        } else {
+          return 0
+        }
+      }
     })
   })
-  p = p.then((res) => {
-    let slice = res.slice(skip, skip + (limit || res.length))
-    return slice
-  })
+  if (skip > 0 || limit > 0) {
+    p = p.then((res) => {
+      // console.log(res)
+      let slice = res.slice(skip, skip + (limit || res.length))
+      return slice
+    })
+  }
   if (deep) {
     p = p.then((res) => res.map(album => getAlbum(album.name)))
   }
   p = p.then((promises) => {
     return Promise.all(promises)
+  })
+  p = p.then((albums) => {
+    store.commit('UPDATE_ALBUMS', albums)
   })
   return p
 }
@@ -165,8 +198,8 @@ export function getColors (resource) {
           })
           .then(() => cb())
           .catch((e) => {
-            cb()
             reject(e)
+            cb()
           })
       })
     } else {
@@ -175,6 +208,7 @@ export function getColors (resource) {
   })
 }
 export function getBackgroundImageCSS (resource) {
+  if (!resource || resource === 'file://') resource = 'static/albumart-placeholder.png'
   return 'background-image: url(' + resource + ')'
 }
 export function cacheAlbumArt (filePath) {
@@ -188,7 +222,7 @@ export function cacheAlbumArt (filePath) {
         let cachePath = join(artsCachePath, hashsum)
         stat(cachePath, (err, res) => {
           if (err && err.code === 'ENOENT') {
-            console.log('Caching art for', filePath)
+            // console.log('Caching art for', filePath)
             writeFile(cachePath, picture.data, (err) => {
               if (err) {
                 reject(err)
@@ -216,10 +250,10 @@ export function cacheAlbumArt (filePath) {
 export function loadAlbumArt (filePath) {
   return db.find({ filePath: filePath }).then((res) => {
     if (res && res.length > 0 && res[0].albumArt) {
-      console.log('Using cached art', res[0].albumArt, 'for', filePath)
+      // console.log('Using cached art', res[0].albumArt, 'for', filePath)
       return 'file://' + res[0].albumArt // we already have an album art
     } else {
-      console.log('Caching art for', filePath)
+      // console.log('Caching art for', filePath)
       return cacheAlbumArt(filePath)
         .then(path => 'file://' + path)
     }
