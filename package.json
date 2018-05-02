@@ -1,8 +1,8 @@
 {
   "name": "blanc",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "tehlordvortex <tehlordvortex@outlook.com>",
-  "description": "A sleek music player",
+  "description": "A sleek and simple music player",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
