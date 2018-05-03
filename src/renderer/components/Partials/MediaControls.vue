@@ -226,14 +226,14 @@ export default {
     MaterialButton
   },
   created () {
-    if (!Player.getAudio()) Player.init()
-    if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
     ipc.removeAllListeners('music-play-pause')
     ipc.removeAllListeners('music-previous')
     ipc.removeAllListeners('music-next')
     ipc.on('music-play-pause', () => {
       if (this.playing) this.pause()
-      else this.play()
+      else {
+        if (this.currentlyPlaying) this.$store.commit('PLAY_MUSIC', this.currentlyPlaying)
+      }
     })
     ipc.on('music-previous', () => {
       this.playPrevious()
@@ -243,6 +243,8 @@ export default {
     })
   },
   mounted () {
+    if (!Player.getAudio()) Player.init()
+    if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
     // if (Howler.usingWebAudio) {
     //   this.ctx = Howler.ctx
     // }
@@ -442,13 +444,11 @@ export default {
       }
     },
     pause (event) {
-      if (this.currentlyPlaying) {
-        if (event) this.$store.commit('PAUSE_MUSIC')
-        Player.pause()
-      }
+      this.$store.commit('PAUSE_MUSIC')
+      Player.pause()
     },
     stop (event) {
-      if (event) this.$store.commit('STOP_MUSIC')
+      this.$store.commit('STOP_MUSIC')
       this.sliderPosition = 0
       this.duration = 0
       Player.stop()
