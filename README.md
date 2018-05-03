@@ -1,6 +1,24 @@
 # blanc
 
-> A sleek music player
+> A sleek and simple music player
+
+## What is it
+
+Blanc is a music player with a focus on being shiny. Which is why it might bring your PC to it's knees while indexing your music.
+
+Once it's done and you start playing music: Hover over the album art for the play button. Avoid the button and click the image for a nice surprise (and also a major shiny factor.)
+
+## So far it supports
+
+1. Playing music
+2. Viewing Albums
+3. Global Media Shortcuts
+
+## Todo
+
+1. Playlists
+2. Viewing Artists
+3. UI Customizability
 
 #### Build Setup
 
