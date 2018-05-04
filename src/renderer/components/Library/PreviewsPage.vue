@@ -34,6 +34,7 @@
           @click="play(item)"
           :showArt="false"
           :data-staggered-index="index"
+          @contextmenu="doContextMenu(item)"
           >
           <p>{{ item.title }}</p>
           <p>{{ item.artist }}</p>
@@ -59,6 +60,9 @@ import MaterialButton from '@/components/Partials/MaterialButton'
 // import db from '@/library.db'
 // import { getAlbums, getLibrary } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
+
+import { remote } from 'electron'
+const { Menu } = remote
 
 // import { getAlbumArt } from '@/lazy-loaders'
 
@@ -120,7 +124,13 @@ export default {
       //   return Promise.all(albums)
       // })
       if (!this.$store.state.Library.albums) return null
-      else return this.$store.state.Library.albums.slice(0, 10)
+      else {
+        let startIndex = Math.floor(Math.random() * this.$store.state.Library.albums.length)
+        let endIndex = Math.floor(10 + (Math.random() * 6)) + startIndex
+        if (endIndex > this.$store.state.Library.albums || endIndex === 0) endIndex = this.$store.state.Library.albums.length
+        let slicedAlbums = this.$store.state.Library.albums.slice(startIndex, endIndex)
+        return slicedAlbums
+      }
     }
   },
   components: {
@@ -158,6 +168,16 @@ export default {
       this.$router.push({
         name: 'library-all-songs-page'
       })
+    },
+    doContextMenu (item) {
+      const template = [{
+        label: 'Play Next',
+        click: () => {
+          this.$store.commit('PLAY_NEXT', item)
+        }
+      }]
+      const menu = Menu.buildFromTemplate(template)
+      menu.popup({async: true})
     }
   }
 }
