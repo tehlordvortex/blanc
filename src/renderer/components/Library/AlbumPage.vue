@@ -187,6 +187,11 @@ export default {
       }
     }
   },
+  watch: {
+    '$route' () {
+      this.skipItems = 0
+    }
+  },
   methods: {
     scrolled (ev) {
       // console.log(ev)
