@@ -291,6 +291,7 @@
     padding: 1em;
     background-color: #3050ff;
     border: none;
+    border-radius: 30px;
     cursor: pointer;
     color: white;
     font-weight: bold;
