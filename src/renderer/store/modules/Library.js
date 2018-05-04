@@ -1,3 +1,5 @@
+import { fieldCaseInsensitiveSort } from '@/lib/utils'
+
 const state = {
   indexProgress: 0,
   indexing: false,
@@ -36,7 +38,7 @@ const mutations = {
     state.library = libs
   },
   UPDATE_ALBUMS (state, albums) {
-    state.albums = albums
+    state.albums = albums.sort(fieldCaseInsensitiveSort('name'))
   }
 }
 
