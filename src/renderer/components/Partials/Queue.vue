@@ -24,8 +24,8 @@
         leave-active-class="animated slideOutRight p-abs"
         v-if="queue && queue.length > 0">
         <list-row
-          v-for="item in queue"
-          :key="item.filePath"
+          v-for="(item, index) in queue"
+          :key="index"
           @click="play(item)"
           @delete="remove(item)"
           class="slide-in-item"
@@ -74,6 +74,7 @@ export default {
     display: flex;
     flex-direction: column;
     min-width: 300px;
+    box-shadow: 0 -2px 5px 0 rgba(0, 0, 0, 0.3), -2px 0 5px 0 rgba(0, 0, 0, 0.3), 2px 0 5px 0 rgba(0, 0, 0, 0.3);
   }
   .spacer {
     flex-grow: 1;
