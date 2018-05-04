@@ -1,12 +1,7 @@
 import { parseFile } from 'music-metadata'
-// import * as mime from 'mime'
-// import Vibrant from 'node-vibrant'
-// import { Quantizer, default as Vibrant } from 'node-vibrant'
-// import ImageColorWorker from './image-color.worker'
 import { remote } from 'electron'
 import { join } from 'path'
 import { stat, mkdir, writeFile } from 'fs'
-// import { parseFile } from 'music-metadata'
 import * as crypto from 'crypto'
 import { albumsDB, default as db } from '@/library.db'
 import Color from 'color'
@@ -14,7 +9,6 @@ import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
 
-// import Color from 'color'
 const app = remote.app
 let userData = app.getPath('userData')
 let artsCachePath = join(userData, 'albumArts')
@@ -32,10 +26,6 @@ let colorQueue = new Queue()
 colorQueue.concurrency = 16
 colorQueue.autostart = true
 
-// let albumsCache = null
-// let libraryCache = null
-// let libState = store.state.Library
-
 export function toColorString (color) {
   if (color.background && color.foreground) return 'background-color:' + color.background + ';color:' + color.foreground
   else return ''
@@ -45,29 +35,9 @@ export function toDataURI (format, buffer) {
   return 'data:image/' + format + ';base64,' + buffer.toString('base64')
 }
 export function getAlbumArt (filePath) {
-  // return new Promise((resolve, reject) => {
-  //   imageQueue.push(cb => {
-  //     if (imageJobs[filePath]) {
-  //       resolve(imageJobs[filePath])
-  //       cb()
-  //       return null
-  //     }
-  // return parseFile(filePath).then(metadata => {
-  //   let picture = metadata.common.picture && metadata.common.picture[0]
-  //   if (picture) {
-  //     let image = 'data:image/' + picture.format + ';base64,' + picture.data.toString('base64')
-  //     // imageJobs[filePath] = image
-  //     return image
-  //   } else {
-  //     return ''
-  //   }
-  // })
-  //   })
-  // })
   return cacheAlbumArt(filePath).then((path) => Promise.resolve('file://' + path))
 }
 export function getAlbum (name) {
-  // if (!libState.refreshed && albumsCache && albumsCache.some(album => album.name === name)) return albumsCache.find(album => album.name === name)
   return new Promise((resolve, reject) => {
     db.cfind({ album: name }).sort({ album: 1, title: 1 }).exec().then((res) => {
       if (!res || res.length === 0) return resolve({})
@@ -183,7 +153,11 @@ export function updateAlbums (newSongs, removed = false) {
             if (!album.art && song.albumArt) {
               album.art = song.albumArt
             }
-            album.artists = album.artists.concat(song.artists)
+            song.artists.forEach(artist => {
+              if (!album.artists.includes(artist)) {
+                album.artists.push(artist)
+              }
+            })
             return db.update({name: album.name}, album)
           } else {
             return Promise.resolve()
@@ -202,7 +176,13 @@ export function updateAlbums (newSongs, removed = false) {
           album = album[0]
           album.songs = album.songs.filter(alSong => alSong.filePath === song.filePath)
           album.artists = album.artists.filter(artist => !song.artists.some(sArtist => sArtist === artist))
-          album.artists = album.songs.reduce((acc, song) => acc.concat(song.artists), [])
+          album.songs.map((song) => {
+            song.artists.forEach(artist => {
+              if (!album.artists.includes(artist)) {
+                album.artists.push(artist)
+              }
+            })
+          })
           return db.update({name: album.name}, album)
         } else return Promise.resolve()
       })
@@ -210,7 +190,6 @@ export function updateAlbums (newSongs, removed = false) {
   }
 }
 export function getAlbums (skip = 0, limit = 0, deep = true) {
-  // if (!libState.refreshedAlbums && albumsCache) return Promise.resolve(albumsCache)
   let albumsPromise = albumsDB.cfind({}).sort({name: 1}).exec()
   albumsPromise.then((albums) => {
     if (albums.length === 0) {
@@ -240,12 +219,6 @@ export function getColors (resource) {
   return new Promise((resolve, reject) => {
     if (resource && resource.startsWith('data')) {
       colorQueue.push(cb => {
-        // let resourceHash = crypto.createHash('md5').update(resource).digest('hex')
-        // if (colorJobs[resourceHash]) {
-        //   resolve(colorJobs[resourceHash])
-        //   cb()
-        //   return null
-        // }
         let buffer = Buffer.from(resource.split(',')[1], 'base64')
         let v = Vibrant.from(buffer).getSwatches()
         v.then((swatches) => {
