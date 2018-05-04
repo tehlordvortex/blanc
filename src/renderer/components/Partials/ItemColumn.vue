@@ -24,7 +24,6 @@ export default {
   }
   .item-column--title {
     font-weight: lighter;
-    color: gray;
     text-transform: uppercase;
     height: 1em;
     margin-bottom: 1em;

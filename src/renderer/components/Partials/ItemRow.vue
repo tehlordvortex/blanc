@@ -30,7 +30,6 @@ export default {
   }
   .item-row--title {
     font-weight: lighter;
-    color: gray;
     text-transform: uppercase;
     margin-bottom: 1em;
     display: block;
