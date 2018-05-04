@@ -140,7 +140,22 @@ export default {
       else return toColorString(this.album.colors)
     },
     albums () {
-      return this.$store.state.Library.albums
+      return [...this.$store.state.Library.albums].sort((a, b) => {
+        if (!a.name && !b.name) return 0
+        if (!a.name && b.name) return -1
+        else if (a.name && !b.name) return 1
+        else {
+          let al = a.name.toLowerCase().trim()
+          let bl = b.name.toLowerCase().trim()
+          if (al < bl) {
+            return -1
+          } else if (al > bl) {
+            return 1
+          } else {
+            return 0
+          }
+        }
+      })
     },
     albumsDisplayed () {
       if (!this.albums) return null
