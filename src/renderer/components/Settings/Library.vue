@@ -116,6 +116,5 @@ export default {
   .section-header {
     text-transform: uppercase;
     font-weight: lighter;
-    color: white;
   }
 </style>
