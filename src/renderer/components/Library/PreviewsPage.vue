@@ -89,40 +89,6 @@ export default {
       return slicedLibrary
     },
     albums () {
-      // return new Promise((resolve, reject) => {
-      //   albumsDB.find({}).sort({ name: 1 }).exec((err, docs) => {
-      //     if (err) reject(err)
-      //     else {
-      //       resolve(docs)
-      //     }
-      //   })
-      // })
-      // return db.cfind({ album: { $nin: ['', null, undefined] } }).sort({ album: 1, title: 1 }).exec().then((docs) => {
-      //   let albums = []
-      //   docs.forEach(doc => {
-      //     if (!albums.some(album => album.name === doc.album)) {
-      //       let album = {
-      //         name: doc.album
-      //       }
-      //       album.colors = doc.colors
-      //       // let p = getAlbumArt(doc.filePath)
-      //       // // console.log(p)
-      //       // albums.push(p.then((art) => {
-      //       //   // console.log('gotten art', art)
-      //       //   if (art && !album.art) {
-      //       //     album.art = art
-      //       //   }
-      //       // }).then(() => album))
-      //       albums.push(album)
-      //     } else {
-      //       let album = albums.find(album => album.name === doc.album)
-      //       if (!album.art && doc.albumArt) {
-      //         album.art = doc.albumArt
-      //       }
-      //     }
-      //   })
-      //   return Promise.all(albums)
-      // })
       if (!this.$store.state.Library.albums) return null
       else {
         let startIndex = Math.floor(Math.random() * this.$store.state.Library.albums.length)

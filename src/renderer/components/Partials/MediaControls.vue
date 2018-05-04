@@ -187,15 +187,8 @@
 <script>
 import { mapState } from 'vuex'
 import settings from '@/lib/settings'
-// import { loadAlbumArt } from '@/lazy-loaders'
-// import { Howl, Howler } from 'howler'
 import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import Player from '@/lib/player'
-// import * as Oscilloscope from 'oscilloscope'
-// import Vibrant from 'node-vibrant'
-// import Color from 'color'
-// import * as fs from 'fs'
-// import * as mime from 'mime'
 
 import SettingsPopupButton from './SettingsPopupButton'
 import Queue from './Queue'
@@ -245,17 +238,6 @@ export default {
   mounted () {
     if (!Player.getAudio()) Player.init()
     if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
-    // if (Howler.usingWebAudio) {
-    //   this.ctx = Howler.ctx
-    // }
-    // let audioCtx = new AudioContext()
-    // let source = audioCtx.createMediaElementSource(Player.getAudio())
-    // this.visualizer = new Oscilloscope(source)
-    // let ctx = this.$refs.visualizer.getContext('2d')
-    // ctx.fillStyle = 'white'
-    // ctx.strokeStyle = 'white'
-    // this.visualizer.animate(ctx)
-    // source.connect(audioCtx.destination)
     Player.getAudio().addEventListener('timeupdate', () => {
       this.position = Player.getCurrentTime()
     })
@@ -379,28 +361,6 @@ export default {
       return (hours !== '00' ? hours + ':' : '') + minutes + ':' + seconds
     },
     createSound (source, loop = true) {
-      // let sound = new Howl({
-      //   src: [source],
-      //   autoplay: true,
-      //   html5: true,
-      //   loop: loop
-      // })
-      // sound.on('load', (id) => {
-      //   if (!this.ctx && Howler.usingWebAudio) {
-      //     this.ctx = Howler.ctx
-      //   }
-      //   if (!this.analyser) {
-      //     this.analyser = this.ctx.createAnalyser()
-      //   }
-      //   console.log(sound._sounds[0]._node)
-      //   this.duration = sound.duration(id)
-      // })
-      // sound.on('stop', (id) => {
-      //   if (sound.nextAnimationFrame) {
-      //     cancelAnimationFrame(sound.nextAnimationFrame)
-      //   }
-      // })
-      // return sound
       source = source.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f')
       source = 'file://' + source
       Player.setSrc(source)
@@ -426,20 +386,6 @@ export default {
             this.duration = this.currentlyPlaying.duration
             this.createSound(this.currentlyPlaying.filePath)
           }).catch(e => console.warn(e))
-          // fs.readFile(this.currentlyPlaying.filePath, (err, contents) => {
-          //   if (err) {
-          //     alert('Couldn\'t play file:' + err)
-          //   } else {
-          //     let dataURI = 'data:' + mime.getType(this.currentlyPlaying.filePath) + ';base64,'
-          //     dataURI += contents.toString('base64')
-          //     this.sound = new Howl({
-          //       src: [dataURI],
-          //       autoplay: true,
-          //       html5: true
-          //     })
-          //   }
-          // })
-          // console.log(encodeURIComponent(this.currentlyPlaying.filePath))
         }
       }
     },
