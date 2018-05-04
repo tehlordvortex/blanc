@@ -6,22 +6,22 @@ import { promiseFiles } from 'node-dir'
 import { parseFile } from 'music-metadata'
 import { posix, sep as pathSep } from 'path'
 import * as mime from 'mime'
-import { toDataURI, getColors, getLibrary, getAlbums } from '@/lazy-loaders'
+import { toDataURI, getColors, getLibrary, getAlbums, updateAlbums, indexAlbums } from '@/lazy-loaders'
 import store from '@/store'
+
 export function removeFiles (libPath) {
   let r = new RegExp('^' + libPath)
-  return db.remove({ filePath: r }, { multi: true }).then(() => {
-    getLibrary()
-    getAlbums()
+  return db.remove({ filePath: r }, { multi: true }).then((removed) => {
+    return Promise.resolve().then(getLibrary).then(getAlbums)
   })
 }
 export function getMetadata (file) {
   return parseFile(file, {native: false, duration: true})
 }
 export function indexFile (file) {
+  let libraryItem = {}
   return getMetadata(file)
     .then(metadata => {
-      let libraryItem = {}
       libraryItem.filePath = file
       libraryItem.fileName = posix.basename(file)
       libraryItem.title = ''
@@ -58,7 +58,12 @@ export function indexFile (file) {
             // libraryItem.colors = undefined
           })
       }
-      res.then(() => db.update({filePath: file}, libraryItem, {upsert: true}))
+      res = res.then(() => {
+        return db.update({filePath: file}, libraryItem, {upsert: true})
+      })
+      res = res.then(() => {
+        return {...libraryItem}
+      })
       return res
     })
 }
@@ -69,22 +74,25 @@ export function addFiles (path) {
       processed: 0,
       total: 0
     }
+    let newSongs = []
     let indexQueue = new Queue()
     indexQueue.concurrency = 16
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0
       indexDetails.total = 0
-
-      getLibrary()
-        .then(getAlbums)
-        .then(() => store.commit('FINISH_INDEXING'))
-        .then(() => resolve())
-        .catch(e => {
-          console.warn(e)
-          store.commit('FINISH_INDEXING')
-          reject(e)
-        })
+      let newSongsWithAlbums = newSongs.filter(song => song.album)
+      console.log(newSongsWithAlbums.length, 'new songs with albums')
+      let p = Promise.resolve()
+      if (newSongs.length > 1) p.then(getLibrary)
+      p.then(() => updateAlbums(newSongsWithAlbums))
+      p.then(() => store.commit('FINISH_INDEXING'))
+      p.then(() => resolve())
+      p.catch(e => {
+        console.warn(e)
+        store.commit('FINISH_INDEXING')
+        reject(e)
+      })
     }
     indexQueue.on('end', finish)
     indexQueue.on('success', (_, job) => {
@@ -103,7 +111,9 @@ export function addFiles (path) {
               .then((amount) => {
                 if (amount === 0) {
                   return indexFile(file)
-                    .then(() => {
+                    .then((song) => {
+                      console.log('addFiles', song)
+                      newSongs.push(song)
                       indexDetails.processed++
                       // console.log(indexDetails)
                       store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
@@ -137,7 +147,7 @@ export default function index (path) {
 
       store.commit('FINISH_INDEXING')
       getLibrary()
-        .then(getAlbums)
+        .then(indexAlbums)
         .then(() => store.commit('FINISH_INDEXING'))
         .then(() => resolve())
         .catch(e => {

@@ -8,7 +8,7 @@ import { join } from 'path'
 import { stat, mkdir, writeFile } from 'fs'
 // import { parseFile } from 'music-metadata'
 import * as crypto from 'crypto'
-import db from '@/library.db'
+import { albumsDB, default as db } from '@/library.db'
 import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
@@ -82,7 +82,6 @@ export function getAlbum (name) {
       let album = {}
       album.name = name
       album.artists = []
-      album.artPath = res[id].filePath
       album.songs = res
       album.colors = null
       album.art = null
@@ -117,8 +116,7 @@ export function getLibrary () {
     store.commit('UPDATE_LIBRARY', library)
   })
 }
-export function getAlbums (skip = 0, limit = 0, deep = true) {
-  // if (!libState.refreshedAlbums && albumsCache) return Promise.resolve(albumsCache)
+export function indexAlbums () {
   let p = db.cfind({ album: { $nin: ['', null, undefined] } })
   p = p.exec().then((docs) => {
     let albums = []
@@ -151,23 +149,92 @@ export function getAlbums (skip = 0, limit = 0, deep = true) {
       }
     })
   })
-  if (skip > 0 || limit > 0) {
-    p = p.then((res) => {
-      // console.log(res)
-      let slice = res.slice(skip, skip + (limit || res.length))
-      return slice
-    })
-  }
-  if (deep) {
-    p = p.then((res) => res.map(album => getAlbum(album.name)))
-  }
+  p = p.then((res) => res.map(album => getAlbum(album.name)))
   p = p.then((promises) => {
     return Promise.all(promises)
   })
   p = p.then((albums) => {
-    store.commit('UPDATE_ALBUMS', albums)
+    Promise.all(albums.map(album => {
+      return albumsDB.update({name: album.name}, album, {upsert: true})
+    })).then(() => store.commit('UPDATE_ALBUMS', albums))
   })
   return p
+}
+export function updateAlbums (newSongs, removed = false) {
+  if (!removed) {
+    return Promise.all(newSongs.map(song => {
+      return albumsDB.find({ album: song.album }).then((album) => {
+        if (album.length === 0) {
+          let album = {
+            name: song.album,
+            colors: song.colors,
+            art: song.albumArt,
+            artists: song.artists,
+            songs: [song]
+          }
+          return albumsDB.insert(album)
+        } else {
+          album = album[0]
+          if (!album.songs.some(alSong => alSong.filePath === song.filePath)) {
+            album.songs.push(song)
+            if (!album.colors && song.colors) {
+              album.colors = song.colors
+            }
+            if (!album.art && song.albumArt) {
+              album.art = song.albumArt
+            }
+            album.artists = album.artists.concat(song.artists)
+            return db.update({name: album.name}, album)
+          } else {
+            return Promise.resolve()
+          }
+        }
+      })
+    })).then(() => {
+      return albumsDB.find({}).then(albums => {
+        store.commit('UPDATE_ALBUMS', albums)
+      })
+    })
+  } else {
+    return Promise.all(newSongs.map(song => {
+      return albumsDB.find({name: song.album}).then(album => {
+        if (album.length > 0) {
+          album = album[0]
+          album.songs = album.songs.filter(alSong => alSong.filePath === song.filePath)
+          album.artists = album.artists.filter(artist => !song.artists.some(sArtist => sArtist === artist))
+          album.artists = album.songs.reduce((acc, song) => acc.concat(song.artists), [])
+          return db.update({name: album.name}, album)
+        } else return Promise.resolve()
+      })
+    }))
+  }
+}
+export function getAlbums (skip = 0, limit = 0, deep = true) {
+  // if (!libState.refreshedAlbums && albumsCache) return Promise.resolve(albumsCache)
+  let albumsPromise = albumsDB.cfind({}).sort({name: 1}).exec()
+  albumsPromise.then((albums) => {
+    if (albums.length === 0) {
+      console.log('No albums')
+      return indexAlbums()
+    } else {
+      return Promise.all(albums.map(album => {
+        return db.find({ album: album.name }).then((docs) => {
+          return docs.map(song => {
+            if (!album.songs.includes(song)) {
+              album.songs.push(song)
+            }
+            if (!album.colors && song.colors) {
+              album.colors = song.colors
+            }
+            if (!album.art && song.albumArt) {
+              album.art = song.albumArt
+            }
+            return db.update({name: album.name}, album)
+          })
+        })
+      }))
+    }
+  })
 }
 export function getColors (resource) {
   return new Promise((resolve, reject) => {
