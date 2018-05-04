@@ -57,19 +57,26 @@ import StaggeredSlideIn from '@/components/Transitions/StaggeredSlideIn'
 import ItemRow from '@/components/Partials/ItemRow'
 import ItemColumn from '@/components/Partials/ItemColumn'
 import MaterialButton from '@/components/Partials/MaterialButton'
-// import db from '@/library.db'
-// import { getAlbums, getLibrary } from '@/lazy-loaders'
+import { getSong } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
-
 import { remote } from 'electron'
-const { Menu } = remote
 
-// import { getAlbumArt } from '@/lazy-loaders'
+const { Menu } = remote
 
 export default {
   name: 'library-landing-page',
   data: () => ({
   }),
+  asyncComputed: {
+    library () {
+      if (!this.rawLibrary) return null
+      let startIndex = Math.floor(Math.random() * (this.rawLibrary.length - 30))
+      let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
+      if (endIndex > this.rawLibrary.length || endIndex === 0) endIndex = this.rawLibrary.length
+      let slicedLibrary = this.rawLibrary.slice(startIndex, endIndex)
+      return Promise.all(slicedLibrary.map(song => getSong(song)))
+    }
+  },
   computed: {
     currentlyPlaying () {
       return this.$store.state.Music.currentlyPlaying
@@ -79,14 +86,6 @@ export default {
     },
     rawLibrary () {
       return this.$store.state.Library.library
-    },
-    library () {
-      if (!this.rawLibrary) return null
-      let startIndex = Math.floor(Math.random() * (this.rawLibrary.length - 30))
-      let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-      if (endIndex > this.rawLibrary.length || endIndex === 0) endIndex = this.rawLibrary.length
-      let slicedLibrary = this.rawLibrary.slice(startIndex, endIndex)
-      return slicedLibrary
     },
     albums () {
       if (!this.$store.state.Library.albums) return null

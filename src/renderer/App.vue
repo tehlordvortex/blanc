@@ -14,11 +14,8 @@
 <script>
   import MediaControls from './components/Partials/MediaControls'
   import Chrome from './components/Chrome'
-  import { getLibrary, getAlbums } from '@/lazy-loaders'
   import { mapState } from 'vuex'
   import { ipcRenderer as ipc } from 'electron'
-  import { addFiles } from '@/indexer.lib'
-  import settings from '@/lib/settings'
 
   export default {
     name: 'blanc',
@@ -27,19 +24,17 @@
       MediaControls
     },
     created () {
-      if (!this.library) getLibrary()
-      if (!this.albums) getAlbums()
       if (this.devMode) {
         ipc.send('open-dev-tools')
       }
-      settings.libraries.map(library => addFiles(library))
     },
     computed: mapState({
       showMusicBar: state => state.App.showMusicBar,
       showChrome: state => state.App.showChrome,
       library: state => state.Library.library,
       albums: state => state.Library.albums,
-      devMode: state => state.App.devMode
+      devMode: state => state.App.devMode,
+      indexPercent: state => state.Library.indexProgress * 100
     }),
     watch: {
       devMode (newVal) {
@@ -48,6 +43,11 @@
         } else {
           ipc.send('close-dev-tools')
         }
+      },
+      indexPercent (value) {
+        // avoid Math.Infinity
+        if (value > 0) ipc.send('set-progress', value / 100)
+        else ipc.send('set-progress', value)
       }
     }
   }

@@ -80,9 +80,11 @@
   // import IndexerWorker from '@/indexer.worker'
   // import { loadAlbumArt, computedStyle } from '@/lazy-loaders'
   import db from '@/library.db'
-  import index from '@/indexer.lib'
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
+  import { getLibrary, getAlbums } from '@/lazy-loaders'
+  import { addFiles, index } from '@/indexer.lib'
+  import { mapState } from 'vuex'
   const app = remote.app
   window.db = db
   const defLibraryPath = app.getPath('music') || ''
@@ -99,17 +101,12 @@
     components: {
       ProgressBar
     },
-    computed: {
-      indexPercent () {
-        return this.$store.state.Library.indexProgress * 100
-      }
-    },
+    computed: mapState({
+      indexPercent: state => state.Library.indexProgress * 100,
+      library: state => state.Library.library,
+      albums: state => state.Library.albums
+    }),
     watch: {
-      indexPercent (value) {
-        // avoid Math.Infinity
-        if (value > 0) ipcRenderer.send('set-progress', value / 100)
-        else ipcRenderer.send('set-progress', value)
-      },
       doneIndexing (value) {
         if (value) this.leavePage(false)
       }
@@ -118,7 +115,15 @@
       this.$store.commit('HIDE_CHROME')
       this.$store.commit('HIDE_MUSIC_BAR')
       if (settings.libraries.length === 0) this.showFirstStart = true
-      else this.leavePage()
+      else {
+        if (!this.library || typeof this.library[0] !== 'string') {
+          getLibrary().then(getAlbums).then(() => {
+            Promise.all(settings.libraries.map(library => addFiles(library))).then(() => this.leavePage())
+          })
+        } else {
+          Promise.all(settings.libraries.map(library => addFiles(library))).then(() => this.leavePage())
+        }
+      }
     },
     methods: {
       dragOver (event) {

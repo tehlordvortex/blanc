@@ -8,6 +8,7 @@ import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
+import { fieldCaseInsensitiveSort } from './lib/utils'
 
 const app = remote.app
 let userData = app.getPath('userData')
@@ -37,22 +38,25 @@ export function toDataURI (format, buffer) {
 export function getAlbumArt (filePath) {
   return cacheAlbumArt(filePath).then((path) => Promise.resolve('file://' + path))
 }
+export function getSong (id) {
+  return db.findOne({_id: id})
+}
+export function getSongs (albumName) {
+  return albumsDB.find({name: albumName}).then(album => {
+    if (album.length === 0) return []
+    else {
+      return Promise.all(album[0].songs.map(song => db.findOne({_id: song})))
+    }
+  })
+}
 export function getAlbum (name) {
   return new Promise((resolve, reject) => {
     db.cfind({ album: name }).sort({ album: 1, title: 1 }).exec().then((res) => {
       if (!res || res.length === 0) return resolve({})
-      let id = 0
-      while (!res[id]) {
-        if (id >= res.length) {
-          console.log('All empty cells in result?', res, name)
-          return
-        }
-        id++
-      }
       let album = {}
       album.name = name
       album.artists = []
-      album.songs = res
+      album.songs = res.map(song => song['_id'])
       album.colors = null
       album.art = null
       let resolves = []
@@ -82,8 +86,8 @@ export function getAlbum (name) {
 }
 
 export function getLibrary () {
-  return db.find({}).then(library => {
-    store.commit('UPDATE_LIBRARY', library)
+  return db.find({}, {_id: 1}).then(library => {
+    store.commit('UPDATE_LIBRARY', library.map(song => song._id))
   })
 }
 export function indexAlbums () {
@@ -102,22 +106,7 @@ export function indexAlbums () {
     return albums
   })
   p = p.then((albums) => {
-    return albums.sort((a, b) => {
-      if (!a.name && !b.name) return 0
-      if (!a.name && b.name) return -1
-      else if (a.name && !b.name) return 1
-      else {
-        let al = a.name.toLowerCase().trim()
-        let bl = b.name.toLowerCase().trim()
-        if (al < bl) {
-          return -1
-        } else if (al > bl) {
-          return 1
-        } else {
-          return 0
-        }
-      }
-    })
+    return albums.sort(fieldCaseInsensitiveSort('name'))
   })
   p = p.then((res) => res.map(album => getAlbum(album.name)))
   p = p.then((promises) => {
@@ -140,13 +129,13 @@ export function updateAlbums (newSongs, removed = false) {
             colors: song.colors,
             art: song.albumArt,
             artists: song.artists,
-            songs: [song]
+            songs: [song['_id']]
           }
           return albumsDB.insert(album)
         } else {
           album = album[0]
-          if (!album.songs.some(alSong => alSong.filePath === song.filePath)) {
-            album.songs.push(song)
+          if (!album.songs.includes(song['_id'])) {
+            album.songs.push(song['_id'])
             if (!album.colors && song.colors) {
               album.colors = song.colors
             }
@@ -174,7 +163,7 @@ export function updateAlbums (newSongs, removed = false) {
       return albumsDB.find({name: song.album}).then(album => {
         if (album.length > 0) {
           album = album[0]
-          album.songs = album.songs.filter(alSong => alSong.filePath === song.filePath)
+          album.songs = album.songs.filter(alSong => alSong === song['_id'])
           album.artists = album.artists.filter(artist => !song.artists.some(sArtist => sArtist === artist))
           album.songs.map((song) => {
             song.artists.forEach(artist => {
@@ -199,8 +188,8 @@ export function getAlbums (skip = 0, limit = 0, deep = true) {
       return Promise.all(albums.map(album => {
         return db.find({ album: album.name }).then((docs) => {
           return docs.map(song => {
-            if (!album.songs.includes(song)) {
-              album.songs.push(song)
+            if (!album.songs.includes(song['_id'])) {
+              album.songs.push(song['_id'])
             }
             if (!album.colors && song.colors) {
               album.colors = song.colors

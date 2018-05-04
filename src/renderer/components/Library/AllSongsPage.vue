@@ -45,6 +45,7 @@ import { TILE_HEIGHT, CHUNKS_TO_DISPLAY, TILES_PER_CHUNK, CHUNK_HEIGHT } from '@
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
 import { remote } from 'electron'
+import { getSong } from '@/lazy-loaders'
 const { Menu } = remote
 // import db from '@/library.db'
 // import { getLibrary } from '@/lazy-loaders'
@@ -119,9 +120,6 @@ export default {
         let transformDistance = (this.skipItems * TILE_HEIGHT * TILES_PER_CHUNK)
         return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
       })
-    },
-    library () {
-      return this.$store.state.Library.library
     }
   },
   methods: {
@@ -156,6 +154,11 @@ export default {
       }]
       const menu = Menu.buildFromTemplate(template)
       menu.popup({async: true})
+    }
+  },
+  asyncComputed: {
+    library () {
+      return Promise.all(this.$store.state.Library.library.map(song => getSong(song)))
     }
   },
   watch: {

@@ -49,7 +49,7 @@
               v-if="album"
             >
               <music-item-tile
-                v-for="(item, index) in album.songs"
+                v-for="(item, index) in albumSongs"
                 :key="item.filePath"
                 :showArt="false"
                 :item="item"
@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { getBackgroundImageCSS, toColorString } from '@/lazy-loaders'
+import { getBackgroundImageCSS, toColorString, getSongs } from '@/lazy-loaders'
 // import db from '@/library.db'
 import MusicItemTile from '@/components/Partials/MusicItemTile'
 import AlbumArtCard from '@/components/Partials/AlbumArtCard'
@@ -123,6 +123,10 @@ export default {
       if (!this.$route.params.album) return null
       if (!this.albums) return null
       else return this.albums.find(album => album.name === this.$route.params.album)
+    },
+    albumSongs () {
+      if (!this.album) return null
+      else return getSongs(this.album.name)
     },
     image () {
       if (!this.album) return Promise.resolve('')
