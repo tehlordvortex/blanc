@@ -52,24 +52,31 @@ const mutations = {
     }
   },
   PLAY_NEXT (state, music) {
-    state.queue.push(music)
+    if (!state.currentlyPlaying) state.queue.push(music)
+    else state.queue.splice(state.currentlyPlayingIndex, 1, state.currentlyPlaying, music)
   },
   CHANGE_VOLUME (state, volume) {
     state.volume = volume
   },
   PLAY_NEXT_SONG (state) {
-    if (self.loop !== 'all' && state.currentlyPlayingIndex !== state.queue.length - 1) {
+    console.log(state.loop, state.currentlyPlayingIndex)
+    if (state.loop !== 'all' && state.currentlyPlayingIndex !== state.queue.length - 1) {
       state.currentlyPlaying = state.queue[++state.currentlyPlayingIndex]
-    } else if (self.loop === 'all') {
-      state.currentlyPlayingIndex = 0
-      state.currentlyPlaying = state.queue[0]
+    } else if (state.loop === 'all') {
+      if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+      // else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+      else state.currentlyPlayingIndex++
+      state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
     }
   },
   PLAY_PREVIOUS_SONG (state) {
-    if (self.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
+    console.log(state.loop, state.currentlyPlayingIndex)
+    if (state.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
       state.currentlyPlaying = state.queue[--state.currentlyPlayingIndex]
-    } else if (self.loop === 'all') {
-      state.currentlyPlayingIndex = state.queue.length - 1
+    } else if (state.loop === 'all') {
+      if (state.currentlyPlayingIndex === 0) state.currentlyPlayingIndex = state.queue.length - 1
+      else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+      else state.currentlyPlayingIndex = state.queue.length - 1
       state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
     }
   },
