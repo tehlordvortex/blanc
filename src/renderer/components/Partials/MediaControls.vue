@@ -357,7 +357,7 @@ export default {
     },
     currentlyPlaying (newVal) {
       if (newVal) {
-        this.play()
+        if (this.playing) this.play()
       } else {
         this.stop()
       }
@@ -571,7 +571,7 @@ export default {
     height: 256px;
   }
   .media-controls-details {
-    max-width: 300px;
+    width: 250px;
     margin-left: 1em;
     cursor: pointer;
     /* font-size: 0.8em; */
@@ -604,7 +604,7 @@ export default {
   }
   .media-controls-volume-slider {
     position: absolute;
-    left: -120px;
+    left: -105px;
     top: 0;
   }
   .media-controls-seeker {
@@ -743,11 +743,11 @@ export default {
     transition: all .5s ease;
   }
   .vertical-slide-fade-enter, .vertical-slide-fade-leave-to {
-    transform: translateY(-10px) rotate(-90deg);
+    transform: translateY(-10px);
   }
   .vertical-slide-fade-enter-to
   /* .slide-fade-leave-active below version 2.1.8 */ {
-    transform: translateY(0px) rotate(-90deg);
+    transform: translateY(0px);
     opacity: 1;
   }
 </style>
