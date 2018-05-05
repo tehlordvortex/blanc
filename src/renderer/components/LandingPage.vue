@@ -83,7 +83,7 @@
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
   import { getLibrary, getAlbums } from '@/lazy-loaders'
-  import { addFiles, index } from '@/indexer.lib'
+  import { addFiles, default as index } from '@/indexer.lib'
   import { mapState } from 'vuex'
   const app = remote.app
   window.db = db
