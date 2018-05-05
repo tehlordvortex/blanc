@@ -105,6 +105,8 @@ export default {
     transition: background-color 0.5s;
     cursor: pointer;
     align-items: center;
+    width: 100%;
+    margin: 0;
   }
   .music-item-tile--active-indicator {
     width: 42px;
@@ -121,9 +123,9 @@ export default {
     flex-shrink: 0;
   }
   .music-item-tile--details {
-    flex-grow: 1;
-    padding: 0 1em;
-    max-width: 85%;
+    flex-shrink: 0;
+    padding: 0;
+    width: 80%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -131,7 +133,7 @@ export default {
   }
   .music-item-tile--details p {
     margin: 0;
-    width: 100%;
+    max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -141,7 +143,7 @@ export default {
     align-items: center;
     justify-content: center;
     flex-grow: 1;
-    max-width: 10%;
+    min-width: 30px;
   }
   .icon-button {
     background-color: transparent;

@@ -58,7 +58,7 @@
                 :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
                 :data-index="index"
               >
-                {{ item.title || item.fileName }}
+                <p>{{ item.title || item.fileName }}</p>
               </music-item-tile>
             </transition-group>
         </div>
@@ -236,7 +236,7 @@ export default {
     width: 100%;
     height: 100%;
     display: flex;
-
+    /* flex-direction: column; */
   }
   .album-banner {
     min-height: 160px;
@@ -255,8 +255,7 @@ export default {
     display: flex;
     flex-direction: row;
     padding: 5px;
-    min-width: 300px;
-    max-width: 400px;
+    max-width: 300px;
     margin: 1em;
   }
   .album-banner-fullimage {
@@ -276,20 +275,20 @@ export default {
     height: 128px;
     background-position: center;
     background-size: cover;
-    margin: 0 1em;
+    margin-right: 5px;
     flex-shrink: 0;
   }
 
   .album-songs {
-    width: 80%;
     height: 100%;
-    margin: 0 auto;
+    width: 100%;
+    /* margin: 0 auto; */
     overflow-y: auto;
     overflow-x: hidden;
   }
 
   .album-details p {
-    max-width: 200px;
+    max-width: 150px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
