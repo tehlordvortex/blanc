@@ -190,7 +190,7 @@ export default {
     },
     play (item) {
       // console.log('Playing', item)
-      this.$store.commit('SET_QUEUE', this.album.songs)
+      this.$store.commit('SET_QUEUE', this.albumSongs)
       this.$store.commit('PLAY_MUSIC', item)
     },
     pause () {
