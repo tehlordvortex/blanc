@@ -1,6 +1,7 @@
 <template>
   <div id="app" @dragover.prevent @dragenter.prevent @dragleave.prevent @drop.prevent :class="showChrome ? 'pad-body' : ''">
     <chrome :visible="showChrome" />
+      <navbar v-if="showChrome" />
     <transition
       mode="out-in"
       enter-active-class="animated slideInLeft"
@@ -16,12 +17,14 @@
   import Chrome from './components/Chrome'
   import { mapState } from 'vuex'
   import { ipcRenderer as ipc } from 'electron'
+  import Navbar from './components/Partials/Navbar'
 
   export default {
     name: 'blanc',
     components: {
       Chrome,
-      MediaControls
+      MediaControls,
+      Navbar
     },
     created () {
       if (this.devMode) {
