@@ -65,6 +65,7 @@
       </template>
       <template v-else>
         <item-column title="albums" class="fill-height">
+          <search-bar v-model="searchString" />
           <template v-if="albumsDisplayed && albumsDisplayed.length > 0">
             <div class="albums-wrapper" @scroll="scrolled">
               <transition-group
@@ -109,6 +110,7 @@ import AlbumArtCard from '@/components/Partials/AlbumArtCard'
 import BackButton from '@/components/Partials/BackButton'
 import ItemColumn from '@/components/Partials/ItemColumn'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
+import SearchBar from '@/components/Partials/SearchBar'
 import { ALBUM_TILE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_TILES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
@@ -116,7 +118,8 @@ import flatten from 'lodash.flatten'
 export default {
   name: 'album-page',
   data: () => ({
-    skipItems: 0
+    skipItems: 0,
+    searchString: ''
   }),
   asyncComputed: {
     album () {
@@ -144,7 +147,12 @@ export default {
       else return toColorString(this.album.colors)
     },
     albums () {
-      return this.$store.state.Library.albums
+      return this.$store.state.Library.albums.filter(album => {
+        let criteria = []
+        criteria.push(album.name)
+        criteria = criteria.concat(album.artists)
+        return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
+      })
     },
     albumsDisplayed () {
       if (!this.albums) return null
@@ -213,6 +221,9 @@ export default {
           album: item.name
         }
       })
+    },
+    search (str) {
+      this.searchString = str
     }
   },
   components: {
@@ -220,7 +231,8 @@ export default {
     BackButton,
     AlbumArtCard,
     ItemColumn,
-    LoadingIndicator
+    LoadingIndicator,
+    SearchBar
   }
 }
 </script>
