@@ -5,14 +5,14 @@
       <span class="spacer"></span>
       <i
         class="material-icons close-button"
-        @click="clear"
+        @click.stop="clear"
       >
         delete
       </i>
       <i 
         class="material-icons close-button"
         v-if="!hideCloseButton"
-        @click="$emit('close', $event)"
+        @click.stop="$emit('close', $event)"
         >
         clear
       </i>
