@@ -99,8 +99,16 @@ export default {
       // console.log(this.art)
       if (this.art) return this.art
       if (this.artPath) return Promise.resolve('file://' + this.artPath)
-      if (!this.filePath) return Promise.resolve('')
-      else return loadAlbumArt(this.filePath)
+      if (!this.filePath) return Promise.resolve('static/albumart-placeholder.png')
+      else {
+        return loadAlbumArt(this.filePath).then((path) => {
+          if (path === 'file://' || !path) {
+            return __static + 'albumart-placehoder.png'
+          } else {
+            return path
+          }
+        })
+      }
     },
     computedImageStyle () {
       // console.log(this.image)
@@ -127,10 +135,10 @@ export default {
 <style scoped lang="scss">
   .card {
     /* border-radius: 5px; */
-    background-color: #666;
+    background-color: #333;
     color: white;
     margin: 1em;
-    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: row;
     padding: 0;
