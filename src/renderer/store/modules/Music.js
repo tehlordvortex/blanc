@@ -84,8 +84,7 @@ const mutations = {
         state.currentlyPlaying = state.queue[0]
       } else {
         if (state.currentlyPlayingIndex === 0) state.currentlyPlayingIndex = state.queue.length - 1
-        else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
-        else state.currentlyPlayingIndex = state.queue.length - 1
+        else state.currentlyPlayingIndex--
         state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
       }
     }
