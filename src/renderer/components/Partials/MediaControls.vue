@@ -278,6 +278,7 @@ export default {
     Player.getAudio().addEventListener('ended', ($e) => {
       if (this.loop === 'one') this.play()
       else if (this.loop === 'all') this.playNext()
+      else this.stop()
     })
     this.audioElement = Player.getAudio()
   },
@@ -717,7 +718,8 @@ export default {
     justify-content: center;
   }
   .media-controls-fullscreen .media-controls-details p {
-    margin: 10px 0;
+    margin: 5px auto;
+    max-width: 85%;
   }
   .media-controls-fullscreen .media-controls-seeker {
     min-width: 80%;
