@@ -83,7 +83,6 @@
           <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
         </transition>
       </div>
-      <settings-popup-button />
     </div>
     <transition
       name="animated-slide-in"
@@ -116,11 +115,11 @@
             ></av-circle>
           </keep-alive>
           <div class="media-controls-details--items">
-            <div v-if="currentlyPlaying">
+            <template v-if="currentlyPlaying">
               <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
               <p class="media-controls-details--artist">{{ currentlyPlaying.artist }}</p>
               <p class="media-controls-details--album">{{ currentlyPlaying.album }}</p>
-            </div>
+            </template>
             <p v-else>Nothing is playing.</p>
             <div class="media-controls-seeker">
               <material-button
@@ -186,15 +185,15 @@
                 fullscreen
               </i>
             </div>
-            <transition
-              name="animated-slide-in"
-              enter-active-class="animated slideInUp"
-              leave-active-class="animated slideOutDown">
-              <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
-            </transition>
           </div>
           <!-- <canvas ref="visualizer"></canvas> -->
         </div>
+        <transition
+          name="animated-slide-in"
+          enter-active-class="animated slideInUp"
+          leave-active-class="animated slideOutDown">
+          <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
+        </transition>
       </div>
     </transition>
   </div>
@@ -206,7 +205,6 @@ import settings from '@/lib/settings'
 import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import Player from '@/lib/player'
 
-import SettingsPopupButton from './SettingsPopupButton'
 import Queue from './Queue'
 import VolumeSlider from './VolumeSlider'
 import MaterialButton from './MaterialButton'
@@ -230,7 +228,6 @@ export default {
     audioElement: null
   }),
   components: {
-    SettingsPopupButton,
     Queue,
     VolumeSlider,
     MaterialButton
@@ -550,6 +547,12 @@ export default {
     color: white;
     position: relative;
   }
+
+  @media screen and (max-width: 700px) {
+    .media-controls-details {
+      width: 150px;
+    }
+  }
   .media-controls-details--title {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
@@ -557,10 +560,11 @@ export default {
     margin: 1px 0;
     color: inherit;
     text-decoration: none;
-    max-width: 200px;
+    max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    display: block;
     /* padding: 1px; */
   }
   /* .media-controls-details p {
