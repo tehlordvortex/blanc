@@ -9,7 +9,7 @@
         @keyup.enter="playing ? pause($event) : play($event)"
         >{{ playing ? 'pause' : 'play_arrow' }}</i>
     </div>
-    <div class="media-controls-details">
+    <div class="media-controls-details" ref="details">
       <div v-if="currentlyPlaying">
         <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
         <p class="media-controls-details--artist" v-if="currentlyPlaying.artist">{{ currentlyPlaying.artist }}</p>
@@ -100,83 +100,99 @@
         <div class="media-controls-fullscreen--background" :style="computedImageStyle"></div>
         <!-- <div class="media-controls-art media-controls-art--large" :style="computedImageStyle">
         </div> -->
-        <div class="media-controls-details" @click.stop>
-          <div v-if="currentlyPlaying">
-            <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
-            <p class="media-controls-details--artist">{{ currentlyPlaying.artist }}</p>
-            <p class="media-controls-details--album">{{ currentlyPlaying.album }}</p>
-          </div>
-          <p v-else>Nothing is playing.</p>
-          <div class="media-controls-seeker">
-            <material-button
-              icon
-              flat
-              @click="playPrevious"
-            >
-              <i class="material-icons">skip_previous</i>
-            </material-button>
-            <span>{{ positionText }}</span>
-            <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1"/>
-            <span>{{ durationText }}</span>
-            <material-button
-              icon
-              flat
-              @click="playNext"
-            >
-              <i class="material-icons">skip_next</i>
-            </material-button>
-          </div>
-          <div class="media-controls-actions">
-            <i
-              class="material-icons icon-button"
-              @click.stop="playing ? pause($event) : play($event)"
-              >
-              {{ playing ? 'pause' : 'play_arrow' }}
-            </i>
-            <material-button
-              icon
-              flat
-              @click="toggleLoop"
-            >
-              <i class="material-icons">{{ loopIcon }}</i>
-            </material-button>
-            <div class="media-controls-volume-slider-container">
+        <div class="media-controls-details" @click.stop ref="fsdetails">
+          <keep-alive>
+            <av-circle
+              v-if="audioElement"
+              :canv-width="500"
+              :canv-height="500"
+
+              :progress="false"
+              :rotate-graph="true"
+              :outline-width="0"
+              :bar-color="visualizerBarColor"
+              canv-class="media-controls-details--background"
+              :audio-element="audioElement"
+            ></av-circle>
+          </keep-alive>
+          <div class="media-controls-details--items">
+            <div v-if="currentlyPlaying">
+              <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
+              <p class="media-controls-details--artist">{{ currentlyPlaying.artist }}</p>
+              <p class="media-controls-details--album">{{ currentlyPlaying.album }}</p>
+            </div>
+            <p v-else>Nothing is playing.</p>
+            <div class="media-controls-seeker">
               <material-button
-                @click="showVolume = !showVolume"
                 icon
                 flat
+                @click="playPrevious"
               >
-                <i class="material-icons">{{ this.volume > 0.5 ? 'volume_up' : 'volume_down' }}</i>
+                <i class="material-icons">skip_previous</i>
               </material-button>
-              <transition
-                appear
-                name="animated-vertical-slide-fade"
-                enter-active-class="animated fadeInLeft"
-                leave-active-class="animated fadeOutLeft"
+              <span>{{ positionText }}</span>
+              <input @click.stop type="range" min="0" :max="duration" v-model="sliderPosition" step="1"/>
+              <span>{{ durationText }}</span>
+              <material-button
+                icon
+                flat
+                @click="playNext"
               >
-                <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
-              </transition>
+                <i class="material-icons">skip_next</i>
+              </material-button>
             </div>
-            <i
-              class="material-icons icon-button"
-              @click.stop="showFullscreenQueue = !showFullscreenQueue"
-              tabindex="0"
+            <div class="media-controls-actions">
+              <i
+                class="material-icons icon-button"
+                @click.stop="playing ? pause($event) : play($event)"
+                >
+                {{ playing ? 'pause' : 'play_arrow' }}
+              </i>
+              <material-button
+                icon
+                flat
+                @click="toggleLoop"
               >
-              queue_music
-            </i>
-            <i
-            class="icon-button material-icons"
-            @click.stop="toggleWindowFullscreen"
-            >
-              fullscreen
-            </i>
+                <i class="material-icons">{{ loopIcon }}</i>
+              </material-button>
+              <div class="media-controls-volume-slider-container">
+                <material-button
+                  @click="showVolume = !showVolume"
+                  icon
+                  flat
+                >
+                  <i class="material-icons">{{ this.volume > 0.5 ? 'volume_up' : 'volume_down' }}</i>
+                </material-button>
+                <transition
+                  appear
+                  name="animated-vertical-slide-fade"
+                  enter-active-class="animated fadeInLeft"
+                  leave-active-class="animated fadeOutLeft"
+                >
+                  <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
+                </transition>
+              </div>
+              <i
+                class="material-icons icon-button"
+                @click.stop="showFullscreenQueue = !showFullscreenQueue"
+                tabindex="0"
+                >
+                queue_music
+              </i>
+              <i
+              class="icon-button material-icons"
+              @click.stop="toggleWindowFullscreen"
+              >
+                fullscreen
+              </i>
+            </div>
+            <transition
+              name="animated-slide-in"
+              enter-active-class="animated slideInUp"
+              leave-active-class="animated slideOutDown">
+              <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
+            </transition>
           </div>
-          <transition
-            name="animated-slide-in"
-            enter-active-class="animated slideInUp"
-            leave-active-class="animated slideOutDown">
-            <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
-          </transition>
           <!-- <canvas ref="visualizer"></canvas> -->
         </div>
       </div>
@@ -210,7 +226,8 @@ export default {
     windowFullscreen: false,
     showQueue: false,
     showFullscreenQueue: false,
-    showVolume: false
+    showVolume: false,
+    audioElement: null
   }),
   components: {
     SettingsPopupButton,
@@ -265,6 +282,7 @@ export default {
       if (this.loop === 'one') this.play()
       else if (this.loop === 'all') this.playNext()
     })
+    this.audioElement = Player.getAudio()
   },
   computed: {
     ...mapState({
@@ -298,6 +316,13 @@ export default {
           return 'repeat_one'
         case 'none':
           return 'remove'
+      }
+    },
+    visualizerBarColor () {
+      if (this.currentlyPlaying && this.currentlyPlaying.colors) {
+        return ['#FFF', this.currentlyPlaying.colors.background]
+      } else {
+        return null
       }
     }
   },
@@ -470,7 +495,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
   .media-controls {
     height: 70px;
     position: fixed;
@@ -523,11 +548,7 @@ export default {
     /* font-size: 0.8em; */
     margin-right: 1em; 
     color: white;
-  }
-  @media only screen and (max-width: 900px) {
-    .media-controls-details {
-      max-width: 200px;
-    }
+    position: relative;
   }
   .media-controls-details--title {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -659,10 +680,37 @@ export default {
     flex-grow: 0;
   }
   .media-controls-fullscreen .media-controls-details {
-    min-width: 500px;
-    background-color: rgba(0, 0, 0, 0.5);
+    width: 500px;
+    height: 500px;
+    background-color: transparent;
     color: white;
-    padding: 1em;
+    padding: 0;
+    margin: 0;
+  }
+  .media-controls-details--background {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+
+  .media-controls-details--items {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.3);
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    /* height: 100%; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   .media-controls-fullscreen .media-controls-details p {
     margin: 10px 0;
@@ -695,5 +743,9 @@ export default {
   /* .slide-fade-leave-active below version 2.1.8 */ {
     transform: translateY(0px);
     opacity: 1;
+  }
+
+  .media-controls-fullscreen .full-width {
+    width: 100%;
   }
 </style>

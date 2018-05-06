@@ -70,6 +70,7 @@
     "sweet-modal-vue": "^2.0.0",
     "vue": "^2.3.3",
     "vue-async-computed": "^3.3.1",
+    "vue-audio-visual": "git+https://git@github.com/tehlordvortex/vue-audio-visual.git",
     "vue-electron": "^1.0.6",
     "vue-router": "^2.5.3",
     "vue-simple-progress": "^1.0.2",

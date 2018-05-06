@@ -8647,6 +8647,12 @@ vue-async-computed@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/vue-async-computed/-/vue-async-computed-3.3.1.tgz#9d754e649ccabef97e7e3932f1bc097a66a23db7"
 
+"vue-audio-visual@git+https://git@github.com/tehlordvortex/vue-audio-visual.git":
+  version "1.1.0"
+  resolved "git+https://git@github.com/tehlordvortex/vue-audio-visual.git#3713865ecf4791c088e201ae4ce3644088629a94"
+  dependencies:
+    vue "^2.5.2"
+
 vue-electron@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/vue-electron/-/vue-electron-1.0.6.tgz#e798e03180b8933539defe31f92e53b9242b9406"
