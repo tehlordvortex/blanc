@@ -320,7 +320,7 @@ export default {
       if (this.currentlyPlaying && this.currentlyPlaying.colors) {
         return ['#FFF', this.currentlyPlaying.colors.background]
       } else {
-        return null
+        return ['#333', '#666']
       }
     }
   },
