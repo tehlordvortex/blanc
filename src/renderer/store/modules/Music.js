@@ -63,10 +63,15 @@ const mutations = {
     if (state.loop !== 'all' && state.currentlyPlayingIndex !== state.queue.length - 1) {
       state.currentlyPlaying = state.queue[++state.currentlyPlayingIndex]
     } else if (state.loop === 'all') {
-      if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
-      // else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
-      else state.currentlyPlayingIndex++
-      state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
+      if (state.queue.length === 1) {
+        state.currentlyPlaying = null
+        state.currentlyPlaying = state.queue[0]
+      } else {
+        if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+        // else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+        else state.currentlyPlayingIndex++
+        state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
+      }
     }
   },
   PLAY_PREVIOUS_SONG (state) {
@@ -74,10 +79,15 @@ const mutations = {
     if (state.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
       state.currentlyPlaying = state.queue[--state.currentlyPlayingIndex]
     } else if (state.loop === 'all') {
-      if (state.currentlyPlayingIndex === 0) state.currentlyPlayingIndex = state.queue.length - 1
-      else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
-      else state.currentlyPlayingIndex = state.queue.length - 1
-      state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
+      if (state.queue.length === 1) {
+        state.currentlyPlaying = null
+        state.currentlyPlaying = state.queue[0]
+      } else {
+        if (state.currentlyPlayingIndex === 0) state.currentlyPlayingIndex = state.queue.length - 1
+        else if (state.currentlyPlayingIndex === state.queue.length - 1) state.currentlyPlayingIndex = 0
+        else state.currentlyPlayingIndex = state.queue.length - 1
+        state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
+      }
     }
   },
   SET_LOOP (state, loop) {
