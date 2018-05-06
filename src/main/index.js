@@ -34,7 +34,10 @@ function createWindow () {
       webSecurity: false
     },
     icon: require('path').join(__static, 'icon.png'),
-    show: false
+    show: false,
+    backgroundColor: '#3050ff',
+    minWidth: 650,
+    minHeight: 563
   })
 
   mainWindow.loadURL(winURL)
