@@ -312,7 +312,7 @@ export default {
         case 'one':
           return 'repeat_one'
         case 'none':
-          return 'remove'
+          return 'arrow_forward'
       }
     },
     visualizerBarColor () {
