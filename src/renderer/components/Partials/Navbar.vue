@@ -1,7 +1,7 @@
 <template>
   <div class="navbar" :class="active ? 'navbar--active' : ''">
     <div class="navbar-icon--wrapper">
-      <div class="navbar-icon" @click="active = !active" @keyup.enter="active = !active" tabindex="0">
+      <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
         <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
       </div>
     </div>
@@ -13,11 +13,12 @@
           >
           <router-link
             :tabindex="active ? '0' : '-1'"
+            v-if="!(!active && item.subitem)"
             class="navbar-item"
             :class="($route.path.startsWith(item.path) ? 'navbar-item--active': '') + ' ' + (item.subitem ? 'navbar-item--subitem' : '')"
             :to="item.path">
             <i class="material-icons">{{ item.icon }}</i>
-            <span>{{ item.title }}</span>
+            <span v-if="active">{{ item.title }}</span>
           </router-link>
         </li>
       </ul>
@@ -82,24 +83,25 @@ export default {
 
 <style>
   .navbar {
-    width: 24px;
-    height: 24px;
+    width: 50px;
+    height: calc(100% - 70px - 1.5em);
     position: fixed;
-    top: 1.7em;
-    left: 5px;
-    background-color: rgba(0, 0, 0, 0.5);
+    top: 1.5em;
+    left: 0px;
+    background-color: #333;
     z-index: 1000;
     transition: all 0.3s ease;
     overflow: hidden;
   }
 
+  .navbar-item:focus, .navbar-icon:focus {
+    outline: none;
+  }
+
   .navbar.navbar--active {
     width: 300px;
     /* background: #333; */
-    left: 0;
-    top: 1.5em;
-    height: 100%;
-    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.5);
+    box-shadow: 2px 0 5px 0 rgba(0, 0, 0, 0.6);
   }
   .navbar-items ul {
     list-style-type: none;
@@ -116,6 +118,9 @@ export default {
     cursor: pointer;
     transition: background-color 0.3s;
   }
+  .navbar-item .material-icons {
+    font-size: 32px;
+  }
   .navbar-items li a {
     display: flex;
     text-decoration: none;
@@ -126,7 +131,7 @@ export default {
     padding-left: 2em;
   }
 
-  .navbar-items li:hover, .navbar-item--active {
+  .navbar-item:focus, .navbar-icon--wrapper:hover, .navbar-items .navbar-item:hover, .navbar-item--active {
     background: #666;
   }
 
@@ -147,13 +152,23 @@ export default {
   .navbar-icon--wrapper {
     position: relative;
     width: 100%;
-    height: 24px;
+    height: 2em;
     padding: 0;
     margin: 0;
+    transition: background-color 0.3s;
   }
   .navbar-icon {
     cursor: pointer;
     position: absolute;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .navbar--active .navbar-icon {
+    position: absolute;
+    left: 100%;
+    transform: translateX(-100%)
+  }
+  .navbar-icon .material-icons {
+    font-size: 32px;
   }
 </style>
