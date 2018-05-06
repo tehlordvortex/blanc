@@ -132,7 +132,7 @@ export default {
   }
 
   .navbar-item:focus, .navbar-icon--wrapper:hover, .navbar-items .navbar-item:hover, .navbar-item--active {
-    background: #666;
+    background: #555;
   }
 
   .navbar-items li a > * {
