@@ -56,9 +56,7 @@ export default {
     /* filter: drop-shadow(0 3px 0px rgba(0, 0, 0, 0.5)) drop-shadow(-3px 0 0 rgba(0, 0, 0, 0.5)); */
     /* box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.5), -2px 0 5px 0 rgba(0, 0, 0, 0.5) */
   }
-  .volume-slider input[type="range"] {
-    
-  }
+
   .volume-slider input[type=range] {
     -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
     width: 100%; /* Specific width is required for Firefox. */
