@@ -91,6 +91,7 @@
   .pad-body {
     padding-top: 1.5em;
     padding-bottom: 70px;
+    padding-left: 50px;
   }
   ::-webkit-scrollbar
   {
