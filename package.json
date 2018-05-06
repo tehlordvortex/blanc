@@ -58,7 +58,6 @@
   "dependencies": {
     "color": "^3.0.0",
     "electron-settings": "^3.1.4",
-    "howler": "^2.0.9",
     "lodash.chunk": "^4.2.0",
     "lodash.flatten": "^4.4.0",
     "mime": "^2.3.1",
@@ -69,10 +68,8 @@
     "node-vibrant": "^3.0.0",
     "queue": "^4.4.2",
     "sweet-modal-vue": "^2.0.0",
-    "v-tooltip": "^2.0.0-rc.31",
     "vue": "^2.3.3",
     "vue-async-computed": "^3.3.1",
-    "vue-audio-visual": "^1.1.0",
     "vue-electron": "^1.0.6",
     "vue-router": "^2.5.3",
     "vue-simple-progress": "^1.0.2",
