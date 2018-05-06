@@ -225,7 +225,7 @@ export default {
     ipc.on('music-play-pause', () => {
       if (this.playing) this.pause()
       else {
-        if (this.currentlyPlaying) this.$store.commit('PLAY_MUSIC', this.currentlyPlaying)
+        if (this.currentlyPlaying) this.$store.commit('RESUME_MUSIC')
       }
     })
     ipc.on('music-previous', () => {
