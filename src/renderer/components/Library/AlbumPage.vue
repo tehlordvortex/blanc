@@ -58,7 +58,8 @@
                 :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
                 :data-index="index"
               >
-                <p>{{ item.title || item.fileName }}</p>
+                <p>{{ item.title }}</p>
+                <p>{{ item.artist }}</p>
               </music-item-tile>
             </transition-group>
         </div>
@@ -248,10 +249,10 @@ export default {
     width: 100%;
     height: 100%;
     display: flex;
-    /* flex-direction: column; */
+    flex-direction: column;
   }
   .album-banner {
-    min-height: 160px;
+    min-height: 200px;
     background: #222;
     display: flex;
     flex-direction: row;
@@ -279,7 +280,8 @@ export default {
     filter: blur(3px);
     z-index: 0;
     background-position: center;
-    background-attachment: scroll;
+    background-size: cover;
+    background-repeat: no-repeat;
   }
 
   .album-image {
