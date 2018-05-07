@@ -116,8 +116,10 @@
       this.$store.commit('HIDE_MUSIC_BAR')
       if (settings.libraries.length === 0) this.showFirstStart = true
       else {
-        if (!this.library || typeof this.library[0] !== 'string') {
-          getLibrary().then(getAlbums).then(() => {
+        if (!this.library || typeof this.library[0] !== 'string' || !this.albums) {
+          getLibrary().then(() => {
+            return getAlbums()
+          }).then(() => {
             Promise.all(settings.libraries.map(library => addFiles(library))).then(() => this.leavePage())
           })
         } else {

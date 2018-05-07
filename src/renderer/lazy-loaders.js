@@ -119,70 +119,12 @@ export function indexAlbums () {
   })
   return p
 }
-export function updateAlbums (newSongs, removed = false) {
-  if (!removed) {
-    return Promise.all(newSongs.map(song => {
-      return albumsDB.find({ album: song.album }).then((album) => {
-        if (album.length === 0) {
-          let album = {
-            name: song.album,
-            colors: song.colors,
-            art: song.albumArt,
-            artists: song.artists,
-            songs: [song['_id']]
-          }
-          return albumsDB.insert(album)
-        } else {
-          album = album[0]
-          if (!album.songs.includes(song['_id'])) {
-            album.songs.push(song['_id'])
-            if (!album.colors && song.colors) {
-              album.colors = song.colors
-            }
-            if (!album.art && song.albumArt) {
-              album.art = song.albumArt
-            }
-            song.artists.forEach(artist => {
-              if (!album.artists.includes(artist)) {
-                album.artists.push(artist)
-              }
-            })
-            return db.update({name: album.name}, album)
-          } else {
-            return Promise.resolve()
-          }
-        }
-      })
-    })).then(() => {
-      return albumsDB.find({}).then(albums => {
-        store.commit('UPDATE_ALBUMS', albums)
-      })
-    })
-  } else {
-    return Promise.all(newSongs.map(song => {
-      return albumsDB.find({name: song.album}).then(album => {
-        if (album.length > 0) {
-          album = album[0]
-          album.songs = album.songs.filter(alSong => alSong === song['_id'])
-          album.artists = album.artists.filter(artist => !song.artists.some(sArtist => sArtist === artist))
-          album.songs.map((song) => {
-            song.artists.forEach(artist => {
-              if (!album.artists.includes(artist)) {
-                album.artists.push(artist)
-              }
-            })
-          })
-          return db.update({name: album.name}, album)
-        } else return Promise.resolve()
-      })
-    }))
-  }
-}
-export function getAlbums (skip = 0, limit = 0, deep = true) {
+
+export function getAlbums (forceRefresh = false) {
   let albumsPromise = albumsDB.cfind({}).sort({name: 1}).exec()
   albumsPromise.then((albums) => {
-    if (albums.length === 0) {
-      console.log('No albums')
+    if (albums.length === 0 || forceRefresh) {
+      console.log('Re-indexing albums')
       return indexAlbums()
     } else {
       return Promise.all(albums.map(album => {

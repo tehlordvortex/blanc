@@ -23,6 +23,7 @@ const mutations = {
     state.status = 'paused'
   },
   STOP_MUSIC (state) {
+    state.currentlyPlaying = null
     state.status = 'stopped'
   },
   RESUME_MUSIC (state) {

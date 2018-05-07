@@ -6,14 +6,22 @@ import { promiseFiles } from 'node-dir'
 import { parseFile } from 'music-metadata'
 import { posix, sep as pathSep } from 'path'
 import * as mime from 'mime'
-import { toDataURI, getColors, getLibrary, getAlbums, updateAlbums, indexAlbums } from '@/lazy-loaders'
+import { toDataURI, getColors, getLibrary, indexAlbums, getAlbums } from './lazy-loaders'
 import store from '@/store'
 
-export function removeFiles (libPath) {
+export async function removeFiles (libPath) {
   let r = new RegExp('^' + libPath)
-  return db.remove({ filePath: r }, { multi: true }).then((removed) => {
-    return Promise.resolve().then(getLibrary).then(getAlbums)
-  })
+  let songs = await db.find({ filePath: r })
+  let currentlyPlaying = store.state.Music.currentlyPlaying
+  let queue = store.state.Music.queue
+  if (currentlyPlaying && songs.some(song => song.filePath === currentlyPlaying.filePath)) {
+    store.commit('STOP_MUSIC')
+  }
+  let newQueue = queue.filter(song => !songs.some(removedSong => removedSong.filePath === song.filePath))
+  store.commit('SET_QUEUE', newQueue)
+  await db.remove({ filePath: r }, { multi: true })
+  await getLibrary()
+  await getAlbums(true)
 }
 export function getMetadata (file) {
   return parseFile(file, {native: false, duration: true})
@@ -74,18 +82,15 @@ export function addFiles (path) {
       processed: 0,
       total: 0
     }
-    let newSongs = []
     let indexQueue = new Queue()
     indexQueue.concurrency = 16
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0
       indexDetails.total = 0
-      let newSongsWithAlbums = newSongs.filter(song => song.album)
-      console.log(newSongsWithAlbums.length, 'new songs with albums')
       let p = Promise.resolve()
-      if (newSongs.length > 1) p.then(getLibrary)
-      p.then(() => updateAlbums(newSongsWithAlbums))
+      p.then(getLibrary)
+      p.then(() => indexAlbums())
       p.then(() => store.commit('FINISH_INDEXING'))
       p.then(() => resolve())
       p.catch(e => {
@@ -112,8 +117,6 @@ export function addFiles (path) {
                 if (amount === 0) {
                   return indexFile(file)
                     .then((song) => {
-                      console.log('addFiles', song)
-                      newSongs.push(song)
                       indexDetails.processed++
                       // console.log(indexDetails)
                       store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
@@ -123,6 +126,8 @@ export function addFiles (path) {
                       cb()
                     })
                 } else {
+                  indexDetails.processed++
+                  store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                   cb()
                 }
               })
