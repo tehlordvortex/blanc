@@ -25,7 +25,7 @@ function getSwatches (image, invertColors, id) {
     buffer = Buffer.from(base64Data, 'base64')
   } else {
     base64Data = null
-    buffer = readFileSync(image.replace('file://', ''))
+    buffer = readFileSync(image.replace('file:///', ''))
   }
   let v
   try {

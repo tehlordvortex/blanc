@@ -8,7 +8,7 @@ import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
-import { fieldCaseInsensitiveSort } from './lib/utils'
+import { fieldCaseInsensitiveSort, toFileURL } from './lib/utils'
 
 const app = remote.app
 let userData = app.getPath('userData')
@@ -36,7 +36,7 @@ export function toDataURI (format, buffer) {
   return 'data:image/' + format + ';base64,' + buffer.toString('base64')
 }
 export function getAlbumArt (filePath) {
-  return cacheAlbumArt(filePath).then((path) => Promise.resolve('file://' + path))
+  return cacheAlbumArt(filePath).then((path) => Promise.resolve(toFileURL(path)))
 }
 export function getSong (id) {
   return db.findOne({_id: id})
@@ -75,7 +75,7 @@ export function getAlbum (name) {
             if (art && !album.art) {
               // console.log(art)
               if (album.art) return
-              album.art = art.replace('file://', '')
+              album.art = art.replace('file:///', '')
             }
           }))
         }
@@ -237,7 +237,7 @@ export function getColors (resource) {
   })
 }
 export function getBackgroundImageCSS (resource) {
-  if (!resource || resource === 'file://') resource = 'static/albumart-placeholder.png'
+  if (!resource || resource === 'file:///') resource = 'static/albumart-placeholder.png'
   return 'background-image: url(' + resource + ')'
 }
 export function cacheAlbumArt (filePath) {
@@ -280,11 +280,11 @@ export function loadAlbumArt (filePath) {
   return db.find({ filePath: filePath }).then((res) => {
     if (res && res.length > 0 && res[0].albumArt) {
       // console.log('Using cached art', res[0].albumArt, 'for', filePath)
-      return 'file://' + res[0].albumArt // we already have an album art
+      return toFileURL(res[0].albumArt) // we already have an album art
     } else {
       // console.log('Caching art for', filePath)
       return cacheAlbumArt(filePath)
-        .then(path => 'file://' + path)
+        .then(path => toFileURL(path))
     }
   })
 }

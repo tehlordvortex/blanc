@@ -27,6 +27,7 @@
 <script>
 import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
+import { toFileURL } from '@/lib/utils'
 
 export default {
   name: 'music-item-tile',
@@ -51,7 +52,7 @@ export default {
     image () {
       if (!this.showArt) return ''
       if (!this.item) return Promise.resolve('')
-      if (this.item.albumArt) return Promise.resolve('file://' + this.item.albumArt)
+      if (this.item.albumArt) return Promise.resolve(toFileURL(this.item.albumArt))
       else return loadAlbumArt(this.item.filePath)
     },
     computedImageStyle () {

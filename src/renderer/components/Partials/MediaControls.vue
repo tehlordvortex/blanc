@@ -208,6 +208,7 @@ import Player from '@/lib/player'
 import Queue from './Queue'
 import VolumeSlider from './VolumeSlider'
 import MaterialButton from './MaterialButton'
+import { toFileURL } from '@/lib/utils'
 
 import { ipcRenderer as ipc } from 'electron'
 
@@ -262,8 +263,8 @@ export default {
     Player.getAudio().addEventListener('play', ($e) => {
       if (!document.hasFocus()) {
         Notification.requestPermission().then((perms) => {
-          let path = 'file://' + this.currentlyPlaying.albumArt
-          if (path === 'file://' || !path) path = __static + '/albumart-placeholder.png'
+          let path = toFileURL(this.currentlyPlaying.albumArt)
+          if (path === 'file:///' || !path) path = __static + '/albumart-placeholder.png'
           let body = this.currentlyPlaying.artist || 'Unknown Artist'
           body += '\n'
           body += this.currentlyPlaying.album || 'Unknown Album'
@@ -329,7 +330,7 @@ export default {
       if (!this.currentlyPlaying) return Promise.resolve('')
       else {
         console.log(this.currentlyPlaying.filePath)
-        if (this.currentlyPlaying.albumArt) return Promise.resolve('file://' + this.currentlyPlaying.albumArt)
+        if (this.currentlyPlaying.albumArt) return Promise.resolve(toFileURL(this.currentlyPlaying.albumArt))
         else return loadAlbumArt(this.currentlyPlaying.filePath)
       }
     },
@@ -384,9 +385,9 @@ export default {
       return (hours !== '00' ? hours + ':' : '') + minutes + ':' + seconds
     },
     createSound (source, loop = true) {
-      source = source.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f')
-      source = 'file://' + source
-      Player.setSrc(source)
+      // source = source.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f')
+      // source = 'file://' + source
+      Player.setSrc(toFileURL(source))
       Player.play().catch(e => console.warn(e))
     },
     play (event) {

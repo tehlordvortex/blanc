@@ -22,6 +22,7 @@
 // import mime from 'mime'
 // import * as Color from 'color'
 import { loadAlbumArt, getColors, getBackgroundImageCSS, toColorString } from '@/lazy-loaders'
+import { toFileURL } from '@/lib/utils'
 
 // console.log(VibrantWorker)
 
@@ -98,11 +99,11 @@ export default {
     image () {
       // console.log(this.art)
       if (this.art) return this.art
-      if (this.artPath) return Promise.resolve('file://' + this.artPath)
+      if (this.artPath) return Promise.resolve(toFileURL(this.artPath))
       if (!this.filePath) return Promise.resolve('static/albumart-placeholder.png')
       else {
         return loadAlbumArt(this.filePath).then((path) => {
-          if (path === 'file://' || !path) {
+          if (path === 'file:///' || !path) {
             return __static + 'albumart-placehoder.png'
           } else {
             return path

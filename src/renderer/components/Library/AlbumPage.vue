@@ -115,6 +115,7 @@ import SearchBar from '@/components/Partials/SearchBar'
 import { ALBUM_TILE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_TILES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
+import { toFileURL } from '@/lib/utils'
 
 export default {
   name: 'album-page',
@@ -135,7 +136,7 @@ export default {
     image () {
       if (!this.album) return Promise.resolve('')
       // console.log(this.album.art)
-      return 'file://' + this.album.art
+      return toFileURL(this.album.art)
     },
     computedImageStyle () {
       // console.log(this.image)
