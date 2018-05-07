@@ -26,7 +26,7 @@ export function fieldCaseInsensitiveSort (field) {
 export function toFileURL (path) {
   let fileURL = 'file:///'
   if (process.platform === 'win32') {
-    path = path.replace('\\', '/')
+    path = path.replace(/\\/g, '/')
   }
   fileURL += path.replace(/%/g, '%25').replace(/#/g, '%23').replace(/\?/g, '%3f')
   return fileURL
