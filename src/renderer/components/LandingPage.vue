@@ -140,7 +140,8 @@
       },
       choosePath () {
         ipcRenderer.once('dialog-selected-folder', (event, path) => {
-          this.libraryPath = path || this.libraryPath
+          if (Array.isArray(path)) this.libraryPath = path[0] || this.libraryPath
+          else this.libraryPath = path || this.libraryPath
         })
         ipcRenderer.send('dialog-select-folder', this.libraryPath)
       },
