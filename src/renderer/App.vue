@@ -37,7 +37,8 @@
       library: state => state.Library.library,
       albums: state => state.Library.albums,
       devMode: state => state.App.devMode,
-      indexPercent: state => state.Library.indexProgress * 100
+      indexPercent: state => state.Library.indexProgress * 100,
+      indexing: state => state.Library.indexing
     }),
     watch: {
       devMode (newVal) {
@@ -51,6 +52,11 @@
         // avoid Math.Infinity
         if (value > 0) ipc.send('set-progress', value / 100)
         else ipc.send('set-progress', value)
+      },
+      indexing (value) {
+        if (!value) {
+          ipc.send('set-progress', -1)
+        }
       }
     }
   }
