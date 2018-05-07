@@ -75,7 +75,7 @@ export function getAlbum (name) {
             if (art && !album.art) {
               // console.log(art)
               if (album.art) return
-              album.art = art.replace('file:///', '')
+              album.art = decodeURI(art.replace('file:///', ''))
             }
           }))
         }

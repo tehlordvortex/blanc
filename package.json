@@ -1,6 +1,6 @@
 {
   "name": "blanc",
-  "version": "0.3.6",
+  "version": "0.3.6+2",
   "author": "tehlordvortex <tehlordvortex@outlook.com>",
   "description": "A sleek and simple music player",
   "license": "MIT",
@@ -58,6 +58,7 @@
   "dependencies": {
     "color": "^3.0.0",
     "electron-settings": "^3.1.4",
+    "file-url": "^2.0.2",
     "lodash.chunk": "^4.2.0",
     "lodash.flatten": "^4.4.0",
     "mime": "^2.3.1",
