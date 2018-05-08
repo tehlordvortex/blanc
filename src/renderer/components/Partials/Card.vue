@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import * as Vibrant from 'node-vibrant'
-console.log(Vibrant)
+import { getColors } from '@/lazy-loaders'
+
 export default {
   name: 'card',
   props: {
@@ -38,19 +38,17 @@ export default {
         return new Promise((resolve, reject) => {
           let imgElement = this.$el.querySelector('.card--image img')
           if (imgElement) {
-            if (imgElement.src.startsWith('data')) {
-              let base64Data = imgElement.src.substr(imgElement.src.indexOf(','))
-              let buffer = Buffer.from(base64Data, 'base64')
-              let v = Vibrant.from(buffer)
-                .useQuantizer(Vibrant.Quantizer.WebWorker)
-                .getSwatches()
-              v.then((sw) => {
-                console.log(sw)
-                resolve('')
-              })
-            }
+            return getColors(imgElement).then(colors => {
+              if (colors) {
+                return {
+                  backgroundColor: colors.background,
+                  color: colors.foreground
+                }
+              } else {
+                return {}
+              }
+            })
           } else {
-            console.log('No image')
             resolve('')
           }
         })
@@ -87,7 +85,7 @@ export default {
     height: 100%;
   }
   .card--contents {
-    margin: 1em;
+    /* margin: 1em; */
     word-wrap: break-word;
     /* white-space: pre-wrap; */
     flex-grow: 1;
