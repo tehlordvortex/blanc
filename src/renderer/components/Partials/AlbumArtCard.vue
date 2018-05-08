@@ -1,5 +1,5 @@
 <template>
-  <div @click="clicked" class="card" :class="small ? 'card--small' : ''" :style="computedStyle">
+  <div @click="clicked" class="card" :class="(small ? 'card--small ' : ' ') + (vertical ? 'card--vertical ' : ' ')" :style="computedStyle">
     <div class="card--image" :style="computedImageStyle">
       <!-- <img :src="image" class="album-art" /> -->
     </div>
@@ -37,6 +37,10 @@ export default {
       default: null
     },
     small: {
+      type: Boolean,
+      default: false
+    },
+    vertical: {
       type: Boolean,
       default: false
     }
@@ -118,9 +122,6 @@ export default {
     },
     computedStyle () {
       // console.log(this.cachedColor)
-      if (this.colors) {
-        return toColorString(this.colors)
-      }
       if (!this.image) return Promise.resolve('')
       else return getColors(this.image).then(toColorString)
     }
@@ -134,8 +135,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
+  $font-size: 1em;
+  $line-height: 1;
+  $lines-to-show: 4;
   .card {
-    /* border-radius: 5px; */
+    border-radius: 5px;
     background-color: #333;
     color: white;
     margin: 1em;
@@ -150,6 +154,7 @@ export default {
     position: relative;
     overflow: hidden;
     cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   .card.card--small {
@@ -161,10 +166,48 @@ export default {
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+
+  .card.card--vertical {
+    flex-direction: column;
+    width: 128px;
+    height: 200px;
+    min-width: 128px;
+    max-width: 128px;
+  }
+  .card.card--vertical .card--contents {
+    margin: 0;
+    width: 100%;
+    padding: 5px;
+  }
+  .card.card--vertical .card--contents p {
+    // margin: 0px;
+    // flex-grow: 0;
+    // width: 128px;
+    // padding: 5px;
+    // height: 72px;
+    display: block; /* Fallback for non-webkit */
+    display: -webkit-box;
+    width: 100%;
+    height: $font-size*$line-height*$lines-to-show; /* Fallback for non-webkit */
+    margin: 0;
+    font-size: $font-size;
+    line-height: $line-height;
+    -webkit-line-clamp: $lines-to-show;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card.card.card--vertical .card--contents--text {
+    display: none;
+  }
+  .card.card--vertical:hover {
+    box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.6), 0 -4px 10px 0 rgba(0, 0, 0, 0.6), 4px 0 10px 0 rgba(0, 0, 0, 0.6),-4px 0 10px 0 rgba(0, 0, 0, 0.6);
+  }
+  .card.card--vertical:after {
+    display: none;
+  }
   
-  $font-size: 1em;
-  $line-height: 1;
-  $lines-to-show: 4;
+  
   .card--contents--title, .card--contents--title p {
     margin: 0;
   }
@@ -189,8 +232,8 @@ export default {
     /* height: 100%; */
     padding: 0;
     flex-shrink: 0;
-    flex-grow: 0;
     width: 128px;
+    height: 128px;
     /* height: 128px; */
     background-size: cover;
     background-position: center;

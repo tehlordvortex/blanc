@@ -24,7 +24,8 @@
           "modules": false
         }],
         "stage-0"
-      ]
+      ],
+      "plugins": ["transform-vue-jsx"]
     },
     "web": {
       "presets": [

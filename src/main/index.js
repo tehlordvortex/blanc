@@ -36,7 +36,7 @@ function createWindow () {
     icon: require('path').join(__static, 'icon.png'),
     show: false,
     backgroundColor: '#3050ff',
-    minWidth: 650,
+    minWidth: 1000,
     minHeight: 563
   })
 

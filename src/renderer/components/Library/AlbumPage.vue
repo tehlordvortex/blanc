@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper no-scroll">
+  <div class="wrapper">
     <transition
       mode="out-in"
       enter-active-class="animated slideInLeft"
@@ -65,37 +65,15 @@
         </div>
       </template>
       <template v-else>
-        <item-column title="albums" class="fill-height">
+        <item-row wrap title="albums" @scroll="scrolled">
           <search-bar v-model="searchString" />
-          <template v-if="albumsDisplayed && albumsDisplayed.length > 0">
-            <div class="albums-wrapper" @scroll="scrolled">
-              <transition-group
-                name="animated-slide-in"
-                appear
-                mode="in-out"
-                appear-active-class="animated slideInLeft"
-                tag="div"
-                :style="albumListStyle"
-                @enter="stagger"
-                @leave="disappear"
-              >
-                <album-art-card
-                  @click="gotoAlbum(item)"
-                  v-for="(item, index) in albumsDisplayed"
-                  v-if="item.name"
-                  :key="'albums-' + item.name"
-                  hasImage
-                  :data-index="index"
-                  :style="item.style"
-                  :artPath="item.art">
-                  <p slot="title">{{ item.name }}</p>
-                  <p>{{ item.artists.join(", ") }}</p>
-                </album-art-card>
-              </transition-group>
-            </div>
-          </template>
+          <album-list
+            :albums="albums"
+            v-if="albums" 
+            @click="albumClicked"
+            />
           <loading-indicator v-else />
-        </item-column>
+        </item-row>
       </template>
     </transition>
     <!-- </div> -->
@@ -108,13 +86,15 @@ import { getBackgroundImageCSS, toColorString, getSongs } from '@/lazy-loaders'
 import MusicItemTile from '@/components/Partials/MusicItemTile'
 import AlbumArtCard from '@/components/Partials/AlbumArtCard'
 import BackButton from '@/components/Partials/BackButton'
-import ItemColumn from '@/components/Partials/ItemColumn'
+import ItemRow from '@/components/Partials/ItemRow'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import SearchBar from '@/components/Partials/SearchBar'
-import { ALBUM_TILE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_TILES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
-import chunk from 'lodash.chunk'
-import flatten from 'lodash.flatten'
+import { ALBUM_TILE_HEIGHT } from '@/lib/constants'
+// import { ALBUM_TILE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_TILES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
+// import chunk from 'lodash.chunk'
+// import flatten from 'lodash.flatten'
 import { toFileURL } from '@/lib/utils'
+import AlbumList from '@/components/Partials/AlbumList'
 
 export default {
   name: 'album-page',
@@ -158,11 +138,12 @@ export default {
     },
     albumsDisplayed () {
       if (!this.albums) return null
-      let chunks = chunk(this.albums, ALBUM_TILES_PER_CHUNK)
-      return flatten(chunks.splice(this.skipItems, ALBUM_CHUNKS_TO_DISPLAY)).map((item, index) => {
-        let transformDistance = (this.skipItems * ALBUM_TILE_HEIGHT * ALBUM_TILES_PER_CHUNK)
-        return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
-      })
+      // let chunks = chunk(this.albums, ALBUM_TILES_PER_CHUNK)
+      // return flatten(chunks.splice(this.skipItems, ALBUM_CHUNKS_TO_DISPLAY)).map((item, index) => {
+      //   let transformDistance = (this.skipItems * ALBUM_CHUNK_HEIGHT)
+      //   return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
+      // })
+      return this.albums
     }
   },
   computed: {
@@ -179,10 +160,16 @@ export default {
     musicStatus () {
       return this.$store.state.Music.status
     },
+    albumsPerLine () {
+      console.log(this.$refs)
+      if (!this.$refs.flexWrap) return null
+      return Math.floor(this.$refs.flexWrap.clientWidth / (128 + 16 * 2))
+    },
     albumListStyle () {
       if (!this.albums) return null
+      if (!this.albumsPerLine) return null
       return {
-        height: (this.albums.length * ALBUM_TILE_HEIGHT) + 'px !important'
+        height: (Math.floor(this.albums.length / this.albumsPerLine) * ALBUM_TILE_HEIGHT) + 'px !important'
       }
     }
   },
@@ -195,8 +182,10 @@ export default {
     scrolled (ev) {
       // console.log(ev)
       // console.log(ev)
-      this.skipItems = Math.floor(ev.target.scrollTop / ALBUM_CHUNK_HEIGHT)
-      console.log(this.skipItems)
+      console.log(ev.target.scrollTop)
+      // console.log(ALBUM_CHUNK_HEIGHT)
+      // this.skipItems = Math.floor(Math.max(0, (ev.target.scrollTop - 16 * 4)) / ALBUM_CHUNK_HEIGHT)
+      // console.log(this.skipItems)
     },
     play (item) {
       // console.log('Playing', item)
@@ -224,22 +213,28 @@ export default {
         }
       })
     },
-    search (str) {
-      this.searchString = str
+    albumClicked (data) {
+      this.gotoAlbum(data.album)
     }
   },
   components: {
     MusicItemTile,
     BackButton,
     AlbumArtCard,
-    ItemColumn,
+    ItemRow,
     LoadingIndicator,
-    SearchBar
+    SearchBar,
+    AlbumList
   }
 }
 </script>
 
-<style>
+<style lang="scss">
+  @mixin max-width($width) {
+    @media screen and (max-width: $width) {
+        @content;
+    }
+  }
   .album-page {
     background: #333;
     width: 100%;
@@ -312,8 +307,8 @@ export default {
 
   .albums-wrapper {
     width: 100%;
-    max-height: 100%;
     height: 100%;
+    max-height: 100%;
     overflow: auto;
     position: relative;
   }
@@ -323,6 +318,38 @@ export default {
   }
   .no-padding {
     padding: 0;
+  }
+
+  .flex-wrap > div {
+    display: inline-block;
+  }
+  .flex-wrap {
+    width: 90%;
+    margin: 0 5%;
+    display: flex;
+    flex-wrap: wrap;
+    // justify-content: center;
+  }
+  /* .flex-wrap {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: flex-start;
+    align-self: flex-start;
+    justify-self: flex-start;
+  } */
+
+  .album-list-outer-container {
+    width: 100%;
+    height: inherit;
+    // max-height: 90%;
+    overflow: auto;
+    position: relative;
+  }
+  .album-list-line {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
 </style>

@@ -105,9 +105,9 @@ export function addFiles (path) {
       })
     }
     indexQueue.on('end', finish)
-    indexQueue.on('success', (_, job) => {
-      console.log('done with job', _)
-    })
+    // indexQueue.on('success', (_, job) => {
+    //   console.log('done with job', _)
+    // })
     promiseFiles(path)
       .then((files) => files.filter(file => mime.getType(file) && mime.getType(file).startsWith('audio')))
       .then((files) => {

@@ -188,9 +188,11 @@ export async function getColors (resource) {
             cb()
           }
           v.then((swatches) => {
-            let c = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted).getRgb().map(Math.floor)
+            let swatch = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted)
+            let c = swatch.getRgb().map(Math.floor)
             let background = Color.rgb(c)
-            let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
+            let foreground = Color(swatch.getTitleTextColor())
+            // let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
             let backgroundText = background.rgb().string()
             let foregroundText = foreground.rgb().string()
             return {

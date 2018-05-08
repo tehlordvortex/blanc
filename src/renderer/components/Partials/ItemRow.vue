@@ -1,7 +1,7 @@
 <template>
-  <div class="item-row">
+  <div class="item-row" :class="wrap ? 'item-row--wrap' : ''">
     <span class="item-row--title" v-text="title"></span>
-    <div class="item-row--content" :class="wrap ? 'item-row--content--wrap' : ''">
+    <div class="item-row--content" :class="wrap ? 'item-row--content--wrap' : ''" @scroll="$emit('scroll', $event)">
       <slot></slot>
     </div>
   </div>
@@ -23,6 +23,10 @@ export default {
     width: 100%;
     overflow-x: auto;
   }
+  .item-row.item-row--wrap {
+    height: 100%;
+    overflow-x: hidden;
+  }
   .item-row ::-webkit-scrollbar-thumb,  .item-row ::-webkit-scrollbar-track {
     background-color: rgba(0, 0, 0, 0);
   }
@@ -32,6 +36,7 @@ export default {
   .item-row--title {
     font-weight: lighter;
     text-transform: uppercase;
+    height: 1em;
     margin-bottom: 1em;
     display: block;
   }
@@ -44,5 +49,8 @@ export default {
   }
   .item-row--content--wrap {
     flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: calc(100% - 2em);
   }
 </style>
