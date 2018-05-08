@@ -172,6 +172,9 @@ export async function getColors (resource) {
         } else {
           resourceSum = posix.basename(path)
         }
+        if (path === 'static/albumart-placeholder.png') {
+          path = join(__static, '/albumart-placeholder.png')
+        }
       }
     } else {
       buffer = resource
