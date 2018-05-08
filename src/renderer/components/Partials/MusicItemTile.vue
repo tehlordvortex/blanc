@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
+import { getColors, loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import { toFileURL } from '@/lib/utils'
 
@@ -70,7 +70,16 @@ export default {
         })
       } else {
         // if (!this.showArt) return this.defaultActiveStyle
-        return Promise.resolve('')
+        if (this.item.albumArt) {
+          return getColors(this.item.albumArt).then((colors) => {
+            return {
+              background: colors.background,
+              color: colors.foreground
+            }
+          })
+        } else {
+          return Promise.resolve('')
+        }
       }
     }
   },

@@ -3,6 +3,7 @@ export const appDataPath = require('electron').ipcRenderer.sendSync('sync-get-pa
 const join = require('path').join
 export const libraryDBPath = join(appDataPath, 'library.db')
 export const albumsDBPath = join(appDataPath, 'albums.db')
+export const colorsDBPath = join(appDataPath, 'colors.db')
 console.log('Library db at', libraryDBPath)
 console.log('Albums db at', albumsDBPath)
 const db = new Datastore({
@@ -15,6 +16,11 @@ db.ensureIndex({
 })
 export const albumsDB = new Datastore({
   filename: albumsDBPath,
+  autoload: true
+})
+
+export const colorsDB = new Datastore({
+  filename: colorsDBPath,
   autoload: true
 })
 export default db

@@ -1,18 +1,18 @@
 import { parseFile } from 'music-metadata'
 import { remote } from 'electron'
-import { join } from 'path'
-import { stat, mkdir, writeFile } from 'fs'
+import { join, win32, posix } from 'path'
+import { stat, mkdir, writeFile, readFileSync } from 'fs'
 import * as crypto from 'crypto'
-import { albumsDB, default as db } from '@/library.db'
+import { colorsDB, albumsDB, default as db } from '@/library.db'
 import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
-import { fieldCaseInsensitiveSort, toFileURL } from './lib/utils'
+import { fieldCaseInsensitiveSort, toFileURL, hashsum } from './lib/utils'
 
 const app = remote.app
-let userData = app.getPath('userData')
-let artsCachePath = join(userData, 'albumArts')
+const userData = app.getPath('userData')
+export const artsCachePath = join(userData, 'albumArts')
 stat(artsCachePath, (err, details) => {
   if (err && err.code === 'ENOENT') {
     mkdir(artsCachePath, (err) => {
@@ -70,13 +70,13 @@ export function getAlbum (name) {
             album.artists.push(artist)
           }
         })
-        if (!album.art) {
-          resolves.push(loadAlbumArt(song.filePath).then((art) => {
-            if (art && !album.art) {
-              // console.log(art)
-              if (album.art) return
-              album.art = decodeURI(art.replace('file:///', ''))
-            }
+        if (!album.art && song.albumArt) {
+          album.art = song.albumArt
+          resolves.push(getColors(album.art).then((colors) => {
+            album.colors = colors
+          }).catch(e => {
+            console.warn('Error getting colors for', song.filePath, e)
+            album.art = ''
           }))
         }
       })
@@ -98,8 +98,7 @@ export function indexAlbums () {
     docs.forEach(doc => {
       if (!albums.some(album => album.name === doc.album)) {
         albums.push({
-          name: doc.album,
-          colors: doc.colors
+          name: doc.album
         })
       }
     })
@@ -146,36 +145,83 @@ export function getAlbums (forceRefresh = false) {
     }
   })
 }
-export function getColors (resource) {
+export async function getColors (resource) {
   return new Promise((resolve, reject) => {
-    if (resource && resource.startsWith('data')) {
-      colorQueue.push(cb => {
-        let buffer = Buffer.from(resource.split(',')[1], 'base64')
-        let v = Vibrant.from(buffer).getSwatches()
-        v.then((swatches) => {
-          let c = (swatches.Vibrant || swatches.Muted).getRgb().map(Math.floor)
-          let background = Color.rgb(c)
-          let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
-          let backgroundText = background.rgb().string()
-          let foregroundText = foreground.rgb().string()
-          return {
-            background: backgroundText,
-            foreground: foregroundText
-          }
-        })
-          .then((colors) => {
-            // colorJobs[resourceHash] = colors
-            resolve(colors)
-          })
-          .then(() => cb())
-          .catch((e) => {
+    let buffer, resourceSum, path
+    if (typeof resource === 'string') {
+      if (resource.startsWith('data')) {
+        buffer = Buffer.from(resource.split(',')[1], 'base64')
+        resourceSum = hashsum(buffer, 'md5')
+      } else if (resource.startsWith('file:///')) {
+        if (process.platform === 'win32') {
+          path = decodeURI(resource.replace('file:///', ''))
+        } else {
+          path = decodeURI(resource.replace('file://', ''))
+        }
+        buffer = null
+        if (process.platform === 'win32') {
+          resourceSum = win32.basename(path)
+        } else {
+          resourceSum = posix.basename(path)
+        }
+      } else {
+        path = resource
+        buffer = null
+        if (process.platform === 'win32') {
+          resourceSum = win32.basename(path)
+        } else {
+          resourceSum = posix.basename(path)
+        }
+      }
+    } else {
+      buffer = resource
+    }
+    colorQueue.push(cb => {
+      colorsDB.findOne({ _id: resourceSum }).then((res) => {
+        if (!res) {
+          if (!buffer) buffer = readFileSync(path)
+          let v
+          try {
+            v = Vibrant.from(buffer).getSwatches()
+          } catch (e) {
             reject(e)
             cb()
+          }
+          v.then((swatches) => {
+            let c = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted).getRgb().map(Math.floor)
+            let background = Color.rgb(c)
+            let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
+            let backgroundText = background.rgb().string()
+            let foregroundText = foreground.rgb().string()
+            return {
+              background: backgroundText,
+              foreground: foregroundText
+            }
           })
+            .then((colors) => {
+              return colorsDB.update({
+                _id: resourceSum
+              },
+              {
+                _id: resourceSum,
+                colors: colors
+              },
+              {
+                upsert: true
+              }).then(() => resolve(colors))
+            })
+            .then(() => cb())
+            .catch((e) => {
+              reject(e)
+              cb()
+            })
+        } else {
+          Promise.resolve()
+            .then(() => resolve(res.colors))
+            .then(() => cb())
+        }
       })
-    } else {
-      resolve({})
-    }
+    })
   })
 }
 export function getBackgroundImageCSS (resource) {

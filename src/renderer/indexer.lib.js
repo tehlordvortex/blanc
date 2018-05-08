@@ -4,10 +4,11 @@ import db from '@/library.db'
 import Queue from 'queue'
 import { promiseFiles } from 'node-dir'
 import { parseFile } from 'music-metadata'
-import { posix, sep as pathSep } from 'path'
+import { win32, posix, sep as pathSep } from 'path'
 import * as mime from 'mime'
-import { toDataURI, getColors, getLibrary, indexAlbums, getAlbums } from './lazy-loaders'
+import { getLibrary, indexAlbums, getAlbums } from './lazy-loaders'
 import store from '@/store'
+import { cacheAlbumArt } from './lib/utils'
 
 export async function removeFiles (libPath) {
   let r = new RegExp('^' + libPath)
@@ -31,7 +32,12 @@ export function indexFile (file) {
   return getMetadata(file)
     .then(metadata => {
       libraryItem.filePath = file
-      libraryItem.fileName = posix.basename(file)
+      if (process.platform === 'win32') {
+        libraryItem.fileName = win32.basename(file)
+      } else {
+        libraryItem.fileName = posix.basename(file)
+      }
+
       libraryItem.title = ''
       libraryItem.artist = ''
       libraryItem.artists = []
@@ -55,14 +61,13 @@ export function indexFile (file) {
       let picture = metadata.common.picture && metadata.common.picture[0]
       let res = Promise.resolve()
       if (picture) {
-        let image = toDataURI(picture.format, picture.data)
         res
-          .then(() => getColors(image))
-          .then(colors => {
-            libraryItem.colors = colors
+          .then(() => cacheAlbumArt(picture.data))
+          .then(path => {
+            libraryItem.albumArt = path
           })
           .catch((e) => {
-            console.log('Error getting colors for', file)
+            console.log('Error getting caching art for', file, e)
             // libraryItem.colors = undefined
           })
       }
@@ -176,6 +181,9 @@ export default function index (path) {
                 indexDetails.processed++
                 // console.log(indexDetails)
                 store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
+                cb()
+              }).catch((e) => {
+                console.warn('Error indexing', file, e)
                 cb()
               })
           })

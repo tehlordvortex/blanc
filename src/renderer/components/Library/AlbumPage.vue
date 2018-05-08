@@ -86,7 +86,6 @@
                   :key="'albums-' + item.name"
                   hasImage
                   :data-index="index"
-                  :colors="item.colors"
                   :style="item.style"
                   :artPath="item.art">
                   <p slot="title">{{ item.name }}</p>
@@ -136,7 +135,8 @@ export default {
     image () {
       if (!this.album) return Promise.resolve('')
       // console.log(this.album.art)
-      return toFileURL(this.album.art)
+      if (!this.album.art) return Promise.resolve('static/albumart-placeholder.png')
+      else return toFileURL(this.album.art)
     },
     computedImageStyle () {
       // console.log(this.image)

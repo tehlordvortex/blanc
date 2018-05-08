@@ -8,7 +8,6 @@
           v-if="item.name"
           :key="'albums-' + item.name"
           :artPath="item.art"
-          :colors="item.colors"
           small
           >
           <p>{{ item.name }}</p>

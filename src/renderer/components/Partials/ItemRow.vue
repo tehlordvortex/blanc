@@ -1,7 +1,7 @@
 <template>
   <div class="item-row">
     <span class="item-row--title" v-text="title"></span>
-    <div class="item-row--content">
+    <div class="item-row--content" :class="wrap ? 'item-row--content--wrap' : ''">
       <slot></slot>
     </div>
   </div>
@@ -11,7 +11,8 @@
 export default {
   name: 'item-row',
   props: {
-    title: String
+    title: String,
+    wrap: Boolean
   }
 }
 </script>
@@ -40,5 +41,8 @@ export default {
     overflow-x: auto;
     overflow-y: hidden;
     position: relative;
+  }
+  .item-row--content--wrap {
+    flex-wrap: wrap;
   }
 </style>

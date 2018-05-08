@@ -202,7 +202,7 @@
 <script>
 import { mapState } from 'vuex'
 import settings from '@/lib/settings'
-import { loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
+import { getColors, loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import Player from '@/lib/player'
 
 import Queue from './Queue'
@@ -318,8 +318,8 @@ export default {
       }
     },
     visualizerBarColor () {
-      if (this.currentlyPlaying && this.currentlyPlaying.colors) {
-        return ['#FFF', this.currentlyPlaying.colors.background]
+      if (this.computedStyle) {
+        return ['#FFF', this.computedStyle.background]
       } else {
         return ['#333', '#666']
       }
@@ -348,7 +348,14 @@ export default {
           background: this.currentlyPlaying.colors.background || '',
           color: this.currentlyPlaying.colors.foreground || ''
         })
-      } else return Promise.resolve('')
+      } else if (this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt).then(colors => {
+          return {
+            background: colors.background,
+            color: colors.foreground
+          }
+        })
+      }
     }
   },
   watch: {
