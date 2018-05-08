@@ -32,6 +32,15 @@
                   <p>{{ albumArtists }}</p>
                 </div>
               </transition>
+              <material-button
+                icon
+                big
+                class="album-play-button"
+                :style="computedStyle"
+                @click="playAlbum"
+              >
+                <i class="material-icons">play_arrow</i>
+              </material-button>
             </div>
           </div>
           <loading-indicator v-else />
@@ -89,12 +98,13 @@ import BackButton from '@/components/Partials/BackButton'
 import ItemRow from '@/components/Partials/ItemRow'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import SearchBar from '@/components/Partials/SearchBar'
-import { ALBUM_TILE_HEIGHT } from '@/lib/constants'
-// import { ALBUM_TILE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_TILES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
+import { ALBUM_LINE_HEIGHT } from '@/lib/constants'
+// import { ALBUM_LINE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_LINES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
 // import chunk from 'lodash.chunk'
 // import flatten from 'lodash.flatten'
 import { toFileURL } from '@/lib/utils'
 import AlbumList from '@/components/Partials/AlbumList'
+import MaterialButton from '@/components/Partials/MaterialButton'
 
 export default {
   name: 'album-page',
@@ -138,7 +148,7 @@ export default {
     },
     albumsDisplayed () {
       if (!this.albums) return null
-      // let chunks = chunk(this.albums, ALBUM_TILES_PER_CHUNK)
+      // let chunks = chunk(this.albums, ALBUM_LINES_PER_CHUNK)
       // return flatten(chunks.splice(this.skipItems, ALBUM_CHUNKS_TO_DISPLAY)).map((item, index) => {
       //   let transformDistance = (this.skipItems * ALBUM_CHUNK_HEIGHT)
       //   return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
@@ -169,7 +179,7 @@ export default {
       if (!this.albums) return null
       if (!this.albumsPerLine) return null
       return {
-        height: (Math.floor(this.albums.length / this.albumsPerLine) * ALBUM_TILE_HEIGHT) + 'px !important'
+        height: (Math.floor(this.albums.length / this.albumsPerLine) * ALBUM_LINE_HEIGHT) + 'px !important'
       }
     }
   },
@@ -215,6 +225,11 @@ export default {
     },
     albumClicked (data) {
       this.gotoAlbum(data.album)
+    },
+    playAlbum () {
+      if (!this.albumSongs) return
+      this.$store.commit('SET_QUEUE', this.albumSongs)
+      this.$store.commit('PLAY_MUSIC', this.albumSongs[0])
     }
   },
   components: {
@@ -224,7 +239,8 @@ export default {
     ItemRow,
     LoadingIndicator,
     SearchBar,
-    AlbumList
+    AlbumList,
+    MaterialButton
   }
 }
 </script>
@@ -257,14 +273,14 @@ export default {
     position: relative;
   }
   .album-banner * {
-    z-index: 0;
+    z-index: 50;
   }
   .album-banner--text {
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: row;
     padding: 5px;
-    max-width: 300px;
+    min-width: 300px;
     margin: 1em;
   }
   .album-banner-fullimage {
@@ -295,6 +311,7 @@ export default {
     /* margin: 0 auto; */
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 0;
   }
 
   .album-details p {
@@ -350,6 +367,13 @@ export default {
     width: 100%;
     display: flex;
     justify-content: center;
+  }
+
+  .album-play-button {
+    position: absolute;
+    bottom: -32px;
+    right: 2em;
+    z-index: 100;
   }
 
 </style>
