@@ -188,7 +188,6 @@ export function getColors (resource) {
       colorsDB.findOne({ _id: resourceSum }).then((res) => {
         if (!res) {
           if (!buffer) {
-            console.log(path, resource, resourceSum)
             buffer = readFileSync(path)
           }
           let v
