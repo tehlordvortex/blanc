@@ -80,9 +80,9 @@ export function indexFile (file) {
       return res
     })
 }
-export function addFiles (path) {
+export function addFiles (path, background = false) {
   return new Promise((resolve, reject) => {
-    store.commit('BEGIN_INDEXING')
+    if (!background) store.commit('BEGIN_INDEXING')
     let indexDetails = {
       processed: 0,
       total: 0
@@ -96,11 +96,13 @@ export function addFiles (path) {
       let p = Promise.resolve()
       p.then(getLibrary)
       p.then(() => indexAlbums())
-      p.then(() => store.commit('FINISH_INDEXING'))
+      p.then(() => {
+        if (!background) store.commit('FINISH_INDEXING')
+      })
       p.then(() => resolve())
       p.catch(e => {
         console.warn(e)
-        store.commit('FINISH_INDEXING')
+        if (!background) store.commit('FINISH_INDEXING')
         reject(e)
       })
     }
@@ -124,7 +126,7 @@ export function addFiles (path) {
                     .then((song) => {
                       indexDetails.processed++
                       // console.log(indexDetails)
-                      store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
+                      if (!background) store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                       cb()
                     }).catch((e) => {
                       console.warn('Error indexing', file, e)
@@ -132,7 +134,7 @@ export function addFiles (path) {
                     })
                 } else {
                   indexDetails.processed++
-                  store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
+                  if (!background) store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                   cb()
                 }
               })

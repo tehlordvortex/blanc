@@ -120,10 +120,10 @@
           getLibrary().then(() => {
             return getAlbums()
           }).then(() => {
-            Promise.all(settings.libraries.map(library => addFiles(library))).then(() => this.leavePage())
+            Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
           })
         } else {
-          Promise.all(settings.libraries.map(library => addFiles(library))).then(() => this.leavePage())
+          Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
         }
       }
     },
