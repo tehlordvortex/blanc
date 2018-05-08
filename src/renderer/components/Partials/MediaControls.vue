@@ -343,13 +343,8 @@ export default {
     computedStyle () {
       // console.log(this.image)
       if (!this.currentlyPlaying) return Promise.resolve('')
-      if (this.currentlyPlaying.colors) {
-        return Promise.resolve({
-          background: this.currentlyPlaying.colors.background || '',
-          color: this.currentlyPlaying.colors.foreground || ''
-        })
-      } else if (this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt).then(colors => {
+      else if (this.image) {
+        return getColors(this.image).then(colors => {
           return {
             background: colors.background,
             color: colors.foreground

@@ -63,12 +63,7 @@ export default {
     computedStyle () {
       // console.log(this.image)
       if (!this.item) return Promise.resolve('')
-      if (this.item.colors) {
-        return Promise.resolve({
-          background: this.item.colors.background || '',
-          color: this.item.colors.foreground || ''
-        })
-      } else {
+      else {
         // if (!this.showArt) return this.defaultActiveStyle
         if (this.item.albumArt) {
           return getColors(this.item.albumArt).then((colors) => {
