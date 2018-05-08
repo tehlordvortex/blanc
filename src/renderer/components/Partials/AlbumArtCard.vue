@@ -173,6 +173,7 @@ export default {
     height: 200px;
     min-width: 128px;
     max-width: 128px;
+    transition: box-shadow 0.3s;
   }
   .card.card--vertical .card--contents {
     margin: 0;
@@ -201,7 +202,7 @@ export default {
     display: none;
   }
   .card.card--vertical:hover {
-    box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.6), 0 -4px 10px 0 rgba(0, 0, 0, 0.6), 4px 0 10px 0 rgba(0, 0, 0, 0.6),-4px 0 10px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.6);
   }
   .card.card--vertical:after {
     display: none;
