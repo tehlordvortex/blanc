@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { toColorString } from '@/lazy-loaders'
+import { toColorString, getColors } from '@/lazy-loaders'
 
 // const defaultColors = 'background-color: #3050ff; color: white'
 export default {
@@ -30,24 +30,31 @@ export default {
     flat: {
       type: Boolean,
       default: false
+    },
+    big: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
     classList () {
       let classes = []
+      classes.push('button')
       if (this.icon) classes.push('icon-button')
-      else classes.push('button')
+      if (this.big) classes.push('big')
       if (this.floating) classes.push('floating')
       if (this.flat) classes.push('flat')
       return classes
     },
     currentlyPlaying () {
       return this.$store.state.Music.currentlyPlaying
-    },
+    }
+  },
+  asyncComputed: {
     buttonColor () {
-      if (this.flat && this.icon) return ''
-      if (this.currentlyPlaying && this.currentlyPlaying.colors) {
-        return toColorString(this.currentlyPlaying.colors)
+      if (this.flat) return ''
+      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt).then(toColorString)
       } else {
         return ''
       }
@@ -56,7 +63,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 
   .button {
     background-color: #3080ff;
@@ -72,32 +79,46 @@ export default {
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
   }
-  .button:hover {
+  .button:hover, .icon-button:hover {
     box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.6);
     background-color: #3585ff;
   }
   .icon-button {
-    background-color: transparent;
+    background-color: #3080ff;
     color: white;
     border: none;
     transition: background-color 0.3s;
     border-radius: 50%;
     cursor: pointer;
-    padding: 3px;
     user-select: none;
     text-decoration: none;
     display: inline-block;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
   }
 
-  .icon-button:hover {
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
+  .icon-button.big {
+    width: 64px;
+    height: 64px;
+  }
+  .icon-button.big .material-icons {
+    font-size: 48px !important;
   }
 
   .floating {
     position: absolute;
   }
   .button.flat, .button.flat:hover, .button.flat:hover {
+    box-shadow: none;
+  }
+  .icon-button.flat {
+    background-color: transparent;
+  }
+  .icon-button.flat:hover {
+    background-color: rgba(0, 0, 0, 0.6);
     box-shadow: none;
   }
 </style>

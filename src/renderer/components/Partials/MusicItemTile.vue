@@ -16,10 +16,13 @@
       <slot></slot>
     </div>
     <div class="music-item-tile--actions">
-      <i
-        class="material-icons icon-button"
+      <material-button
+        icon
+        flat
         @click.stop="$emit(isActive ? 'pause' : 'play', $event)"
-        >{{ isActive ? 'pause' : 'play_arrow' }}</i>
+      >
+        <i class="material-icons">{{ isActive ? 'pause' : 'play_arrow' }}</i>
+      </material-button>
     </div>
   </div>
 </template>
@@ -28,6 +31,7 @@
 import { getColors, loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import { toFileURL } from '@/lib/utils'
+import MaterialButton from './MaterialButton'
 
 export default {
   name: 'music-item-tile',
@@ -73,7 +77,18 @@ export default {
             }
           })
         } else {
-          return Promise.resolve('')
+          return loadAlbumArt(this.item.filePath).then((path) => {
+            return getColors(path)
+          }).then((colors) => {
+            if (colors && colors.background) {
+              return {
+                background: colors.background,
+                color: colors.foreground
+              }
+            } else {
+              return ''
+            }
+          })
         }
       }
     }
@@ -94,7 +109,8 @@ export default {
     }
   },
   components: {
-    LoadingIndicator
+    LoadingIndicator,
+    MaterialButton
   }
 }
 </script>

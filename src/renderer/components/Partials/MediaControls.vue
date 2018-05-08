@@ -2,12 +2,17 @@
   <div class="media-controls" :style="computedStyle">
     <div class="media-controls-art" :style="computedImageStyle" @click.stop="goFullscreen">
       <!-- <img :src="currentlyPlaying ? image : ''" /> -->
-      <i
-        class="material-icons icon-button"
-        tabindex="0"
-        @click.stop="playing ? pause($event) : play($event)"
-        @keyup.enter="playing ? pause($event) : play($event)"
-        >{{ playing ? 'pause' : 'play_arrow' }}</i>
+      <material-button
+        icon
+        flat
+        @click="playing ? pause($event) : play($event)"
+      >
+        <i
+          class="material-icons"
+        >
+          {{ playing ? 'pause' : 'play_arrow' }}
+        </i>
+      </material-button>
     </div>
     <div class="media-controls-details" ref="details">
       <div v-if="currentlyPlaying">
@@ -58,14 +63,17 @@
       >
         <i class="material-icons">{{ loopIcon }}</i>
       </material-button>
-      <i
-        class="material-icons icon-button"
+      <material-button
+        icon
+        flat
         @click.stop="toggleQueue"
-        @keyup.enter="toggleQueue"
-        tabindex="0"
+      >
+        <i
+          class="material-icons"
         >
-        queue_music
-      </i>
+          queue_music
+        </i>
+      </material-button>
       <div class="media-controls-volume-slider-container">
         <material-button
           @click="showVolume = !showVolume"
@@ -141,12 +149,17 @@
               </material-button>
             </div>
             <div class="media-controls-actions">
-              <i
-                class="material-icons icon-button"
-                @click.stop="playing ? pause($event) : play($event)"
+              <material-button
+                icon
+                flat
+                @click="playing ? pause($event) : play($event)"
+              >
+                <i
+                  class="material-icons"
                 >
-                {{ playing ? 'pause' : 'play_arrow' }}
-              </i>
+                  {{ playing ? 'pause' : 'play_arrow' }}
+                </i>
+              </material-button>
               <material-button
                 icon
                 flat
@@ -171,19 +184,28 @@
                   <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
                 </transition>
               </div>
-              <i
-                class="material-icons icon-button"
+              <material-button
+                icon
+                flat
                 @click.stop="showFullscreenQueue = !showFullscreenQueue"
-                tabindex="0"
-                >
-                queue_music
-              </i>
-              <i
-              class="icon-button material-icons"
-              @click.stop="toggleWindowFullscreen"
               >
-                fullscreen
-              </i>
+                <i
+                  class="material-icons"
+                  >
+                  queue_music
+                </i>
+              </material-button>
+              <material-button
+                icon
+                flat
+                @click.stop="toggleWindowFullscreen"
+              >
+                <i
+                class="material-icons"
+                >
+                  fullscreen
+                </i>
+              </material-button>
             </div>
           </div>
           <!-- <canvas ref="visualizer"></canvas> -->
@@ -329,7 +351,8 @@ export default {
     image () {
       if (!this.currentlyPlaying) return Promise.resolve('')
       else {
-        console.log(this.currentlyPlaying.filePath)
+        // console.log(this.currentlyPlaying.filePath)
+        // console.log(this.currentlyPlaying.albumArt)
         if (this.currentlyPlaying.albumArt) return Promise.resolve(toFileURL(this.currentlyPlaying.albumArt))
         else return loadAlbumArt(this.currentlyPlaying.filePath)
       }
@@ -341,16 +364,23 @@ export default {
       return Promise.resolve(getBackgroundImageCSS(this.image))
     },
     computedStyle () {
-      // console.log(this.image)
-      if (!this.currentlyPlaying) return Promise.resolve('')
-      else if (this.image) {
-        return getColors(this.image).then(colors => {
-          return {
-            background: colors.background,
-            color: colors.foreground
-          }
-        })
-      }
+      console.log(this.image)
+      if (this.image) {
+        return getColors(this.image)
+          .then((colors) => {
+            console.log(colors)
+            if (colors && colors.background) {
+              return {
+                background: colors.background,
+                color: colors.foreground
+              }
+            } else {
+              return ''
+            }
+          })
+      } else return Promise.resolve('')
+      // if (!this.currentlyPlaying) return Promise.resolve('')
+      // else if (!this.image) return Promise.resolve('')
     }
   },
   watch: {
@@ -529,13 +559,10 @@ export default {
   }
 
   .media-controls-art .icon-button {
-    display: none;
-  }
-  .media-controls-art .icon-button:focus {
-    display: inline-block;
+    visibility: hidden;
   }
   .media-controls-art:hover .icon-button {
-    display: inline-block;
+    visibility: visible;
   }
 
   .media-controls-art.media-controls-art--large {
@@ -637,7 +664,7 @@ export default {
     align-items: center;
     justify-content: center;
   }
-  .icon-button {
+  /* .icon-button {
     background-color: transparent;
     color: white;
     border: none;
@@ -651,7 +678,7 @@ export default {
   .icon-button:hover {
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
-  }
+  } */
   .media-controls-fullscreen {
     width: 100%;
     height: 100%;
