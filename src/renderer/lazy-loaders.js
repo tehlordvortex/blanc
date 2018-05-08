@@ -145,14 +145,18 @@ export function getAlbums (forceRefresh = false) {
     }
   })
 }
-export async function getColors (resource) {
+export function getColors (resource) {
   return new Promise((resolve, reject) => {
     let buffer, resourceSum, path
+    if (resource === 'file:///' || !resource) {
+      resolve(null)
+      return
+    }
     if (typeof resource === 'string') {
       if (resource.startsWith('data')) {
         buffer = Buffer.from(resource.split(',')[1], 'base64')
         resourceSum = hashsum(buffer, 'md5')
-      } else if (resource.startsWith('file:///')) {
+      } else if (resource.startsWith('file://')) {
         if (process.platform === 'win32') {
           path = decodeURI(resource.replace('file:///', ''))
         } else {
@@ -179,10 +183,14 @@ export async function getColors (resource) {
     } else {
       buffer = resource
     }
+    if (!path) resolve(null)
     colorQueue.push(cb => {
       colorsDB.findOne({ _id: resourceSum }).then((res) => {
         if (!res) {
-          if (!buffer) buffer = readFileSync(path)
+          if (!buffer) {
+            console.log(path, resource, resourceSum)
+            buffer = readFileSync(path)
+          }
           let v
           try {
             v = Vibrant.from(buffer).getSwatches()
@@ -213,9 +221,9 @@ export async function getColors (resource) {
               },
               {
                 upsert: true
-              }).then(() => resolve(colors))
+              }).then(() => resolve(colors)).then(() => cb())
             })
-            .then(() => cb())
+            // .then(() => cb())
             .catch((e) => {
               reject(e)
               cb()
@@ -271,7 +279,7 @@ export function cacheAlbumArt (filePath) {
 
 export function loadAlbumArt (filePath) {
   return db.find({ filePath: filePath }).then((res) => {
-    if (res && res.length > 0 && res[0].albumArt) {
+    if (res && res.length > 0 && res[0].albumArt && res[0].albumArt !== 'file:///') {
       // console.log('Using cached art', res[0].albumArt, 'for', filePath)
       return toFileURL(res[0].albumArt) // we already have an album art
     } else {
@@ -281,3 +289,5 @@ export function loadAlbumArt (filePath) {
     }
   })
 }
+window.getColors = getColors
+window.colorsDB = colorsDB
