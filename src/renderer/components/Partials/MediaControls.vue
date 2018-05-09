@@ -120,6 +120,7 @@
               :bar-color="visualizerBarColor"
               canv-class="media-controls-details--background"
               :audio-element="audioElement"
+              :enabled="fullscreen && playing"
             ></av-circle>
           </keep-alive>
           <div class="media-controls-details--items">
