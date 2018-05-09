@@ -59,11 +59,10 @@ const mutations = {
   CHANGE_VOLUME (state, volume) {
     state.volume = volume
   },
-  PLAY_NEXT_SONG (state) {
-    console.log(state.loop, state.currentlyPlayingIndex)
+  PLAY_NEXT_SONG (state, force) {
     if (state.loop !== 'all' && state.currentlyPlayingIndex !== state.queue.length - 1) {
       state.currentlyPlaying = state.queue[++state.currentlyPlayingIndex]
-    } else if (state.loop === 'all') {
+    } else if (state.loop === 'all' || force) {
       if (state.queue.length === 1) {
         state.currentlyPlaying = null
         state.currentlyPlaying = state.queue[0]
@@ -75,11 +74,10 @@ const mutations = {
       }
     }
   },
-  PLAY_PREVIOUS_SONG (state) {
-    console.log(state.loop, state.currentlyPlayingIndex)
+  PLAY_PREVIOUS_SONG (state, force) {
     if (state.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
       state.currentlyPlaying = state.queue[--state.currentlyPlayingIndex]
-    } else if (state.loop === 'all') {
+    } else if (state.loop === 'all' || force) {
       if (state.queue.length === 1) {
         state.currentlyPlaying = null
         state.currentlyPlaying = state.queue[0]
