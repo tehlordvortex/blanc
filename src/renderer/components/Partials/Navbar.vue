@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar" :class="active ? 'navbar--active' : ''">
+  <div class="navbar" :class="active ? 'navbar--active' : ''" :style="computedStyle">
     <div class="navbar-icon--wrapper">
       <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
         <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
@@ -27,6 +27,8 @@
 </template>
 
 <script>
+import { getColors, loadAlbumArt } from '@/lazy-loaders'
+
 export default {
   name: 'navbar',
   data: () => ({
@@ -76,6 +78,32 @@ export default {
   methods: {
     keyup ($e) {
       console.log($e)
+    }
+  },
+  computed: {
+    currentlyPlaying () {
+      return this.$store.state.Music.currentlyPlaying
+    }
+  },
+  asyncComputed: {
+    computedStyle () {
+      // console.log(this.image)
+      if (!this.colors) return Promise.resolve('')
+      else {
+        // if (!this.showArt) return this.defaultActiveStyle
+        return {
+          background: this.colors.background
+        }
+      }
+    },
+    colors () {
+      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt)
+      } else if (this.currentlyPlaying) {
+        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return Promise.resolve('')
+      }
     }
   }
 }
@@ -133,7 +161,12 @@ export default {
   }
 
   .navbar-item:focus, .navbar-icon--wrapper:hover, .navbar-items .navbar-item:hover, .navbar-item--active {
-    background: #555;
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+  }
+
+  .navbar-item--active .material-icons {
+    /* color: black; */
   }
 
   .navbar-items li a > * {

@@ -12,6 +12,8 @@
       <material-button
         :disabled="indexing"
         @click="refreshLibraries"
+        rounded
+        flat
         >
         Refresh Libraries
       </material-button>

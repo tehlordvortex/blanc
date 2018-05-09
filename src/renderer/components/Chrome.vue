@@ -1,5 +1,5 @@
 <template>
-  <div id="top-bar" v-if="visible">
+  <div id="top-bar" v-if="visible" :style="computedStyle">
     <div id="window-buttons">
       <button @click="goBack"><i class="material-icons">arrow_back</i></button>
       <span class="spacer">
@@ -18,6 +18,7 @@
 <script>
 import { ipcRenderer } from 'electron'
 import ProgressBar from 'vue-simple-progress'
+import { getColors, loadAlbumArt } from '@/lazy-loaders'
 
 export default {
   name: 'chrome',
@@ -58,6 +59,28 @@ export default {
         return '#3080ff'
       }
     }
+  },
+  asyncComputed: {
+    computedStyle () {
+      // console.log(this.image)
+      if (!this.colors) return Promise.resolve('')
+      else {
+        // if (!this.showArt) return this.defaultActiveStyle
+        return {
+          background: this.colors.background,
+          color: this.colors.foreground
+        }
+      }
+    },
+    colors () {
+      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt)
+      } else if (this.currentlyPlaying) {
+        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return Promise.resolve('')
+      }
+    }
   }
 }
 </script>
@@ -74,6 +97,7 @@ export default {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     z-index: 1000;
     -webkit-app-region: drag;
+    transition: background-color 0.3s;
   }
   .spacer {
     flex-grow: 1;
@@ -82,7 +106,6 @@ export default {
     -webkit-app-region: drag;
   }
   #window-buttons {
-    background-color: #333;
     display: flex;
     height: 1.5em;
     flex-direction: row;
@@ -99,11 +122,11 @@ export default {
     -webkit-app-region: no-drag;
   }
   #window-buttons button:focus {
-    background: #666;
+    background: rgba(0, 0, 0, 0.3);
     outline: none;
   }
   #window-buttons button:hover {
-    background: #666;
+    background: rgba(0, 0, 0, 0.3);
   }
 
   #window-buttons #close-btn:hover {

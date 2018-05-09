@@ -11,20 +11,23 @@
           v-if="libraryDisplayed"
           >
             <div :style="songListStyle">
-              <music-item-tile
-                v-for="(item, index) in libraryDisplayed" :key="'all-songs-' + item.filePath"
-                :item="item"
-                @play="play(item)"
-                @pause="pause()"
-                :showArt="false"
+              <div
                 :style="item.style"
-                :data-staggered-index="index"
-                @contextmenu="doContextMenu(item)"
-                >
-                <p>{{ item.title }}</p>
-                <p>{{ item.artist }}</p>
-                <p>{{ item.album }}</p>
-              </music-item-tile>
+                v-for="(item, index) in libraryDisplayed" :key="'all-songs-' + item.filePath"
+              >
+                <music-item-tile
+                  :item="item"
+                  @play="play(item)"
+                  @pause="pause()"
+                  :showArt="false"
+                  :data-staggered-index="index"
+                  @contextmenu="doContextMenu(item)"
+                  >
+                  <p>{{ item.title }}</p>
+                  <p>{{ item.artist }}</p>
+                  <p>{{ item.album }}</p>
+                </music-item-tile>
+              </div>
             </div>
           </div>
         </div>
@@ -185,7 +188,8 @@ export default {
     width: 100%;
     max-height: 100%;
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
   }
 

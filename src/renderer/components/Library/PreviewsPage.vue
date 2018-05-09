@@ -16,7 +16,7 @@
       </template>
       <loading-indicator name="line-scale" v-else />
     </item-row>
-    <material-button class="right" @click="gotoAlbums" center>
+    <material-button class="right" @click="gotoAlbums" flat rounded>
       view all
     </material-button>
   <!-- </div> -->
@@ -44,6 +44,8 @@
     <material-button
       @click="gotoAllSongs"
       class="right"
+      rounded
+      flat
     >View All</material-button>
   </div>
 </template>

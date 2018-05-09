@@ -9,7 +9,7 @@
       ref="modal"
     >
       <h1>There are no files in your library!</h1>
-      <material-button to="/settings/library" slot="button">Manage Library</material-button>
+      <material-button rounded flat to="/settings/library" slot="button">Manage Library</material-button>
     </sweet-modal>
     <!-- <div class="item-row">
       <span class="item-row--title">Albums</span>
@@ -44,7 +44,6 @@ export default {
   }),
   watch: {
     library (newVal) {
-      console.log(newVal)
       if (newVal != null && newVal === 0) {
         console.log(this.$refs)
         this.$refs.modal.open()

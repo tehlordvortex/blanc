@@ -90,6 +90,7 @@ export default {
     /* white-space: pre-wrap; */
     flex-grow: 1;
     width: 100%;
+    position: relative;
   }
   .card--contents.card--contents--center {
     display: flex;

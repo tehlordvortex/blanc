@@ -496,10 +496,10 @@ export default {
       this.showQueue = !this.showQueue
     },
     playPrevious () {
-      this.$store.commit('PLAY_PREVIOUS_SONG')
+      this.$store.commit('PLAY_PREVIOUS_SONG', true)
     },
     playNext () {
-      this.$store.commit('PLAY_NEXT_SONG')
+      this.$store.commit('PLAY_NEXT_SONG', true)
     },
     toggleLoop () {
       switch (this.loop) {

@@ -1,5 +1,10 @@
 <template>
-  <div @click="$emit(isActive ? 'pause' : 'play', $event)" class="music-item-tile" :style="isActive ? (computedStyle ? computedStyle : defaultActiveStyle) : ''" @contextmenu="$emit('contextmenu', $event)">
+  <div
+    @click="$emit(isActive ? 'pause' : 'play', $event)"
+    class="music-item-tile"
+    :class="isActive ? 'music-item-tile--active' : ''"
+    :style="isActive ? (computedStyle ? computedStyle : defaultActiveStyle) : ''"
+    @contextmenu="$emit('contextmenu', $event)">
     <div class="music-item-tile--active-indicator">
       <loading-indicator
       :fullWidth="false"
@@ -118,7 +123,7 @@ export default {
     /* border-bottom: 1px solid grey; */
     height: 4.5em;
     color: white;
-    transition: background-color 0.5s;
+    transition: background-color 0.3s, transform 0.3s;
     cursor: pointer;
     align-items: center;
     width: 100%;
@@ -175,5 +180,10 @@ export default {
   .icon-button:hover, .icon-button:focus {
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
+  }
+  .music-item-tile--active {
+    transform: scaleX(1.01);
+    box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.3);
+    text-rendering: optimizeLegibility;
   }
 </style>

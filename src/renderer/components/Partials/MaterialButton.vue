@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { toColorString, getColors } from '@/lazy-loaders'
+import { loadAlbumArt, toColorString, getColors } from '@/lazy-loaders'
 
 // const defaultColors = 'background-color: #3050ff; color: white'
 export default {
@@ -34,6 +34,10 @@ export default {
     big: {
       type: Boolean,
       default: false
+    },
+    rounded: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -44,6 +48,7 @@ export default {
       if (this.big) classes.push('big')
       if (this.floating) classes.push('floating')
       if (this.flat) classes.push('flat')
+      if (this.rounded) classes.push('rounded')
       return classes
     },
     currentlyPlaying () {
@@ -52,9 +57,11 @@ export default {
   },
   asyncComputed: {
     buttonColor () {
-      if (this.flat) return ''
+      if (this.icon && this.flat) return ''
       if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
         return getColors(this.currentlyPlaying.albumArt).then(toColorString)
+      } else if (this.currentlyPlaying) {
+        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {
         return ''
       }
@@ -78,6 +85,11 @@ export default {
     margin: 5px;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
+    text-align: center;
+  }
+  .button.rounded {
+    border-radius: 25px;
+    padding: 10px 25px;
   }
   .button:hover, .icon-button:hover {
     box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.6);
