@@ -182,8 +182,10 @@ export default {
     color: white;
   }
   .music-item-tile--active {
-    transform: scaleX(1.01);
+    transform: scaleX(1.01) translateZ(1px) perspective(1px);
     box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.3);
     text-rendering: optimizeLegibility;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
   }
 </style>
