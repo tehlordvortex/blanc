@@ -165,10 +165,6 @@ export default {
     color: white;
   }
 
-  .navbar-item--active .material-icons {
-    /* color: black; */
-  }
-
   .navbar-items li a > * {
     margin: 0 5px;
   }
