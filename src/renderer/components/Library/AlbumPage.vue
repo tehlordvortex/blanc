@@ -33,41 +33,43 @@
                   <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
                 </div>
               </transition>
-              <material-button
-                icon
-                big
-                class="album-play-button"
-                :style="computedStyle"
-                @click="playAlbum"
-              >
-                <i class="material-icons">play_arrow</i>
-              </material-button>
             </div>
           </div>
           <loading-indicator v-else />
           <!-- <div class="album-songs" v-if="album"> -->
-          <transition
-            mode="out-in"
-            appear
-            enter-active-class="animated slideInUp"
-            leave-active-class="animated slideOutDown"
-          >
-          <card class="raise-up">
-            <music-item-tile
-              v-for="(item, index) in albumSongs"
-              :key="item.filePath"
-              :showArt="false"
-              :item="item"
-              @play="play(item)"
-              @pause="pause()"
-              :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
-              :data-index="index"
+          <div class="album-songs-wrapper">
+            <transition
+              mode="out-in"
+              appear
+              enter-active-class="animated slideInUp"
+              leave-active-class="animated slideOutDown"
             >
-              <p>{{ item.title }}</p>
-              <p>{{ item.artist }}</p>
-            </music-item-tile>
-          </card>
-          </transition>
+              <card class="raise-up">
+                <material-button
+                  big
+                  icon
+                  class="album-play-button"
+                  :style="computedStyle"
+                  @click="playAlbum"
+                >
+                  <i class="material-icons">play_arrow</i>
+                </material-button>
+                <music-item-tile
+                  v-for="(item, index) in albumSongs"
+                  :key="item.filePath"
+                  :showArt="false"
+                  :item="item"
+                  @play="play(item)"
+                  @pause="pause()"
+                  :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
+                  :data-index="index"
+                >
+                  <p>{{ item.title }}</p>
+                  <p>{{ item.artist }}</p>
+                </music-item-tile>
+              </card>
+            </transition>
+          </div>
         </div>
       </template>
       <template v-else>
@@ -258,9 +260,10 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   .album-banner {
-    min-height: 250px;
+    min-height: 100%;
     display: flex;
     flex-direction: row;
     // align-items: center;
@@ -278,6 +281,10 @@ export default {
     min-width: 300px;
     height: 138px;
     margin: 1em;
+    z-index: 50;
+  }
+  .album-banner--text  p {
+    margin: 5px;
   }
   .album-banner-fullimage {
     position: absolute;
@@ -367,17 +374,27 @@ export default {
 
   .album-play-button {
     position: absolute;
-    bottom: -32px;
-    right: 2em;
-    z-index: 100;
+    z-index: 1200;
     color: white !important;
+    right: 1em;
+    top: -32px;
   }
 
+  .album-songs-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+    z-index: 50;
+    padding-top: 200px;
+    padding-bottom: 1em;
+  }
   .raise-up {
     z-index: 50;
     width: 70%;
-    margin: -2em auto 0 auto !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    margin: 0 auto !important;
+    box-shadow: 0 25px 30px rgba(0, 0, 0, 0.3) !important;
     background-color: #222 !important;
   }
 
