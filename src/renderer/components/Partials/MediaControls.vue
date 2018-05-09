@@ -364,23 +364,24 @@ export default {
       return Promise.resolve(getBackgroundImageCSS(this.image))
     },
     computedStyle () {
-      console.log(this.image)
-      if (this.image) {
-        return getColors(this.image)
-          .then((colors) => {
-            console.log(colors)
-            if (colors && colors.background) {
-              return {
-                background: colors.background,
-                color: colors.foreground
-              }
-            } else {
-              return ''
-            }
-          })
-      } else return Promise.resolve('')
-      // if (!this.currentlyPlaying) return Promise.resolve('')
-      // else if (!this.image) return Promise.resolve('')
+      // console.log(this.image)
+      if (!this.colors) return Promise.resolve('')
+      else {
+        // if (!this.showArt) return this.defaultActiveStyle
+        return {
+          background: this.colors.background,
+          color: this.colors.foreground
+        }
+      }
+    },
+    colors () {
+      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt)
+      } else if (this.currentlyPlaying) {
+        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return Promise.resolve('')
+      }
     }
   },
   watch: {
@@ -538,7 +539,7 @@ export default {
     padding: 3px 1em;
     display: flex;
     flex-direction: row;
-    transition: background-color 0.5s;
+    transition: background-color 0.3s;
     box-shadow: 0 -3px 5px 0 rgba(0, 0, 0, 0.2);
     z-index: 900;
     user-select: none;
