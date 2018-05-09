@@ -89,7 +89,7 @@ export default {
     word-wrap: break-word;
     /* white-space: pre-wrap; */
     flex-grow: 1;
-    /* width: 150px; */
+    width: 100%;
   }
   .card--contents.card--contents--center {
     display: flex;

@@ -202,7 +202,7 @@ export default {
     display: none;
   }
   .card.card--vertical:hover {
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: 0 25px 30px 0 rgba(0, 0, 0, 0.6);
   }
   .card.card--vertical:after {
     display: none;

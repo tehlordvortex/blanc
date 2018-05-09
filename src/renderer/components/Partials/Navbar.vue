@@ -89,6 +89,7 @@ export default {
     top: 1.5em;
     left: 0px;
     background-color: #333;
+    color: white;
     z-index: 1000;
     transition: all 0.3s ease;
     overflow: hidden;

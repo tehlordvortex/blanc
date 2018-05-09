@@ -79,14 +79,6 @@ export default {
 </script>
 
 <style>
-  .wrapper, .wrapper-message {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color: #333;
-    color: white;
-  }
   .wrapper-message {
     display: flex;
     flex-direction: column;

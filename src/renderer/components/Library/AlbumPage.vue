@@ -30,6 +30,7 @@
                 <div class="album-details">
                   <p>{{ album.name }}</p>
                   <p>{{ albumArtists }}</p>
+                  <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
                 </div>
               </transition>
               <material-button
@@ -45,32 +46,28 @@
           </div>
           <loading-indicator v-else />
           <!-- <div class="album-songs" v-if="album"> -->
-            <transition-group
-              name="animated-slide-in"
-              appear
-              mode="out-in"
-              enter-active-class="animated slideInLeft"
-              leave-active-class="animated slideOutLeft"
-              class="album-songs"
-              tag="div"
-              @enter="stagger"
-              @leave="stagger"
-              v-if="album"
+          <transition
+            mode="out-in"
+            appear
+            enter-active-class="animated slideInUp"
+            leave-active-class="animated slideOutDown"
+          >
+          <card class="raise-up">
+            <music-item-tile
+              v-for="(item, index) in albumSongs"
+              :key="item.filePath"
+              :showArt="false"
+              :item="item"
+              @play="play(item)"
+              @pause="pause()"
+              :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
+              :data-index="index"
             >
-              <music-item-tile
-                v-for="(item, index) in albumSongs"
-                :key="item.filePath"
-                :showArt="false"
-                :item="item"
-                @play="play(item)"
-                @pause="pause()"
-                :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
-                :data-index="index"
-              >
-                <p>{{ item.title }}</p>
-                <p>{{ item.artist }}</p>
-              </music-item-tile>
-            </transition-group>
+              <p>{{ item.title }}</p>
+              <p>{{ item.artist }}</p>
+            </music-item-tile>
+          </card>
+          </transition>
         </div>
       </template>
       <template v-else>
@@ -105,6 +102,7 @@ import { ALBUM_LINE_HEIGHT } from '@/lib/constants'
 import { toFileURL } from '@/lib/utils'
 import AlbumList from '@/components/Partials/AlbumList'
 import MaterialButton from '@/components/Partials/MaterialButton'
+import Card from '@/components/Partials/Card'
 
 export default {
   name: 'album-page',
@@ -240,7 +238,8 @@ export default {
     LoadingIndicator,
     SearchBar,
     AlbumList,
-    MaterialButton
+    MaterialButton,
+    Card
   }
 }
 </script>
@@ -252,11 +251,8 @@ export default {
     }
   }
   .album-page {
-    background: #333;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    color: white;
     position: relative;
     width: 100%;
     height: 100%;
@@ -264,11 +260,10 @@ export default {
     flex-direction: column;
   }
   .album-banner {
-    min-height: 200px;
-    background: #222;
+    min-height: 250px;
     display: flex;
     flex-direction: row;
-    align-items: center;
+    // align-items: center;
     justify-content: center;
     position: relative;
   }
@@ -281,6 +276,7 @@ export default {
     flex-direction: row;
     padding: 5px;
     min-width: 300px;
+    height: 138px;
     margin: 1em;
   }
   .album-banner-fullimage {
@@ -374,6 +370,15 @@ export default {
     bottom: -32px;
     right: 2em;
     z-index: 100;
+    color: white !important;
+  }
+
+  .raise-up {
+    z-index: 50;
+    width: 70%;
+    margin: -2em auto 0 auto !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    background-color: #222 !important;
   }
 
 </style>

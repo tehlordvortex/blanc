@@ -31,7 +31,7 @@
         <i class="material-icons">skip_previous</i>
       </material-button>
       <span>{{ positionText }}</span>
-      <input type="range" min="0" :max="duration" v-model="sliderPosition" step="1" @change="seekSong"/>
+      <input :style="computedStyle" type="range" min="0" :max="duration" v-model="sliderPosition" step="1" @change="seekSong"/>
       <span>{{ durationText }}</span>
       <material-button
         icon

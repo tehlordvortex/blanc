@@ -5,7 +5,7 @@
       :fullWidth="false"
       :fullHeight="false"
       v-if="isActive"
-      :color="this.item.colors && this.item.colors.foreground || 'white'"
+      :color="colors && colors.foreground || 'white'"
       small
       name="line-scale-pulse-out-rapid"
        />
@@ -19,11 +19,12 @@
       <material-button
         icon
         flat
+        :style="isActive && buttonStyle"
         @click.stop="$emit(isActive ? 'pause' : 'play', $event)"
       >
         <i class="material-icons">{{ isActive ? 'pause' : 'play_arrow' }}</i>
       </material-button>
-    </div>
+    </div>  
   </div>
 </template>
 
@@ -66,31 +67,25 @@ export default {
     },
     computedStyle () {
       // console.log(this.image)
-      if (!this.item) return Promise.resolve('')
+      if (!this.colors) return Promise.resolve('')
       else {
         // if (!this.showArt) return this.defaultActiveStyle
-        if (this.item.albumArt) {
-          return getColors(this.item.albumArt).then((colors) => {
-            return {
-              background: colors.background,
-              color: colors.foreground
-            }
-          })
-        } else {
-          return loadAlbumArt(this.item.filePath).then((path) => {
-            return getColors(path)
-          }).then((colors) => {
-            if (colors && colors.background) {
-              return {
-                background: colors.background,
-                color: colors.foreground
-              }
-            } else {
-              return ''
-            }
-          })
+        return {
+          background: this.colors.background,
+          color: this.colors.foreground
         }
       }
+    },
+    colors () {
+      if (this.item.albumArt) {
+        return getColors(this.item.albumArt)
+      } else {
+        return loadAlbumArt(this.item.filePath).then(path => getColors(path))
+      }
+    },
+    buttonStyle () {
+      if (!this.colors) return Promise.resolve('')
+      else return {color: this.colors.foreground}
     }
   },
   computed: {
@@ -120,7 +115,7 @@ export default {
     background-color: #222;
     padding: 10px;
     display: flex;
-    border-bottom: 1px solid grey;
+    /* border-bottom: 1px solid grey; */
     height: 4.5em;
     color: white;
     transition: background-color 0.5s;
