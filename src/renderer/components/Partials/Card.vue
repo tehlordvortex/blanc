@@ -72,9 +72,6 @@ export default {
     transition: box-shadow 0.3s;
   }
   
-  .card:hover {
-    box-shadow: 0 6px 10px 0 rgba(200, 200, 200, 0.2);
-  }
   .card--image {
     height: 100%;
     padding: 0;
