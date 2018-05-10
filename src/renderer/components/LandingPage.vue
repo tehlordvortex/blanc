@@ -8,13 +8,27 @@
         >
         <img src="static/icon.png" class="icon" key="icon" v-if="!indexing"/>
       </transition>
-      <transition
+      <transition-group
         appear
         mode="out-in"
         name="slide-fade"
+        class="flex-center"
         >
-        <h1 key="text" v-if="!indexing">blanc</h1>
-      </transition>
+        <h1 key="text" v-if="!indexing && !updating">blanc</h1>
+        <h1 key="status-message" v-if="updating">{{ doneUpdating ? 'All set!' : 'Finishing updates, please wait...' }}</h1>
+        <transition-group
+          key="status-indicators"
+          name="animated-slide-up"
+          enter-active-class="animated slideInUp animated--fast"
+          leave-active-class="animated slideOutRight animated--fast"
+          class="flex-center"
+        >
+          <loading-indicator key="loading-indicator" color="#00FF30" v-if="!doneUpdating" />
+          <div class="done-icon" key="done-icon" v-else>
+              <i class="material-icons">done</i>
+          </div>
+        </transition-group>
+      </transition-group>
     </div>
     <transition
       name="side-fill"
@@ -85,6 +99,9 @@
   import { getLibrary, getAlbums } from '@/lazy-loaders'
   import { addFiles, default as index } from '@/indexer.lib'
   import { mapState } from 'vuex'
+  import LoadingIndicator from '@/components/Partials/LoadingIndicator'
+  import finishUpdates from '@/lib/updates'
+
   const app = remote.app
   window.db = db
   const defLibraryPath = app.getPath('music') || ''
@@ -96,10 +113,13 @@
       worker: null,
       currentPath: '',
       doneIndexing: false,
-      showFirstStart: false
+      showFirstStart: false,
+      updating: false,
+      doneUpdating: false
     }),
     components: {
-      ProgressBar
+      ProgressBar,
+      LoadingIndicator
     },
     computed: mapState({
       indexPercent: state => state.Library.indexProgress * 100,
@@ -114,16 +134,31 @@
     created () {
       this.$store.commit('HIDE_CHROME')
       this.$store.commit('HIDE_MUSIC_BAR')
-      if (settings.libraries.length === 0) this.showFirstStart = true
-      else {
-        if (!this.library || typeof this.library[0] !== 'string' || !this.albums) {
-          getLibrary().then(() => {
-            return getAlbums()
-          }).then(() => {
-            Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
+      if (settings.version !== settings.lastRunVersion) {
+        this.updating = true
+        finishUpdates()
+          .then(() => {
+            settings.lastRunVersion = settings.version
           })
-        } else {
-          Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
+          .then(() => getLibrary())
+          .then(() => getAlbums())
+          .then(() => {
+            this.doneUpdating = true
+          })
+          .then(() => Promise.all(settings.libraries.map(library => addFiles(library, true))))
+          .then(() => this.leavePage())
+      } else {
+        if (settings.libraries.length === 0) this.showFirstStart = true
+        else {
+          if (!this.library || typeof this.library[0] !== 'string' || !this.albums) {
+            getLibrary().then(() => {
+              return getAlbums()
+            }).then(() => {
+              Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
+            })
+          } else {
+            Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
+          }
         }
       }
     },
@@ -365,4 +400,10 @@
     transform-origin: center;
     transform: translate(-50%, -70%) rotate(225deg) scaleY(1.3);
   } */
+  .flex-center {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+  }
 </style>
