@@ -67,6 +67,12 @@ export default {
         icon: 'code',
         path: '/settings/development',
         subitem: true
+      },
+      {
+        title: 'About',
+        icon: 'help',
+        path: '/settings/about',
+        subitem: true
       }
     ]
   }),
@@ -200,5 +206,8 @@ export default {
   }
   .navbar-icon .material-icons {
     font-size: 32px;
+  }
+  .navbar-item {
+    align-items: center;
   }
 </style>

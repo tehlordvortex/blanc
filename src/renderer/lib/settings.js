@@ -1,7 +1,8 @@
 import settingsStore from 'electron-settings'
-
+import * as packageInfo from '../../../package.json'
 export const defaults = {
-  libraries: []
+  libraries: [],
+  lastRunVersion: packageInfo.version
 }
 
 class Settings {
@@ -10,6 +11,15 @@ class Settings {
   }
   set libraries (libs) {
     settingsStore.set('libraries', libs)
+  }
+  get version () {
+    return packageInfo.version
+  }
+  get lastRunVersion () {
+    return settingsStore.get('lastRunVersion', defaults.lastRunVersion)
+  }
+  set lastRunVersion (version) {
+    settingsStore.set('lastRunVersion', version)
   }
   addLibrary (lib) {
     let libs = this.libraries

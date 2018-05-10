@@ -50,6 +50,11 @@ let router = new Router({
           path: 'development',
           name: 'settings-development-page',
           component: require('@/components/Settings/Development.vue').default
+        },
+        {
+          path: 'about',
+          name: 'settings-about-page',
+          component: require('@/components/Settings/About.vue').default
         }
       ]
     },
