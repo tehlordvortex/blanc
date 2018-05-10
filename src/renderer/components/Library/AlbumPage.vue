@@ -10,66 +10,80 @@
           <div class="album-banner" :style="computedStyle" v-if="album">
             <!-- <div class="back-button" @click="goBack"><i class="material-icons">arrow_back</i></div> -->
             <div class="album-banner-fullimage" :style="computedImageStyle"></div>
-            <div class="album-banner--text">
-              <transition
-                name="animated-slide-in"
-                appear
-                enter-active-class="animated slideInLeft"
-                leave-active-class="animated slideOutLeft"
-              >
-                <div class="album-image" :style="computedImageStyle">
-                  <loading-indicator v-if="!computedImageStyle" />
-                </div>
-              </transition>
-              <transition
-                name="animated-slide-in-up"
-                appear
-                enter-active-class="animated slideInUp"
-                leave-active-class="animated slideOutDown"
-              >
-                <div class="album-details">
-                  <p>{{ album.name }}</p>
-                  <p>{{ albumArtists }}</p>
-                  <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
-                </div>
-              </transition>
+            <div class="album-banner-others">
+              <div class="album-banner--text">
+                <transition
+                  name="animated-slide-in"
+                  appear
+                  enter-active-class="animated slideInLeft"
+                  leave-active-class="animated slideOutLeft"
+                >
+                  <div class="album-image" :style="computedImageStyle">
+                    <loading-indicator v-if="!computedImageStyle" />
+                  </div>
+                </transition>
+                <transition
+                  name="animated-slide-in-up"
+                  appear
+                  enter-active-class="animated slideInUp"
+                  leave-active-class="animated slideOutDown"
+                >
+                  <div class="album-details">
+                    <p>{{ album.name }}</p>
+                    <p>{{ albumArtists }}</p>
+                    <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
+                    <p>
+                      <material-button
+                        rounded
+                        flat
+                        :style="computedStyle"
+                        @click="playAlbum"
+                      >
+                        play
+                      </material-button>
+                    </p>
+                  </div>
+                </transition>
+              </div>
+              <div class="album-banner--songs">
+                <transition
+                  mode="out-in"
+                  appear
+                  enter-active-class="animated slideInUp"
+                  leave-active-class="animated slideOutDown"
+                >
+                  <card class="raise-up">
+                    <!-- <material-button
+                      big
+                      icon
+                      class="album-play-button"
+                      :style="computedStyle"
+                      @click="playAlbum"
+                    >
+                      <i class="material-icons">play_arrow</i>
+                    </material-button> -->
+                    <music-item-tile
+                      v-for="(item, index) in albumSongs"
+                      :key="item.filePath"
+                      :showArt="false"
+                      :item="item"
+                      @play="play(item)"
+                      @pause="pause()"
+                      :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
+                      :data-index="index"
+                    >
+                      <p>{{ item.title }}</p>
+                      <p>{{ item.artist }}</p>
+                    </music-item-tile>
+                  </card>
+                </transition>
+              </div>
             </div>
           </div>
           <loading-indicator v-else />
           <!-- <div class="album-songs" v-if="album"> -->
-          <div class="album-songs-wrapper">
-            <transition
-              mode="out-in"
-              appear
-              enter-active-class="animated slideInUp"
-              leave-active-class="animated slideOutDown"
-            >
-              <card class="raise-up">
-                <material-button
-                  big
-                  icon
-                  class="album-play-button"
-                  :style="computedStyle"
-                  @click="playAlbum"
-                >
-                  <i class="material-icons">play_arrow</i>
-                </material-button>
-                <music-item-tile
-                  v-for="(item, index) in albumSongs"
-                  :key="item.filePath"
-                  :showArt="false"
-                  :item="item"
-                  @play="play(item)"
-                  @pause="pause()"
-                  :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
-                  :data-index="index"
-                >
-                  <p>{{ item.title }}</p>
-                  <p>{{ item.artist }}</p>
-                </music-item-tile>
-              </card>
-            </transition>
-          </div>
+          <!-- <div class="album-songs-wrapper">
+          </div> -->
         </div>
       </template>
       <template v-else>
@@ -263,12 +277,11 @@ export default {
     overflow: hidden;
   }
   .album-banner {
-    min-height: 100%;
-    display: flex;
-    flex-direction: row;
-    // align-items: center;
-    justify-content: center;
+    height: 100%;
+    max-height: 100%;
+    // justify-content: center;
     position: relative;
+    // overflow: auto;
   }
   .album-banner * {
     z-index: 50;
@@ -282,6 +295,7 @@ export default {
     height: 138px;
     margin: 1em;
     z-index: 50;
+    flex-shrink: 0;
   }
   .album-banner--text  p {
     margin: 5px;
@@ -297,6 +311,21 @@ export default {
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
+  }
+
+  .album-banner-others {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 1em;
   }
 
   .album-image {
@@ -388,14 +417,19 @@ export default {
     overflow: auto;
     z-index: 50;
     padding-top: 200px;
-    padding-bottom: 1em;
+    // padding-bottom: 1em; 
+    pointer-events: none;
   }
   .raise-up {
-    z-index: 50;
-    width: 70%;
-    margin: 0 auto !important;
-    box-shadow: 0 25px 30px rgba(0, 0, 0, 0.3) !important;
+    width: 100%;
+    margin: 0 !important;
     background-color: #222 !important;
+  }
+
+  .album-banner--songs {
+    width: 70%;
+    flex-shrink: 1;
+    box-shadow: 0 25px 30px rgba(0, 0, 0, 0.3) !important;
   }
 
 </style>
