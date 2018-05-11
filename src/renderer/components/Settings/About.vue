@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper" :class="partial ? 'no-fill-height' : ''">
-    <item-column title="About">
+    <item-column title="About" class="about-page">
       <div style="text-align: center">
         <h1>Blanc</h1>
         <h3>Version {{ appVersion }}</h3>
@@ -33,10 +33,10 @@ export default {
 </script>
 
 <style>
-  a, a:visited {
+  .about-page a, a:visited {
     color: #444;
   }
-  a:hover {
+  .about-page a:hover {
     color: #555;
   }
 </style>
