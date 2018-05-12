@@ -1,6 +1,9 @@
 'use strict'
 
 import { app, BrowserWindow, ipcMain as ipc, dialog, globalShortcut, Menu, Tray } from 'electron'
+
+import * as log from 'electron-log'
+
 // import { name } from '../../package.json'
 /**
  * Set `__static` path to static files in production
@@ -199,7 +202,8 @@ ipc.on('tray-resume-song', (event) => {
 })
 
 ipc.on('app-error', (event, details) => {
-  console.log(details)
+  log.error('Error at ' + new Date())
+  log.error(details)
 })
 
 /**

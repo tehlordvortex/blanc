@@ -9,6 +9,19 @@ import '../../static/material-icons/material-icons.css'
 import Spinner from 'vue-spinkit'
 import SweetModal from 'sweet-modal-vue/src/plugin.js'
 import AudioVisual from 'vue-audio-visual/src/index.js'
+
+import { ipcRenderer as ipc } from 'electron'
+
+window.onerror = (event, source, lineNo, columnNo, error) => {
+  ipc.send('app-error', {
+    event,
+    source,
+    lineNo,
+    columnNo,
+    error
+  })
+}
+
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false
 
