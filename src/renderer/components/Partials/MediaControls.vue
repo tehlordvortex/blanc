@@ -427,7 +427,7 @@ export default {
     play (event) {
       if (!this.currentlyPlaying) return
       if (event) {
-        this.$store.commit('RESUME_MUSIC', this.currentlyPlaying)
+        this.$store.commit('RESUME_MUSIC')
         return
       }
       console.log(this.previousSong, this.currentlyPlaying)
@@ -437,6 +437,7 @@ export default {
         this.createSound(this.currentlyPlaying.filePath)
       } else {
         if (this.previousSong.filePath === this.currentlyPlaying.filePath) {
+          this.$store.commit('RESUME_MUSIC')
           Player.play().catch(e => console.warn(e))
         } else {
           this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))

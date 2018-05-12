@@ -1,3 +1,5 @@
+import { ipcRenderer as ipc } from 'electron'
+
 const state = {
   status: 'stopped',
   queue: [],
@@ -18,9 +20,11 @@ const mutations = {
       state.currentlyPlayingIndex = state.queue.findIndex(item => item.filePath === music.filePath)
     }
     state.status = 'playing'
+    ipc.send('tray-play-song', state.currentlyPlaying)
   },
   PAUSE_MUSIC (state) {
     state.status = 'paused'
+    ipc.send('tray-pause-song')
   },
   STOP_MUSIC (state) {
     state.currentlyPlaying = null
@@ -28,6 +32,7 @@ const mutations = {
   },
   RESUME_MUSIC (state) {
     state.status = 'playing'
+    ipc.send('tray-resume-song')
   },
   CLEAR_QUEUE (state) {
     state.queue = []
@@ -73,6 +78,7 @@ const mutations = {
         state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
       }
     }
+    ipc.send('tray-play-song', state.currentlyPlaying)
   },
   PLAY_PREVIOUS_SONG (state, force) {
     if (state.loop !== 'all' && state.currentlyPlayingIndex !== 0) {
@@ -87,6 +93,7 @@ const mutations = {
         state.currentlyPlaying = state.queue[state.currentlyPlayingIndex]
       }
     }
+    ipc.send('tray-play-song', state.currentlyPlaying)
   },
   SET_LOOP (state, loop) {
     state.loop = loop
