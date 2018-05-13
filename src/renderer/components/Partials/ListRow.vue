@@ -50,7 +50,7 @@ export default {
   }
   .list-row .list-row-content p {
     margin: 0;
-    max-width: 80%;
+    max-width: 100%;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
