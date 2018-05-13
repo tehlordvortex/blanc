@@ -25,6 +25,7 @@
 import { ipcRenderer } from 'electron'
 import ProgressBar from 'vue-simple-progress'
 import { getColors, loadAlbumArt } from '@/lazy-loaders'
+import Color from 'color'
 
 export default {
   name: 'chrome',
@@ -59,8 +60,9 @@ export default {
       return this.$store.state.Music.currentlyPlaying
     },
     barColor () {
-      if (this.currentlyPlaying && this.currentlyPlaying.colors && this.currentlyPlaying.colors.background) {
-        return this.currentlyPlaying.colors.background
+      if (this.colors) {
+        let color = Color(this.colors.background)
+        return (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
       } else {
         return '#3080ff'
       }
@@ -79,10 +81,10 @@ export default {
       }
     },
     colors () {
-      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt)
-      } else if (this.currentlyPlaying) {
-        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {
         return Promise.resolve('')
       }
