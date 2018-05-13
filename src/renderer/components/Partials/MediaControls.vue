@@ -1,6 +1,6 @@
 <template>
   <div class="media-controls" :style="computedStyle">
-    <div class="media-controls-art" :style="computedImageStyle" @click.stop="goFullscreen">
+    <div class="media-controls-art" :style="computedImageStyle">
       <!-- <img :src="currentlyPlaying ? image : ''" /> -->
       <material-button
         icon
@@ -91,6 +91,13 @@
           <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
         </transition>
       </div>
+      <material-button
+        icon
+        flat
+        @click="goFullscreen"
+      >
+        <i class="material-icons">keyboard_arrow_up</i>
+      </material-button>
     </div>
     <transition
       name="animated-slide-in"
@@ -100,29 +107,37 @@
     </transition>
     <transition
       name="animated-zoom-in"
-      enter-active-class="animated zoomInUp"
-      leave-active-class="animated zoomOutDown"
+      enter-active-class="animated slideInUp"
+      leave-active-class="animated slideOutDown"
     >
-      <div class="media-controls-fullscreen" v-show="fullscreen" @click="leaveFullscreen" :style="computedStyle" @keyup.esc="fullscreen = false" ref="fullscreen">
+      <div class="media-controls-fullscreen" v-show="fullscreen" :style="computedStyle" ref="fullscreen">
         <div class="media-controls-fullscreen--background" :style="computedImageStyle"></div>
+        <div class="media-controls-fullscreen--leave-button">
+          <material-button
+            icon
+            flat
+            @click="leaveFullscreen"
+          >
+            <i class="material-icons">keyboard_arrow_down</i>
+          </material-button>
+        </div>
         <!-- <div class="media-controls-art media-controls-art--large" :style="computedImageStyle">
         </div> -->
         <div class="media-controls-details" @click.stop ref="fsdetails">
-          <keep-alive>
+          <!-- <keep-alive> -->
             <av-circle
               v-if="audioElement"
               :canv-width="500"
               :canv-height="500"
-
               :progress="false"
               :rotate-graph="true"
               :outline-width="0"
               :bar-color="visualizerBarColor"
               canv-class="media-controls-details--background"
               :audio-element="audioElement"
-              :enabled="fullscreen && playing"
+              :enabled="windowFocused && fullscreen && playing"
             ></av-circle>
-          </keep-alive>
+          <!-- </keep-alive> -->
           <div class="media-controls-details--items">
             <template v-if="currentlyPlaying">
               <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
@@ -246,6 +261,7 @@ export default {
     duration: 0,
     fullscreen: false,
     windowFullscreen: false,
+    windowFocused: true,
     showQueue: false,
     showFullscreenQueue: false,
     showVolume: false,
@@ -272,9 +288,16 @@ export default {
     ipc.on('music-next', () => {
       this.playNext()
     })
+    window.addEventListener('blur', ($e) => {
+      this.windowFocused = false
+    })
+    window.addEventListener('focus', ($e) => {
+      this.windowFocused = true
+    })
   },
   mounted () {
-    if (!Player.getAudio()) Player.init()
+    Player.destroy()
+    Player.init()
     if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
     Player.getAudio().addEventListener('timeupdate', () => {
       this.position = Player.getCurrentTime()
@@ -575,7 +598,6 @@ export default {
   .media-controls-details {
     width: 250px;
     margin-left: 1em;
-    cursor: pointer;
     /* font-size: 0.8em; */
     margin-right: 1em; 
     color: white;
@@ -601,6 +623,11 @@ export default {
     display: block;
     /* padding: 1px; */
   }
+
+  .media-controls-details--album {
+    cursor: pointer;
+  }
+
   /* .media-controls-details p {
     margin: 0;
   } */
@@ -786,5 +813,11 @@ export default {
 
   .media-controls-fullscreen .full-width {
     width: 100%;
+  }
+
+  .media-controls-fullscreen--leave-button {
+    position: absolute;
+    right: 0;
+    top: 0;
   }
 </style>

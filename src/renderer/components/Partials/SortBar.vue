@@ -1,5 +1,5 @@
 <template>
-  <div class="sort-bar">
+  <div class="sort-bar" :style="computedStyle">
     <a
       v-for="(criteria, index) in criterias"
       :key="index"
@@ -14,6 +14,9 @@
 </template>
 
 <script>
+import { getColors, loadAlbumArt } from '@/lazy-loaders'
+import Color from 'color'
+
 export default {
   name: 'sort-bar',
   props: {
@@ -44,6 +47,31 @@ export default {
       }
       this.$emit('sort', this.sortedBy, this.sortOrder)
     }
+  },
+  computed: {
+    currentlyPlaying () {
+      return this.$store.state.Music.currentlyPlaying
+    }
+  },
+  asyncComputed: {
+    computedStyle () {
+      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+        return getColors(this.currentlyPlaying.albumArt).then(colors => {
+          if (colors && colors.background) {
+            let color = Color(colors.background)
+            return {
+              background: (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
+            }
+          } else {
+            return {}
+          }
+        })
+      } else if (this.currentlyPlaying) {
+        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return ''
+      }
+    }
   }
 }
 </script>
@@ -57,6 +85,7 @@ export default {
     color: white;
     background-color: #222;
     border-bottom: 1px solid grey;
+    transition: background-color 0.3s;
   }
   .sort-bar--item {
     flex-grow: 1;
@@ -68,7 +97,7 @@ export default {
 
   }
   .sort-bar--item.sort-bar--item-active {
-    background-color: #111;
+    background-color: rgba(0, 0, 0, 0.3);
   }
 
   .sort-bar--item.sort-bar--item-asc::after {

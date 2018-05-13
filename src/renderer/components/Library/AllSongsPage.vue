@@ -191,6 +191,7 @@ export default {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
+    padding: 0 1em;
   }
 
   .vertical-bar {

@@ -1,11 +1,18 @@
 <template>
-  <div id="app" @dragover.prevent @dragenter.prevent @dragleave.prevent @drop.prevent :class="showChrome ? 'pad-body' : ''">
-    <chrome :visible="showChrome" />
-      <navbar v-if="showChrome" />
+  <div id="app"
+    @dragover.prevent
+    @dragenter.prevent
+    @dragleave.prevent
+    @drop.prevent
+    :class="showChrome ? 'pad-body' : ''"
+    :style="computedStyle"
+    >
+    <chrome v-if="showChrome && $route.path !== '/'" />
+    <navbar v-if="showChrome && $route.path !== '/'" />
     <transition
       mode="out-in"
       enter-active-class="animated slideInLeft"
-      leave-active-class="animated slideOutRight">
+      :leave-active-class="leaveClass">
       <router-view></router-view>
     </transition>
     <media-controls v-if="showMusicBar" />
@@ -18,6 +25,7 @@
   import { mapState } from 'vuex'
   import { ipcRenderer as ipc } from 'electron'
   import Navbar from './components/Partials/Navbar'
+  import { getColors, loadAlbumArt } from '@/lazy-loaders'
 
   export default {
     name: 'blanc',
@@ -26,20 +34,26 @@
       MediaControls,
       Navbar
     },
+    data: () => ({
+      leaveClass: 'animated fadeOut'
+    }),
     created () {
       if (this.devMode) {
         ipc.send('open-dev-tools')
       }
     },
-    computed: mapState({
-      showMusicBar: state => state.App.showMusicBar,
-      showChrome: state => state.App.showChrome,
-      library: state => state.Library.library,
-      albums: state => state.Library.albums,
-      devMode: state => state.App.devMode,
-      indexPercent: state => state.Library.indexProgress * 100,
-      indexing: state => state.Library.indexing
-    }),
+    computed: {
+      ...mapState({
+        showMusicBar: state => state.App.showMusicBar,
+        showChrome: state => state.App.showChrome,
+        library: state => state.Library.library,
+        albums: state => state.Library.albums,
+        devMode: state => state.App.devMode,
+        indexPercent: state => state.Library.indexProgress * 100,
+        indexing: state => state.Library.indexing,
+        currentlyPlaying: state => state.Music.currentlyPlaying
+      })
+    },
     watch: {
       devMode (newVal) {
         if (newVal) {
@@ -56,6 +70,31 @@
       indexing (value) {
         if (!value) {
           ipc.send('set-progress', -1)
+        }
+      },
+      '$route' (value) {
+        if (value.path !== '/') this.leaveClass = 'animated slideOutRight'
+        else this.leaveClass = 'animated fadeOut'
+      }
+    },
+    asyncComputed: {
+      computedStyle () {
+        // console.log(this.image)
+        if (!this.colors) return Promise.resolve('')
+        else {
+          // if (!this.showArt) return this.defaultActiveStyle
+          return {
+            background: this.colors.background
+          }
+        }
+      },
+      colors () {
+        if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
+          return getColors(this.currentlyPlaying.albumArt)
+        } else if (this.currentlyPlaying) {
+          return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+        } else {
+          return Promise.resolve('')
         }
       }
     }
@@ -77,6 +116,7 @@
     height: 100%;
     background-color: #333;
     color: white;
+    transition: padding 0.5s, background-color 0.3s;
   }
   .wrapper {
     width: 100%;

@@ -117,7 +117,7 @@ export default {
 
 <style scoped>
   .music-item-tile {
-    background-color: #222;
+    background-color: transparent;
     padding: 10px;
     display: flex;
     /* border-bottom: 1px solid grey; */

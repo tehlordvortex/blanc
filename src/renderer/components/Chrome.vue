@@ -1,18 +1,24 @@
 <template>
-  <div id="top-bar" v-if="visible" :style="computedStyle">
-    <div id="window-buttons">
-      <button @click="goBack"><i class="material-icons">arrow_back</i></button>
-      <span class="spacer">
-        <progress-bar
-          v-if="indexing"
-          :val="indexPercent"
-          :barColor="barColor"
-        ></progress-bar>
-      </span>
-      <button tabindex="-1" @click="minimizeApp"><i class="material-icons">remove</i></button>
-      <button tabindex="-1" @click="closeApp" id="close-btn"><i class="material-icons">close</i></button>
+  <transition
+    name="animated-slide-out"
+    enter-active-class="animated slideInDown"
+    leave-active-class="animated slideOutUp"
+  >
+    <div id="top-bar" :style="computedStyle">
+      <div id="window-buttons">
+        <button @click="goBack"><i class="material-icons">arrow_back</i></button>
+        <span class="spacer">
+          <progress-bar
+            v-if="indexing"
+            :val="indexPercent"
+            :barColor="barColor"
+          ></progress-bar>
+        </span>
+        <button tabindex="-1" @click="minimizeApp"><i class="material-icons">remove</i></button>
+        <button tabindex="-1" @click="closeApp" id="close-btn"><i class="material-icons">close</i></button>
+      </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script>

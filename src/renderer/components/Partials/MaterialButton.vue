@@ -9,7 +9,8 @@
 </template>
 
 <script>
-import { loadAlbumArt, toColorString, getColors } from '@/lazy-loaders'
+import { loadAlbumArt, getColors } from '@/lazy-loaders'
+import Color from 'color'
 
 // const defaultColors = 'background-color: #3050ff; color: white'
 export default {
@@ -59,7 +60,16 @@ export default {
     buttonColor () {
       if (this.icon && this.flat) return ''
       if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt).then(toColorString)
+        return getColors(this.currentlyPlaying.albumArt).then(colors => {
+          if (colors && colors.background) {
+            let color = Color(colors.background)
+            return {
+              background: (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
+            }
+          } else {
+            return {}
+          }
+        })
       } else if (this.currentlyPlaying) {
         return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {

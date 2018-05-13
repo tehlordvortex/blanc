@@ -1,29 +1,35 @@
 <template>
-  <div class="navbar" :class="active ? 'navbar--active' : ''" :style="computedStyle">
-    <div class="navbar-icon--wrapper">
-      <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
-        <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
+  <transition
+    name="animated-slide-out-horizontal"
+    enter-active-class="animated slideInLeft"
+    leave-active-class="animated slideOutLeft"
+  >
+    <div class="navbar" :class="active ? 'navbar--active' : ''" :style="computedStyle">
+      <div class="navbar-icon--wrapper">
+        <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
+          <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
+        </div>
       </div>
+      <nav class="navbar-items">
+        <ul>
+          <li
+            v-for="item in items"
+            :key="item.path"
+            >
+            <router-link
+              :tabindex="active ? '0' : '-1'"
+              v-if="!(!active && item.subitem)"
+              class="navbar-item"
+              :class="($route.path.startsWith(item.path) ? 'navbar-item--active': '') + ' ' + (item.subitem ? 'navbar-item--subitem' : '')"
+              :to="item.path">
+              <i class="material-icons">{{ item.icon }}</i>
+              <span v-if="active">{{ item.title }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </nav>
     </div>
-    <nav class="navbar-items">
-      <ul>
-        <li
-          v-for="item in items"
-          :key="item.path"
-          >
-          <router-link
-            :tabindex="active ? '0' : '-1'"
-            v-if="!(!active && item.subitem)"
-            class="navbar-item"
-            :class="($route.path.startsWith(item.path) ? 'navbar-item--active': '') + ' ' + (item.subitem ? 'navbar-item--subitem' : '')"
-            :to="item.path">
-            <i class="material-icons">{{ item.icon }}</i>
-            <span v-if="active">{{ item.title }}</span>
-          </router-link>
-        </li>
-      </ul>
-    </nav>
-  </div>
+  </transition>
 </template>
 
 <script>
@@ -125,7 +131,7 @@ export default {
     background-color: #333;
     color: white;
     z-index: 1000;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
     overflow: hidden;
   }
 
