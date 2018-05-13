@@ -394,6 +394,7 @@ export default {
     // max-height: 90%;
     overflow: auto;
     position: relative;
+    padding-bottom: 2.5em; /* avoid cutting off shadows for the very last items */
   }
   .album-list-line {
     width: 100%;
