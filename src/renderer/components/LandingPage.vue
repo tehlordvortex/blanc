@@ -149,7 +149,7 @@
       } else {
         if (settings.libraries.length === 0) this.showFirstStart = true
         else {
-          if (!this.library || typeof this.library[0] !== 'string' || !this.albums) {
+          if (!this.library || typeof this.library[0] !== 'object' || !this.albums) {
             getLibrary().then(() => {
               return getAlbums()
             }).then(() => this.leavePage())

@@ -98,7 +98,7 @@ export function getAlbum (name) {
 
 export function getLibrary () {
   return db.find({}, {_id: 1}).then(library => {
-    store.commit('UPDATE_LIBRARY', library.map(song => song._id))
+    store.commit('UPDATE_LIBRARY', library)
   })
 }
 export function indexAlbums () {
@@ -137,23 +137,29 @@ export function getAlbums (forceRefresh = false) {
       console.log('Re-indexing albums')
       return indexAlbums()
     } else {
-      return Promise.all(albums.map(album => {
-        return db.find({ album: album.name }).then((docs) => {
-          return docs.map(song => {
-            if (!album.songs.includes(song['_id'])) {
-              album.songs.push(song['_id'])
-            }
-            if (!album.colors && song.colors) {
-              album.colors = song.colors
-            }
-            if (!album.art && song.albumArt) {
-              album.art = song.albumArt
-            }
-            return albumsDB.update({name: album.name}, album)
+      let resolves = Promise.resolve()
+      albums.map(album => {
+        resolves = resolves.then(() => {
+          return db.find({ album: album.name }).then((docs) => {
+            docs.map(song => {
+              if (!album.songs.includes(song['_id'])) {
+                album.songs.push(song['_id'])
+              }
+              if (!album.colors && song.colors) {
+                album.colors = song.colors
+              }
+              if (!album.art && song.albumArt) {
+                album.art = song.albumArt
+              }
+              resolves = resolves.then(() => albumsDB.update({name: album.name}, album))
+            })
           })
         })
-      }))
+      })
     }
+  })
+  return albumsPromise.then(() => {
+    return albumsDB.find({}).then(albums => store.commit('UPDATE_ALBUMS', albums))
   })
 }
 export function getColors (resource, forceLibrayItemCache = false) {

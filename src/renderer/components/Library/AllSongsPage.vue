@@ -48,7 +48,7 @@ import { TILE_HEIGHT, CHUNKS_TO_DISPLAY, TILES_PER_CHUNK, CHUNK_HEIGHT } from '@
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
 import { remote } from 'electron'
-import { getSong } from '@/lazy-loaders'
+// import { getSong } from '@/lazy-loaders'
 const { Menu } = remote
 // import db from '@/library.db'
 // import { getLibrary } from '@/lazy-loaders'
@@ -84,6 +84,9 @@ export default {
         height: (this.librarySorted.length * TILE_HEIGHT) + 'px !important'
       }
     },
+    library () {
+      return this.$store.state.Library.library
+    },
     librarySorted () {
       if (!this.library) return null
       let clone = [...this.library]
@@ -104,17 +107,21 @@ export default {
           return 0
         }
       })
-      let lib = clone.filter(item => {
-        let criteria = []
-        if (item.title) criteria.push(item.title)
-        if (item.artist) criteria.push(item.artist)
-        if (item.artists) criteria.push(item.artists.join())
-        if (item.album) criteria.push(item.album)
-        if (item.fileName) criteria.push(item.fileName)
-        return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
-        // return filter.test(item.title) || filter.test(item.artist) || filter.test(item.artists.join()) || filter.test(item.album)
-      })
-      return lib
+      if (this.searchString) {
+        let lib = clone.filter(item => {
+          let criteria = []
+          if (item.title) criteria.push(item.title)
+          if (item.artist) criteria.push(item.artist)
+          if (item.artists) criteria.push(item.artists.join())
+          if (item.album) criteria.push(item.album)
+          if (item.fileName) criteria.push(item.fileName)
+          return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
+          // return filter.test(item.title) || filter.test(item.artist) || filter.test(item.artists.join()) || filter.test(item.album)
+        })
+        return lib
+      } else {
+        return clone
+      }
     },
     libraryDisplayed () {
       if (!this.librarySorted) return null
@@ -177,11 +184,11 @@ export default {
       menu.popup({async: true})
     }
   },
-  asyncComputed: {
-    library () {
-      return Promise.all(this.$store.state.Library.library.map(song => getSong(song)))
-    }
-  },
+  // asyncComputed: {
+  //   library () {
+  //     return Promise.all(.library.map(song => getSong(song)))
+  //   }
+  // },
   watch: {
     searchString () {
       // this.doSearch()
