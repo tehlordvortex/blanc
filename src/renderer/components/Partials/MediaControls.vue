@@ -101,8 +101,8 @@
     </div>
     <transition
       name="animated-slide-in"
-      enter-active-class="animated slideInRight"
-      leave-active-class="animated slideOutRight">
+      enter-active-class="animated fadeInRight"
+      leave-active-class="animated fadeOutRight">
       <queue v-show="showQueue" class="media-controls-queue" @close="showQueue = false" />
     </transition>
     <transition
@@ -399,10 +399,10 @@ export default {
       }
     },
     colors () {
-      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt)
-      } else if (this.currentlyPlaying) {
-        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {
         return Promise.resolve('')
       }
@@ -493,7 +493,6 @@ export default {
       this.$store.commit('SHOW_CHROME')
     },
     gotoAlbum (album) {
-      console.log(this.$route, this.$router, this.$router.push, this.$router.go)
       this.$router.push({
         name: 'library-album-page',
         params: {
