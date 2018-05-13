@@ -97,7 +97,7 @@
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
   import { getLibrary, getAlbums } from '@/lazy-loaders'
-  import { addFiles, default as index } from '@/indexer.lib'
+  import { default as index } from '@/indexer.lib'
   import { mapState } from 'vuex'
   import LoadingIndicator from '@/components/Partials/LoadingIndicator'
   import finishUpdates from '@/lib/updates'
@@ -145,7 +145,6 @@
           .then(() => {
             this.doneUpdating = true
           })
-          .then(() => Promise.all(settings.libraries.map(library => addFiles(library, true))))
           .then(() => this.leavePage())
       } else {
         if (settings.libraries.length === 0) this.showFirstStart = true
@@ -153,11 +152,9 @@
           if (!this.library || typeof this.library[0] !== 'string' || !this.albums) {
             getLibrary().then(() => {
               return getAlbums()
-            }).then(() => {
-              Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
-            })
+            }).then(() => this.leavePage())
           } else {
-            Promise.all(settings.libraries.map(library => addFiles(library, true))).then(() => this.leavePage())
+            this.leavePage()
           }
         }
       }
