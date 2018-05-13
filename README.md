@@ -6,7 +6,15 @@
 
 Blanc is a music player with a focus on being shiny. Which is why it might bring your PC to it's knees while indexing your music.
 
-Once it's done and you start playing music: Hover over the album art for the play button. Avoid the button and click the image for a nice surprise (and also a major shiny factor.)
+Once it's done and you start playing music: Hover over the album art for the play button. Click the arrow by the right for a beautiful no-chrome mode with a nice visualizer and shrunk controls.
+
+It's currently in development, so if anything breaks, please:
+
+1. Go to one of these paths and remove `Settings`, `albums.db`, `colors.db`, `albums.db`. You may also remove the `albumArts` folder, or remove them one by one and start the app after each file you remove.
+  - On Linux: `~/.config/blanc`
+  - On Windows: `%APPDATA%\Roaming\blanc`
+
+2. Create an issue describing what happened when it broke and attach any log files in the `Logs` or `logs` folder in the folder above.
 
 ## So far it supports
 
