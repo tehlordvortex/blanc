@@ -37,24 +37,38 @@ export default {
   .list-row {
     width: 100%;
     display: flex;
-    min-height: 2em;
+    height: 2em;
     background-color: rgba(0, 0, 0, 0.3);
     color: white;
     /* margin: 5px 0; */
   }
   .list-row .list-row-content {
-    flex-grow: 1;
+    /* flex-grow: 0; */
     padding: 5px 1em;
     cursor: pointer;
+    width: 90%;
   }
   .list-row .list-row-content p {
     margin: 0;
+    max-width: 80%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .list-row .list-row-actions {
+    /* flex-shrink: 0; */
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-end;
+    /* align-self: flex-end; */
   }
   .list-row .list-row-actions .button {
-    padding: 2px 5px;
+    /* padding: 2px 5px; */
     margin: 0;
     height: 100%;
+    max-width: 32px;
     align-items: center;
+    justify-content: center;
     display: flex;
   }
 </style>
