@@ -64,6 +64,7 @@ export function indexFile (file) {
         res
           .then(() => cacheAlbumArt(picture.data))
           .then(path => {
+            picture = undefined
             libraryItem.albumArt = path
           })
           .catch((e) => {
@@ -73,9 +74,6 @@ export function indexFile (file) {
       }
       res = res.then(() => {
         return db.update({filePath: file}, libraryItem, {upsert: true})
-      })
-      res = res.then(() => {
-        return {...libraryItem}
       })
       return res
     })
@@ -88,7 +86,7 @@ export function addFiles (path, background = false) {
       total: 0
     }
     let indexQueue = new Queue()
-    indexQueue.concurrency = 16
+    indexQueue.concurrency = 4
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0
@@ -123,7 +121,7 @@ export function addFiles (path, background = false) {
               .then((amount) => {
                 if (amount === 0) {
                   return indexFile(file)
-                    .then((song) => {
+                    .then(() => {
                       indexDetails.processed++
                       // console.log(indexDetails)
                       if (!background) store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
@@ -151,7 +149,7 @@ export default function index (path) {
       total: 0
     }
     let indexQueue = new Queue()
-    indexQueue.concurrency = 16
+    indexQueue.concurrency = 4
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0

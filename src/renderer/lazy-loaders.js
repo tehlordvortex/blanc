@@ -75,6 +75,7 @@ export function getAlbum (name) {
         if (!song) return
         if (song.colors && !album.colors) {
           album.colors = song.colors
+          album.art = song.albumArt
         }
         song.artists.forEach(artist => {
           if (!album.artists.includes(artist)) {
@@ -193,8 +194,8 @@ export function getColors (resource, forceLibrayItemCache = false) {
         } else {
           resourceSum = posix.basename(path)
         }
-        if (path === 'static/albumart-placeholder.png') {
-          path = join(__static, '/albumart-placeholder.png')
+        if (path.includes('albumart-placeholder.png')) {
+          path = join(__static, 'albumart-placeholder.png')
         }
       }
     } else {
@@ -218,11 +219,13 @@ export function getColors (resource, forceLibrayItemCache = false) {
                 v = Vibrant.from(buffer).useQuantizer(WorkerQuantizer).getSwatches()
               } catch (e) {
                 buffer = undefined
+                resource = undefined
                 reject(e)
                 cb()
               }
               v.then((swatches) => {
                 buffer = undefined
+                resource = undefined
                 let swatch = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted)
                 let c = swatch.getRgb().map(Math.floor)
                 let background = Color.rgb(c)

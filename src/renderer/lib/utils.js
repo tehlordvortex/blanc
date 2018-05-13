@@ -45,6 +45,7 @@ export function cacheAlbumArt (buffer) {
     stat(artPath, (err, stats) => {
       if (err && err.code === 'ENOENT') {
         writeFile(artPath, buffer, (err) => {
+          buffer = undefined
           if (err) reject(err)
           else resolve(artPath)
         })
