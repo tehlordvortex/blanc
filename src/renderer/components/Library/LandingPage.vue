@@ -79,6 +79,7 @@ export default {
 
 <style>
   .wrapper-message {
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
