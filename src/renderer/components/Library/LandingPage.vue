@@ -42,6 +42,10 @@ export default {
   data: () => ({
     loading: false
   }),
+  mounted () {
+    this.$store.commit('SHOW_CHROME')
+    this.$store.commit('SHOW_MUSIC_BAR')
+  },
   watch: {
     library (newVal) {
       if (newVal != null && newVal === 0) {
