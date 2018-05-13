@@ -69,6 +69,7 @@
                       :item="item"
                       @play="play(item)"
                       @pause="pause()"
+                      @contextmenu="doContextMenu(item)"
                       :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
                       :data-index="index"
                     >
@@ -119,6 +120,9 @@ import { toFileURL } from '@/lib/utils'
 import AlbumList from '@/components/Partials/AlbumList'
 import MaterialButton from '@/components/Partials/MaterialButton'
 import Card from '@/components/Partials/Card'
+import { remote } from 'electron'
+
+const Menu = remote.Menu
 
 export default {
   name: 'album-page',
@@ -213,7 +217,7 @@ export default {
     },
     play (item) {
       // console.log('Playing', item)
-      this.$store.commit('SET_QUEUE', this.albumSongs)
+      // this.$store.commit('SET_QUEUE', this.albumSongs)
       this.$store.commit('PLAY_MUSIC', item)
     },
     pause () {
@@ -244,6 +248,33 @@ export default {
       if (!this.albumSongs) return
       this.$store.commit('SET_QUEUE', this.albumSongs)
       this.$store.commit('PLAY_MUSIC', this.albumSongs[0])
+    },
+    doContextMenu (item) {
+      const template = [
+        {
+          label: 'Play Now',
+          click: () => {
+            this.$store.commit('PLAY_MUSIC', item)
+          }
+        },
+        {
+          label: 'Play Next',
+          click: () => {
+            this.$store.commit('PLAY_NEXT', item)
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Add all to queue',
+          click: () => {
+            this.$store.commit('QUEUE_SONGS', this.albumSongs)
+          }
+        }
+      ]
+      const menu = Menu.buildFromTemplate(template)
+      menu.popup({async: true})
     }
   },
   components: {
