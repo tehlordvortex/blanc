@@ -1,6 +1,6 @@
 export const TILE_HEIGHT = 16 * 4.5
 export const CHUNKS_TO_DISPLAY = 4
-export const TILES_PER_CHUNK = 30
+export const TILES_PER_CHUNK = 20
 export const CHUNK_HEIGHT = TILE_HEIGHT * TILES_PER_CHUNK
 
 export const ALBUM_LINE_HEIGHT = 200 + (16 * 2)
