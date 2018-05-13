@@ -103,7 +103,7 @@
       name="animated-slide-in"
       enter-active-class="animated fadeInRight"
       leave-active-class="animated fadeOutRight">
-      <queue v-show="showQueue" class="media-controls-queue" @close="showQueue = false" />
+      <queue v-if="showQueue" class="media-controls-queue" @close="showQueue = false" />
     </transition>
     <transition
       name="animated-zoom-in"
@@ -230,7 +230,7 @@
           name="animated-slide-in"
           enter-active-class="animated slideInUp"
           leave-active-class="animated slideOutDown">
-          <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
+          <queue v-if="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
         </transition>
       </div>
     </transition>
