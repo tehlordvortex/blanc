@@ -5,7 +5,6 @@
     @dragleave.prevent
     @drop.prevent
     :class="showChrome ? 'pad-body' : ''"
-    :style="computedStyle"
     >
     <chrome v-if="showChrome && $route.path !== '/'" />
     <navbar v-if="showChrome && $route.path !== '/'" />
@@ -25,7 +24,6 @@
   import { mapState } from 'vuex'
   import { ipcRenderer as ipc } from 'electron'
   import Navbar from './components/Partials/Navbar'
-  import { getColors, loadAlbumArt } from '@/lazy-loaders'
 
   export default {
     name: 'blanc',
@@ -75,27 +73,6 @@
       '$route' (value) {
         if (value.path !== '/') this.leaveClass = 'animated slideOutRight'
         else this.leaveClass = 'animated fadeOut'
-      }
-    },
-    asyncComputed: {
-      computedStyle () {
-        // console.log(this.image)
-        if (!this.colors) return Promise.resolve('')
-        else {
-          // if (!this.showArt) return this.defaultActiveStyle
-          return {
-            background: this.colors.background
-          }
-        }
-      },
-      colors () {
-        if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-          return getColors(this.currentlyPlaying.albumArt)
-        } else if (this.currentlyPlaying) {
-          return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
-        } else {
-          return Promise.resolve('')
-        }
       }
     }
   }

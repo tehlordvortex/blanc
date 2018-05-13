@@ -15,7 +15,6 @@
 
 <script>
 import { getColors, loadAlbumArt } from '@/lazy-loaders'
-import Color from 'color'
 
 export default {
   name: 'sort-bar',
@@ -54,22 +53,22 @@ export default {
     }
   },
   asyncComputed: {
-    computedStyle () {
-      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt).then(colors => {
-          if (colors && colors.background) {
-            let color = Color(colors.background)
-            return {
-              background: (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
-            }
-          } else {
-            return {}
-          }
-        })
-      } else if (this.currentlyPlaying) {
-        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+    colors () {
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {
-        return ''
+        return Promise.resolve('')
+      }
+    },
+    computedStyle () {
+      if (this.colors) {
+        return {
+          backgroundColor: this.colors.background
+        }
+      } else {
+        return Promise.resolve('')
       }
     }
   }

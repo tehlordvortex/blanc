@@ -10,7 +10,6 @@
 
 <script>
 import { loadAlbumArt, getColors } from '@/lazy-loaders'
-import Color from 'color'
 
 // const defaultColors = 'background-color: #3050ff; color: white'
 export default {
@@ -57,21 +56,21 @@ export default {
     }
   },
   asyncComputed: {
+    colors () {
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return Promise.resolve('')
+      }
+    },
     buttonColor () {
       if (this.icon && this.flat) return ''
-      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt).then(colors => {
-          if (colors && colors.background) {
-            let color = Color(colors.background)
-            return {
-              background: (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
-            }
-          } else {
-            return {}
-          }
-        })
-      } else if (this.currentlyPlaying) {
-        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      if (this.colors) {
+        return {
+          backgroundColor: this.colors.background
+        }
       } else {
         return ''
       }
@@ -103,7 +102,6 @@ export default {
   }
   .button:hover, .icon-button:hover {
     box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.6);
-    background-color: #3585ff;
   }
   .icon-button {
     background-color: #3080ff;

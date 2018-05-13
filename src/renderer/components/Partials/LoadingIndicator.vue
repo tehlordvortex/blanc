@@ -5,6 +5,7 @@
 </template>
 
 <script>
+import { loadAlbumArt, getColors } from '@/lazy-loaders'
 export default {
   name: 'loading-indicator',
   props: {
@@ -40,8 +41,26 @@ export default {
     currentlyPlaying () {
       return this.$store.state.Music.currentlyPlaying
     },
+    visibleColor () {
+      if (this.colors) {
+        return this.colors.background
+      } else {
+        return ''
+      }
+    },
     colorUsed () {
-      return this.color || (this.currentlyPlaying && this.currentlyPlaying.colors && this.currentlyPlaying.colors.background) || '#3080ff'
+      return this.color || this.visibleColor || '#3080ff'
+    }
+  },
+  asyncComputed: {
+    colors () {
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      } else {
+        return Promise.resolve('')
+      }
     }
   }
 }
