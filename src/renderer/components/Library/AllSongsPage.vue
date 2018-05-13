@@ -149,12 +149,30 @@ export default {
       console.log(this.skipItems)
     },
     doContextMenu (item) {
-      const template = [{
-        label: 'Play Next',
-        click: () => {
-          this.$store.commit('PLAY_NEXT', item)
+      const template = [
+        {
+          label: 'Play Next',
+          click: () => {
+            this.$store.commit('PLAY_NEXT', item)
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Play All',
+          click: () => {
+            this.$store.commit('SET_QUEUE', this.librarySorted)
+            this.$store.commit('PLAY_MUSIC', this.librarySorted[0])
+          }
+        },
+        {
+          label: 'Queue All',
+          click: () => {
+            this.$store.commit('SET_QUEUE', this.librarySorted)
+          }
         }
-      }]
+      ]
       const menu = Menu.buildFromTemplate(template)
       menu.popup({async: true})
     }
