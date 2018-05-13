@@ -265,7 +265,8 @@ export default {
     showQueue: false,
     showFullscreenQueue: false,
     showVolume: false,
-    audioElement: null
+    audioElement: null,
+    notificationTag: 'blanc'
   }),
   components: {
     Queue,
@@ -296,6 +297,7 @@ export default {
     })
   },
   mounted () {
+    this.audioElement = null
     Player.destroy()
     Player.init()
     if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
@@ -310,15 +312,17 @@ export default {
       if (!document.hasFocus()) {
         Notification.requestPermission().then((perms) => {
           let path = toFileURL(this.currentlyPlaying.albumArt)
-          if (path === 'file:///' || !path) path = __static + '/albumart-placeholder.png'
+          if (path === 'file:///' || path === 'file://' || !path) path = __static + '/albumart-placeholder.png'
           let body = this.currentlyPlaying.artist || 'Unknown Artist'
           body += '\n'
           body += this.currentlyPlaying.album || 'Unknown Album'
           /* eslint-disable no-new */
-          new Notification(this.currentlyPlaying.title, {
+          this.notificationTag = (new Notification(this.currentlyPlaying.title, {
             icon: path,
-            body: body
-          })
+            body: body,
+            silent: true,
+            tag: this.notificationTag
+          })).tag
         })
       }
     })
