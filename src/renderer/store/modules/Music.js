@@ -45,6 +45,9 @@ const mutations = {
   SET_QUEUE (state, queue) {
     state.queue = queue
   },
+  QUEUE_SONGS (state, songs) {
+    state.queue = state.queue.concat(songs)
+  },
   REMOVE_FROM_QUEUE (state, music) {
     if (state.queue.some(item => item.filePath === music.filePath)) {
       state.queue = state.queue.filter(item => item.filePath !== music.filePath)
