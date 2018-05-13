@@ -1,7 +1,7 @@
 import { parseFile } from 'music-metadata'
 import { remote } from 'electron'
 import { join, win32, posix } from 'path'
-import { stat, mkdir, writeFile, readFileSync } from 'fs'
+import { stat, mkdir, writeFile, readFile } from 'fs'
 import * as crypto from 'crypto'
 import { colorsDB, albumsDB, default as db } from '@/library.db'
 import Color from 'color'
@@ -9,9 +9,20 @@ import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
 import { fieldCaseInsensitiveSort, toFileURL, hashsum } from './lib/utils'
+import WorkerQuantizer from 'node-vibrant/lib/quantizer/worker'
 
 const app = remote.app
 const userData = app.getPath('userData')
+
+const readFilePromise = (path) => {
+  return new Promise((resolve, reject) => {
+    readFile(path, (err, data) => {
+      if (err) reject(err)
+      else resolve(data)
+    })
+  })
+}
+
 export const artsCachePath = join(userData, 'albumArts')
 stat(artsCachePath, (err, details) => {
   if (err && err.code === 'ENOENT') {
@@ -24,7 +35,7 @@ stat(artsCachePath, (err, details) => {
 })
 
 let colorQueue = new Queue()
-colorQueue.concurrency = 16
+colorQueue.concurrency = 4
 colorQueue.autostart = true
 
 export function toColorString (color) {
@@ -138,14 +149,14 @@ export function getAlbums (forceRefresh = false) {
             if (!album.art && song.albumArt) {
               album.art = song.albumArt
             }
-            return db.update({name: album.name}, album)
+            return albumsDB.update({name: album.name}, album)
           })
         })
       }))
     }
   })
 }
-export function getColors (resource) {
+export function getColors (resource, forceLibrayItemCache = false) {
   return new Promise((resolve, reject) => {
     let buffer, resourceSum, path
     if (resource === 'file:///' || !resource) {
@@ -184,56 +195,78 @@ export function getColors (resource) {
       buffer = resource
     }
     if (!path) resolve(null)
-    colorQueue.push(cb => {
-      colorsDB.findOne({ _id: resourceSum }).then((res) => {
-        if (!res) {
-          if (!buffer) {
-            buffer = readFileSync(path)
-          }
-          let v
-          try {
-            v = Vibrant.from(buffer).getSwatches()
-          } catch (e) {
-            reject(e)
-            cb()
-          }
-          v.then((swatches) => {
-            let swatch = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted)
-            let c = swatch.getRgb().map(Math.floor)
-            let background = Color.rgb(c)
-            let foreground = Color(swatch.getTitleTextColor())
-            // let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
-            let backgroundText = background.rgb().string()
-            let foregroundText = foreground.rgb().string()
-            return {
-              background: backgroundText,
-              foreground: foregroundText
+    colorsDB.findOne({ _id: resourceSum }).then((res) => {
+      if (!res) {
+        colorQueue.push(cb => {
+          Promise.resolve()
+            .then(() => {
+              if (!buffer) {
+                return readFilePromise(path)
+              } else {
+                return buffer
+              }
+            })
+            .then((buffer) => {
+              let v
+              try {
+                v = Vibrant.from(buffer).useQuantizer(WorkerQuantizer).getSwatches()
+              } catch (e) {
+                buffer = undefined
+                reject(e)
+                cb()
+              }
+              v.then((swatches) => {
+                buffer = undefined
+                let swatch = (swatches.Vibrant || swatches.DarkVibrant || swatches.Muted || swatches.DarkMuted)
+                let c = swatch.getRgb().map(Math.floor)
+                let background = Color.rgb(c)
+                let foreground = Color(swatch.getTitleTextColor())
+                // let foreground = background.isDark() ? Color.rgb(255, 255, 255) : Color.rgb(0, 0, 0)
+                let backgroundText = background.rgb().string()
+                let foregroundText = foreground.rgb().string()
+                return {
+                  background: backgroundText,
+                  foreground: foregroundText
+                }
+              })
+                .then((colors) => {
+                  return colorsDB.update({
+                    _id: resourceSum
+                  },
+                  {
+                    _id: resourceSum,
+                    colors: colors
+                  },
+                  {
+                    upsert: true
+                  })
+                    .then(() => db.update({ albumArt: path }, {
+                      $set: { colors: colors }
+                    }, { multi: true }))
+                    .then(() => resolve(colors))
+                    .then(() => cb())
+                })
+                // .then(() => cb())
+                .catch((e) => {
+                  reject(e)
+                  cb()
+                })
+            })
+        })
+      } else {
+        Promise.resolve()
+          .then(() => {
+            if (forceLibrayItemCache) {
+              return db.update({ albumArt: path }, {
+                $set: { colors: res.colors }
+              }, { multi: true })
             }
           })
-            .then((colors) => {
-              return colorsDB.update({
-                _id: resourceSum
-              },
-              {
-                _id: resourceSum,
-                colors: colors
-              },
-              {
-                upsert: true
-              }).then(() => resolve(colors)).then(() => cb())
-            })
-            // .then(() => cb())
-            .catch((e) => {
-              reject(e)
-              cb()
-            })
-        } else {
-          Promise.resolve()
-            .then(() => resolve(res.colors))
-            .then(() => cb())
-        }
-      })
+          .then(() => resolve(res.colors))
+          // .then(() => cb())
+      }
     })
+    // })
   })
 }
 export function getBackgroundImageCSS (resource) {
