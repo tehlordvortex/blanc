@@ -22,13 +22,13 @@
         name="animated-slide-in"
         enter-active-class="animated slideInLeft"
         leave-active-class="animated slideOutRight p-abs"
+        move-class="slide-in-item"
         v-if="queue && queue.length > 0">
         <list-row
           v-for="(item, index) in queue"
           :key="index"
           @click="play(item)"
           @delete="remove(item)"
-          class="slide-in-item"
         >
           <p>{{ item.title }} - {{ item.artist || 'Unknown Artist' }} - {{ item.album || 'Unknown Album' }}</p>
         </list-row>
@@ -89,7 +89,7 @@ export default {
     color: white;
   }
   .queue-contents {
-    background-color: #666;
+    background-color: #222;
     color: white;
     flex-grow: 1;
     overflow-x: hidden;
@@ -111,7 +111,6 @@ export default {
     z-index: 10;
   }
   .slide-in-item {
-    display: inline-block;
     transition: all 0.5s ease;
     width: 100%;
   }
