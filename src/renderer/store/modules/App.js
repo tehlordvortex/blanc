@@ -1,6 +1,6 @@
 const state = {
-  showChrome: true,
-  showMusicBar: true,
+  showChrome: false,
+  showMusicBar: false,
   routeHistory: [],
   devMode: false
 }
