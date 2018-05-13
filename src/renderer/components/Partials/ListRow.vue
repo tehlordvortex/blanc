@@ -38,7 +38,7 @@ export default {
     width: 100%;
     display: flex;
     min-height: 2em;
-    background-color: #222;
+    background-color: rgba(0, 0, 0, 0.3);
     color: white;
     /* margin: 5px 0; */
   }

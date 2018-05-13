@@ -24,7 +24,7 @@
       <material-button
         icon
         flat
-        :style="isActive && buttonStyle"
+        :style="isActive && computedStyle"
         @click.stop="$emit(isActive ? 'pause' : 'play', $event)"
       >
         <i class="material-icons">{{ isActive ? 'pause' : 'play_arrow' }}</i>
@@ -82,15 +82,13 @@ export default {
       }
     },
     colors () {
-      if (this.item.albumArt) {
-        return getColors(this.item.albumArt)
+      if (this.item) {
+        if (this.item.colors) return this.item.colors
+        else if (this.item.albumArt) return getColors(this.item.albumArt)
+        else return loadAlbumArt(this.item.filePath).then(path => getColors(path))
       } else {
-        return loadAlbumArt(this.item.filePath).then(path => getColors(path))
+        return Promise.resolve('')
       }
-    },
-    buttonStyle () {
-      if (!this.colors) return Promise.resolve('')
-      else return {color: this.colors.foreground}
     }
   },
   computed: {
@@ -117,13 +115,12 @@ export default {
 
 <style scoped>
   .music-item-tile {
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0.3);
     padding: 10px;
     display: flex;
     /* border-bottom: 1px solid grey; */
     height: 4.5em;
-    color: white;
-    transition: background-color 0.3s, transform 0.3s;
+    transition: background-color 0.3s, transform 0.3s, color 0.3s;
     cursor: pointer;
     align-items: center;
     width: 100%;
