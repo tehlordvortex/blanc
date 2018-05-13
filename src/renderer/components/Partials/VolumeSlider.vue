@@ -43,10 +43,10 @@ export default {
       }
     },
     colors () {
-      if (this.currentlyPlaying && this.currentlyPlaying.albumArt) {
-        return getColors(this.currentlyPlaying.albumArt)
-      } else if (this.currentlyPlaying) {
-        return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
+      if (this.currentlyPlaying) {
+        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
+        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
+        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
       } else {
         return Promise.resolve('')
       }
