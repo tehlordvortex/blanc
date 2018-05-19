@@ -12,7 +12,7 @@ import { cacheAlbumArt } from './lib/utils'
 
 export async function removeFiles (libPath) {
   let r = new RegExp('^' + libPath)
-  let songs = await db.find({ filePath: r })
+  let songs = await db.find({ filePath: r }).execAsync()
   let currentlyPlaying = store.state.Music.currentlyPlaying
   let queue = store.state.Music.queue
   if (currentlyPlaying && songs.some(song => song.filePath === currentlyPlaying.filePath)) {
@@ -20,7 +20,7 @@ export async function removeFiles (libPath) {
   }
   let newQueue = queue.filter(song => !songs.some(removedSong => removedSong.filePath === song.filePath))
   store.commit('SET_QUEUE', newQueue)
-  await db.remove({ filePath: r }, { multi: true })
+  await db.removeAynsc({ filePath: r }, { multi: true })
   await getLibrary()
   await getAlbums(true)
 }
@@ -73,7 +73,7 @@ export function indexFile (file) {
           })
       }
       res = res.then(() => {
-        return db.update({filePath: file}, libraryItem, {upsert: true})
+        return db.updateAsync({filePath: file}, libraryItem, {upsert: true})
       })
       return res
     })
@@ -117,7 +117,7 @@ export function addFiles (path, background = false) {
         }
         files.forEach(file => {
           indexQueue.push(cb => {
-            return db.count({filePath: file})
+            return db.countAsync({filePath: file})
               .then((amount) => {
                 if (amount === 0) {
                   return indexFile(file)

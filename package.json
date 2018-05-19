@@ -1,6 +1,6 @@
 {
   "name": "blanc",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "author": "tehlordvortex <tehlordvortex@outlook.com>",
   "description": "A sleek and simple music player",
   "license": "MIT",
@@ -18,7 +18,8 @@
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
     "test": "npm run unit",
     "unit": "karma start test/unit/karma.conf.js",
-    "postinstall": "npm run lint:fix"
+    "postinstall": "npm run lint:fix",
+    "rebuild": "electron-rebuild"
   },
   "build": {
     "productName": "blanc",
@@ -56,20 +57,22 @@
     }
   },
   "dependencies": {
+    "bluebird": "^3.5.1",
     "color": "^3.0.0",
     "electron-log": "^2.2.14",
     "electron-settings": "^3.1.4",
     "file-url": "^2.0.2",
+    "level-js": "^2.2.4",
+    "linvodb3": "^3.25.1",
     "lodash.chunk": "^4.2.0",
     "lodash.flatten": "^4.4.0",
     "mime": "^2.3.1",
     "music-metadata": "^0.9.15",
-    "nedb": "^1.8.0",
-    "nedb-promise": "^2.0.1",
     "node-dir": "^0.1.17",
     "node-vibrant": "^3.0.0",
     "queue": "^4.4.2",
     "sweet-modal-vue": "^2.0.0",
+    "underscore": "^1.8.3",
     "vue": "^2.3.3",
     "vue-async-computed": "^3.3.1",
     "vue-audio-visual": "git+https://git@github.com/tehlordvortex/vue-audio-visual.git",
@@ -106,6 +109,7 @@
     "electron-debug": "^1.4.0",
     "electron-devtools-installer": "^2.2.0",
     "electron-icon-maker": "^0.0.4",
+    "electron-rebuild": "^1.7.3",
     "eslint": "^4.4.1",
     "eslint-config-standard": "^10.2.1",
     "eslint-friendly-formatter": "^3.0.0",

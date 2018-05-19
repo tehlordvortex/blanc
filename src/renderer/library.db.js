@@ -1,26 +1,45 @@
-const Datastore = require('nedb-promise')
+import Promise from 'bluebird'
+// import store from '@/store'
+// import { debounce } from 'underscore'
+const LinvoDB = require('linvodb3')
+
+LinvoDB.defaults.store = { db: require('level-js') }
 export const appDataPath = require('electron').ipcRenderer.sendSync('sync-get-path', 'userData')
-const join = require('path').join
-export const libraryDBPath = join(appDataPath, 'library.db')
-export const albumsDBPath = join(appDataPath, 'albums.db')
-export const colorsDBPath = join(appDataPath, 'colors.db')
-console.log('Library db at', libraryDBPath)
-console.log('Albums db at', albumsDBPath)
-const db = new Datastore({
-  filename: libraryDBPath,
-  autoload: true
-})
+console.log('App database at', appDataPath)
+LinvoDB.dbPath = appDataPath
+
+const db = new LinvoDB('library')
 db.ensureIndex({
   fieldName: 'filePath',
   unique: true
 })
-export const albumsDB = new Datastore({
-  filename: albumsDBPath,
-  autoload: true
-})
+export const albumsDB = new LinvoDB('albums')
+export const colorsDB = new LinvoDB('colors')
+/* eslint-disable no-proto */
+Promise.promisifyAll(db.find().__proto__)
+Promise.promisifyAll(db)
+Promise.promisifyAll(albumsDB.find().__proto__)
+Promise.promisifyAll(albumsDB)
+Promise.promisifyAll(colorsDB.find().__proto__)
+Promise.promisifyAll(colorsDB)
 
-export const colorsDB = new Datastore({
-  filename: colorsDBPath,
-  autoload: true
-})
+// function handleUpdate (type = 'library') {
+//   return debounce(() => {
+//     store.commit('UPDATE_' + type.toUpperCase(), lives[type].res)
+//   }, 500)
+// }
+
+// let lives = {
+//   'library': db.find({}).live(),
+//   'albums': albumsDB.find({}).live()
+// }
+// export const liveLibrary = lives.library
+// export const liveAlbums = lives.albums
+
+// db.on('liveQueryUpdate', handleUpdate('library'))
+// albumsDB.on('liveQueryUpdate', handleUpdate('albums'))
+
+// window.liveLibrary = liveLibrary
+// window.liveAlbums = liveAlbums
+
 export default db

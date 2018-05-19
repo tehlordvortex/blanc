@@ -66,11 +66,10 @@
                       v-for="(item, index) in albumSongs"
                       :key="item.filePath"
                       :showArt="false"
-                      :item="item"
+                      :itemID="item._id"
                       @play="play(item)"
                       @pause="pause()"
                       @contextmenu="doContextMenu(item)"
-                      :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
                       :data-index="index"
                     >
                       <p>{{ item.title }}</p>
@@ -92,7 +91,7 @@
           <search-bar v-model="searchString" />
           <album-list
             :albums="albums"
-            v-if="albums" 
+            v-if="albums"
             @click="albumClicked"
             />
           <loading-indicator v-else />
@@ -156,13 +155,16 @@ export default {
       else if (!this.album.colors) return ''
       else return toColorString(this.album.colors)
     },
+    rawAlbums () {
+      return this.$store.state.Library.albums
+    },
     albums () {
-      return this.$store.state.Library.albums.filter(album => {
+      return this.searchString ? this.rawAlbums.filter(album => {
         let criteria = []
         criteria.push(album.name)
         criteria = criteria.concat(album.artists)
         return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
-      })
+      }) : this.rawAlbums
     },
     albumsDisplayed () {
       if (!this.albums) return null

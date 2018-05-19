@@ -16,7 +16,7 @@
                 v-for="(item, index) in libraryDisplayed" :key="'all-songs-' + item.filePath"
               >
                 <music-item-tile
-                  :item="item"
+                  :itemID="item._id"
                   @play="play(item)"
                   @pause="pause()"
                   :showArt="false"
@@ -48,7 +48,7 @@ import { TILE_HEIGHT, CHUNKS_TO_DISPLAY, TILES_PER_CHUNK, CHUNK_HEIGHT } from '@
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
 import { remote } from 'electron'
-// import { getSong } from '@/lazy-loaders'
+// import { default as db } from '@/library.db'
 const { Menu } = remote
 // import db from '@/library.db'
 // import { getLibrary } from '@/lazy-loaders'
@@ -134,7 +134,6 @@ export default {
   },
   methods: {
     play (item) {
-      console.log('Playing', item)
       this.$store.commit('PLAY_MUSIC', item)
     },
     pause () {

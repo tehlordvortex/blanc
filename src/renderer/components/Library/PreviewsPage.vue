@@ -8,6 +8,7 @@
           v-if="item.name"
           :key="'albums-' + item.name"
           :artPath="item.art"
+          :colors="item.colors"
           small
           >
           <p>{{ item.name }}</p>
@@ -26,7 +27,7 @@
       <staggered-slide-in tag="div" class="item-column--content" v-if="library" :scale="0.05">
         <music-item-tile
           v-for="(item, index) in library" :key="'all-songs-' + item.filePath"
-          :item="item"
+          :itemID="item._id"
           :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
           @play="play(item)"
           @pause="pause()"
@@ -67,8 +68,16 @@ const { Menu } = remote
 export default {
   name: 'library-landing-page',
   data: () => ({
+    slicedLibrary: null,
+    slicedAlbums: null
   }),
   asyncComputed: {
+    // rawAlbums () {
+    //   return albumsDB.find({}).execAsync()
+    // },
+    // rawLibrary () {
+    //   return db.find({}).execAsync()
+    // }
   },
   computed: {
     currentlyPlaying () {
@@ -77,25 +86,37 @@ export default {
     musicStatus () {
       return this.$store.state.Music.status
     },
-    rawLibrary () {
-      return this.$store.state.Library.library
-    },
     library () {
-      let startIndex = Math.floor(Math.random() * (this.rawLibrary.length - 30))
-      let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-      if (endIndex > this.rawLibrary.length || endIndex === 0) endIndex = this.rawLibrary.length
-      let slicedLibrary = this.rawLibrary.slice(startIndex, endIndex)
-      return slicedLibrary
+      // liveLibrary.refresh()
+      // setTimeout(() => {
+      //   this.slicedLibrary = liveLibrary.res.slice(0, 10)
+      // }, 2000)
+      // if (!liveLibrary.res) return null
+      return (this.$store.state.Library.library && this.$store.state.Library.library.slice(0, 20)) || null
+      // console.log(liveLibrary.res)
+      // let startIndex = Math.floor(Math.random() * (liveLibrary.res.length - 30))
+      // let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
+      // if (endIndex > liveLibrary.res.length || endIndex === 0) endIndex = liveLibrary.res.length
+      // let slicedLibrary = liveLibrary.res.slice(0, 10)
+      // return slicedLibrary
+      // return null
     },
     albums () {
-      if (!this.$store.state.Library.albums) return null
-      else {
-        let startIndex = Math.floor(Math.random() * this.$store.state.Library.albums.length)
-        let endIndex = Math.floor(10 + (Math.random() * 6)) + startIndex
-        if (endIndex > this.$store.state.Library.albums || endIndex === 0) endIndex = this.$store.state.Library.albums.length
-        let slicedAlbums = this.$store.state.Library.albums.slice(startIndex, endIndex)
-        return slicedAlbums
-      }
+      return (this.$store.state.Library.albums && this.$store.state.Library.albums.slice(0, 20)) || null
+      // liveAlbums.refresh()
+      // setTimeout(() => {
+      //   this.slicedAlbums = liveAlbums.res.slice(0, 10)
+      // }, 2000)
+      // if (!liveAlbums.res) return null
+      // else {
+      //   return null
+      //   // console.log(liveAlbums.res)
+      //   // let startIndex = Math.floor(Math.random() * (liveAlbums.res.length - 10))
+      //   // let endIndex = Math.floor(10 + (Math.random() * 6)) + startIndex
+      //   // if (endIndex > liveAlbums.res.length || endIndex === 0) endIndex = liveAlbums.res.length
+      //   // let slicedAlbums = liveAlbums.res.slice(startIndex, endIndex)
+      //   // return slicedAlbums
+      // }
     }
   },
   components: {

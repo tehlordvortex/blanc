@@ -21,7 +21,7 @@
 // import { parseFile } from 'music-metadata'
 // import mime from 'mime'
 // import * as Color from 'color'
-import { loadAlbumArt, getColors, getBackgroundImageCSS, toColorString } from '@/lazy-loaders'
+import { getColors, loadAlbumArt } from '@/lazy-loaders'
 import { toFileURL } from '@/lib/utils'
 
 // console.log(VibrantWorker)
@@ -101,14 +101,14 @@ export default {
     //   }
     // }
     image () {
-      // console.log(this.art)
+      // return null
       if (this.art) return this.art
       if (this.artPath) return Promise.resolve(toFileURL(this.artPath))
       if (!this.filePath) return Promise.resolve('static/albumart-placeholder.png')
       else {
         return loadAlbumArt(this.filePath).then((path) => {
           if (path === 'file:///' || !path) {
-            return __static + 'albumart-placehoder.png'
+            return 'static/albumart-placehoder.png'
           } else {
             return path
           }
@@ -118,12 +118,28 @@ export default {
     computedImageStyle () {
       // console.log(this.image)
       if (!this.image) return Promise.resolve('')
-      else return getBackgroundImageCSS(this.image)
+      else {
+        return {
+          backgroundImage: 'url(' + this.image + ')'
+        }
+      }
     },
     computedStyle () {
       // console.log(this.cachedColor)
-      if (!this.image) return Promise.resolve('')
-      else return getColors(this.image).then(toColorString)
+      if (this.colors) {
+        return {
+          background: this.colors.background,
+          color: this.colors.foreground
+        }
+      } else {
+        if (!this.image || this.image === 'static/albumart-placehoder.png') return ''
+        return getColors(this.image).then(colors => {
+          return {
+            backgroundColor: colors.background,
+            color: colors.foreground
+          }
+        })
+      }
     }
   },
   watch: {
@@ -207,8 +223,8 @@ export default {
   .card.card--vertical:after {
     display: none;
   }
-  
-  
+
+
   .card--contents--title, .card--contents--title p {
     margin: 0;
   }
@@ -228,7 +244,7 @@ export default {
   .card:focus, .card:hover {
     outline: none;
   }
-  
+
   .card--image {
     /* height: 100%; */
     padding: 0;
@@ -286,7 +302,7 @@ export default {
 
     /* Support for all WebKit browsers. */
     -webkit-font-smoothing: antialiased;
-    
+
     /* Support for Safari and Chrome. */
     text-rendering: optimizeLegibility;
 

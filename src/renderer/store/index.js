@@ -9,7 +9,7 @@ Vue.use(Vuex)
 const vuexLocal = new VuexPersistence({
   strictMode: process.env.NODE_ENV !== 'production',
   storage: localStorage,
-  modules: ['Music', 'Library', 'App']
+  modules: ['Music', 'App']
 })
 let store = new Vuex.Store({
   modules,

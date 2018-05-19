@@ -12,12 +12,12 @@ export default function finishUpdate () {
   if (settings.lastRunVersion < '0.7.1') {
     console.log('Re-caching colors...')
     p = p.then(() => {
-      return colorsDB.find({}).then(docs => {
+      return colorsDB.find({}).execAsync().then(docs => {
         let resolves = Promise.resolve()
         for (const colorDoc of docs) {
           let albumArtPath = join(artsCachePath, colorDoc._id)
           resolves = resolves.then(() => {
-            return db.update({ albumArt: albumArtPath }, { $set: { colors: colorDoc.colors } }, { multi: true })
+            return db.updateAsync({ albumArt: albumArtPath }, { $set: { colors: colorDoc.colors } }, { multi: true })
           })
         }
         return resolves

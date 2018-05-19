@@ -1,6 +1,8 @@
 import { parseFile } from 'music-metadata'
 import { remote } from 'electron'
+// import { join } from 'path'
 import { join, win32, posix } from 'path'
+// import { stat, mkdir, writeFile } from 'fs'
 import { stat, mkdir, writeFile, readFile } from 'fs'
 import * as crypto from 'crypto'
 import { colorsDB, albumsDB, default as db } from '@/library.db'
@@ -8,6 +10,7 @@ import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
+// import { fieldCaseInsensitiveSort, toFileURL } from './lib/utils'
 import { fieldCaseInsensitiveSort, toFileURL, hashsum } from './lib/utils'
 import WorkerQuantizer from 'node-vibrant/lib/quantizer/worker'
 
@@ -50,19 +53,19 @@ export function getAlbumArt (filePath) {
   return cacheAlbumArt(filePath).then((path) => Promise.resolve(toFileURL(path)))
 }
 export function getSong (id) {
-  return db.findOne({_id: id})
+  return db.findOneAsync({_id: id})
 }
 export function getSongs (albumName) {
-  return albumsDB.find({name: albumName}).then(album => {
-    if (album.length === 0) return []
+  return albumsDB.findOne({name: albumName}).map(album => album.songs).execAsync().then(songs => {
+    if (!songs) return []
     else {
-      return Promise.all(album[0].songs.map(song => db.findOne({_id: song})))
+      return Promise.all(songs.map(song => db.findOneAsync({_id: song})))
     }
   })
 }
 export function getAlbum (name) {
   return new Promise((resolve, reject) => {
-    db.cfind({ album: name }).sort({ album: 1, title: 1 }).exec().then((res) => {
+    db.find({ album: name }).sort({ album: 1, title: 1 }).execAsync().then((res) => {
       if (!res || res.length === 0) return resolve({})
       let album = {}
       album.name = name
@@ -97,14 +100,14 @@ export function getAlbum (name) {
   })
 }
 
-export function getLibrary () {
-  return db.find({}, {_id: 1}).then(library => {
-    store.commit('UPDATE_LIBRARY', library)
-  })
+export async function getLibrary () {
+  let library = await db.find({}).execAsync()
+  store.commit('UPDATE_LIBRARY', library)
+  // return Promise.resolve()
 }
 export function indexAlbums () {
-  let p = db.cfind({ album: { $nin: ['', null, undefined] } })
-  p = p.exec().then((docs) => {
+  let p = db.find({ album: { $nin: ['', null, undefined] } })
+  p = p.execAsync().then((docs) => {
     let albums = []
     // console.log(docs)
     docs.forEach(doc => {
@@ -125,14 +128,18 @@ export function indexAlbums () {
   })
   p = p.then((albums) => {
     Promise.all(albums.map(album => {
-      return albumsDB.update({name: album.name}, album, {upsert: true})
-    })).then(() => store.commit('UPDATE_ALBUMS', albums))
+      return albumsDB.updateAsync({name: album.name}, album, {upsert: true})
+    }))
+      .then(() => store.commit('UPDATE_ALBUMS', albums))
+      .then(() => {
+        albums = undefined
+      })
   })
   return p
 }
 
 export function getAlbums (forceRefresh = false) {
-  let albumsPromise = albumsDB.cfind({}).sort({name: 1}).exec()
+  let albumsPromise = albumsDB.find({}).sort({name: 1}).execAsync()
   albumsPromise.then((albums) => {
     if (albums.length === 0 || forceRefresh) {
       console.log('Re-indexing albums')
@@ -141,7 +148,7 @@ export function getAlbums (forceRefresh = false) {
       let resolves = Promise.resolve()
       albums.map(album => {
         resolves = resolves.then(() => {
-          return db.find({ album: album.name }).then((docs) => {
+          return db.find({ album: album.name }).execAsync().then((docs) => {
             docs.map(song => {
               if (!album.songs.includes(song['_id'])) {
                 album.songs.push(song['_id'])
@@ -152,7 +159,7 @@ export function getAlbums (forceRefresh = false) {
               if (!album.art && song.albumArt) {
                 album.art = song.albumArt
               }
-              resolves = resolves.then(() => albumsDB.update({name: album.name}, album))
+              resolves = resolves.then(() => albumsDB.updateAsync({name: album.name}, album))
             })
           })
         })
@@ -160,10 +167,11 @@ export function getAlbums (forceRefresh = false) {
     }
   })
   return albumsPromise.then(() => {
-    return albumsDB.find({}).then(albums => store.commit('UPDATE_ALBUMS', albums))
+    return albumsDB.find({}).execAsync().then(albums => store.commit('UPDATE_ALBUMS', albums))
   })
 }
 export function getColors (resource, forceLibrayItemCache = false) {
+  // return Promise.resolve(null)
   return new Promise((resolve, reject) => {
     let buffer, resourceSum, path
     if (resource === 'file:///' || !resource) {
@@ -202,7 +210,7 @@ export function getColors (resource, forceLibrayItemCache = false) {
       buffer = resource
     }
     if (!path) resolve(null)
-    colorsDB.findOne({ _id: resourceSum }).then((res) => {
+    colorsDB.findOneAsync({ _id: resourceSum }).then((res) => {
       if (!res) {
         colorQueue.push(cb => {
           Promise.resolve()
@@ -239,7 +247,7 @@ export function getColors (resource, forceLibrayItemCache = false) {
                 }
               })
                 .then((colors) => {
-                  return colorsDB.update({
+                  return colorsDB.updateAsync({
                     _id: resourceSum
                   },
                   {
@@ -249,7 +257,7 @@ export function getColors (resource, forceLibrayItemCache = false) {
                   {
                     upsert: true
                   })
-                    .then(() => db.update({ albumArt: path }, {
+                    .then(() => db.updateAsync({ albumArt: path }, {
                       $set: { colors: colors }
                     }, { multi: true }))
                     .then(() => resolve(colors))
@@ -266,7 +274,7 @@ export function getColors (resource, forceLibrayItemCache = false) {
         Promise.resolve()
           .then(() => {
             if (forceLibrayItemCache) {
-              return db.update({ albumArt: path }, {
+              return db.updateAsync({ albumArt: path }, {
                 $set: { colors: res.colors }
               }, { multi: true })
             }
@@ -298,7 +306,7 @@ export function cacheAlbumArt (filePath) {
               if (err) {
                 reject(err)
               } else {
-                db.update({filePath: filePath}, { $set: {albumArt: cachePath} })
+                db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
                   .then(() => resolve(cachePath))
                   .catch(reject)
               }
@@ -306,7 +314,7 @@ export function cacheAlbumArt (filePath) {
           } else if (err) {
             reject(err)
           } else {
-            db.update({filePath: filePath}, { $set: {albumArt: cachePath} })
+            db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
               .then(() => resolve(cachePath))
               .catch(reject)
           }
@@ -319,7 +327,8 @@ export function cacheAlbumArt (filePath) {
 }
 
 export function loadAlbumArt (filePath) {
-  return db.find({ filePath: filePath }).then((res) => {
+  // return toFileURL(join(__static, 'albumart-placeholder.png'))
+  return db.find({ filePath: filePath }).execAsync().then((res) => {
     if (res && res.length > 0 && res[0].albumArt && res[0].albumArt !== 'file:///') {
       // console.log('Using cached art', res[0].albumArt, 'for', filePath)
       return toFileURL(res[0].albumArt) // we already have an album art
@@ -330,5 +339,7 @@ export function loadAlbumArt (filePath) {
     }
   })
 }
-window.getColors = getColors
-window.colorsDB = colorsDB
+// window.getColors = getColors
+// window.colorsDB = colorsDB
+window.getAlbums = getAlbums
+window.getLibrary = getLibrary

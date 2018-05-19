@@ -23,8 +23,8 @@
           leave-active-class="animated slideOutRight animated--fast"
           class="flex-center"
         >
-          <loading-indicator key="loading-indicator" color="#00FF30" v-if="!doneUpdating" />
-          <div class="done-icon" key="done-icon" v-else>
+          <loading-indicator key="loading-indicator" color="#00FF30" v-if="!doneUpdating && updating" />
+          <div class="done-icon" key="done-icon" v-else-if="doneUpdating">
               <i class="material-icons">done</i>
           </div>
         </transition-group>
@@ -93,7 +93,7 @@
   import { ipcRenderer, remote } from 'electron'
   // import IndexerWorker from '@/indexer.worker'
   // import { loadAlbumArt, computedStyle } from '@/lazy-loaders'
-  import db from '@/library.db'
+  // import db from '@/library.db'
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
   import { getLibrary, getAlbums } from '@/lazy-loaders'
@@ -103,7 +103,7 @@
   import finishUpdates from '@/lib/updates'
 
   const app = remote.app
-  window.db = db
+  
   const defLibraryPath = app.getPath('music') || ''
   export default {
     name: 'landing-page',
@@ -149,13 +149,7 @@
       } else {
         if (settings.libraries.length === 0) this.showFirstStart = true
         else {
-          if (!this.library || typeof this.library[0] !== 'object' || !this.albums) {
-            getLibrary().then(() => {
-              return getAlbums()
-            }).then(() => this.leavePage())
-          } else {
-            this.leavePage()
-          }
+          this.leavePage()
         }
       }
     },

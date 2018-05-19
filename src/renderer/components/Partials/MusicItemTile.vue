@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { getColors, loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
+import { getColors, loadAlbumArt, getBackgroundImageCSS, getSong } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import { toFileURL } from '@/lib/utils'
 import MaterialButton from './MaterialButton'
@@ -49,8 +49,8 @@ export default {
       type: Boolean,
       default: true
     },
-    item: {
-      type: Object,
+    itemID: {
+      type: String,
       default: null
     },
     active: {
@@ -59,6 +59,9 @@ export default {
     }
   },
   asyncComputed: {
+    item () {
+      return getSong(this.itemID)
+    },
     image () {
       if (!this.showArt) return ''
       if (!this.item) return Promise.resolve('')
@@ -96,7 +99,7 @@ export default {
       if (!this.item) return false
       if (this.active !== null) return this.active
       else {
-        return this.musicStatus === 'playing' && this.currentlyPlaying && this.item.filePath === this.currentlyPlaying.filePath
+        return this.musicStatus === 'playing' && this.currentlyPlaying && this.itemID === this.currentlyPlaying._id
       }
     },
     currentlyPlaying () {
