@@ -65,7 +65,7 @@ export function indexFile (file) {
           .then(() => cacheAlbumArt(picture.format, picture.data))
           .then(path => {
             picture = undefined
-            console.log(libraryItem.fileName, path)
+            // console.log(libraryItem.fileName, path)
             libraryItem.albumArt = path
           })
           .catch((e) => {
