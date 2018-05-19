@@ -142,7 +142,7 @@ export default {
   .navbar.navbar--active {
     width: 300px;
     /* background: #333; */
-    box-shadow: 2px 0 5px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: 1px 0 5px 0 rgba(0, 0, 0, 0.6);
   }
   .navbar-items ul {
     list-style-type: none;
@@ -160,7 +160,7 @@ export default {
     transition: background-color 0.3s;
   }
   .navbar-item .material-icons {
-    font-size: 32px;
+    font-size: 26px;
   }
   .navbar-items li a {
     display: flex;
@@ -211,7 +211,7 @@ export default {
     transform: translateX(-100%)
   }
   .navbar-icon .material-icons {
-    font-size: 32px;
+    font-size: 26px;
   }
   .navbar-item {
     align-items: center;
