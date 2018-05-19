@@ -313,7 +313,7 @@ export default {
       if (!document.hasFocus()) {
         Notification.requestPermission().then((perms) => {
           let path = toFileURL(this.currentlyPlaying.albumArt)
-          if (path === 'file:///' || path === 'file://' || !path) path = __static + '/albumart-placeholder.png'
+          if (path === 'file:///' || path === 'file://' || !path) path = 'static/albumart-placeholder.png'
           let body = this.currentlyPlaying.artist || 'Unknown Artist'
           body += '\n'
           body += this.currentlyPlaying.album || 'Unknown Album'
