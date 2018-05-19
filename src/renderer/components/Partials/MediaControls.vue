@@ -136,6 +136,7 @@
               canv-class="media-controls-details--background"
               :audio-element="audioElement"
               :enabled="windowFocused && fullscreen && playing"
+              :bar-width="3"
             ></av-circle>
           <!-- </keep-alive> -->
           <div class="media-controls-details--items">
@@ -280,7 +281,7 @@ export default {
     ipc.on('music-play-pause', () => {
       if (this.playing) this.pause()
       else {
-        if (this.currentlyPlaying) this.$store.commit('RESUME_MUSIC')
+        this.play()
       }
     })
     ipc.on('music-previous', () => {
@@ -338,7 +339,9 @@ export default {
       currentlyPlaying: state => state.Music.currentlyPlaying,
       status: state => state.Music.status,
       volume: state => state.Music.volume,
-      loop: state => state.Music.loop
+      loop: state => state.Music.loop,
+      queue: state => state.Music.queue,
+      currentlyPlayingIndex: state => state.Music.currentlyPlayingIndex
     }),
     sliderPosition: {
       set (newVal) {
@@ -452,12 +455,16 @@ export default {
       Player.play().catch(e => console.warn(e))
     },
     play (event) {
-      if (!this.currentlyPlaying) return
+      if (!this.currentlyPlaying && !(this.currentlyPlayingIndex && this.queue.length > 0 && this.currentlyPlayingIndex <= this.queue.length - 1)) {
+        return
+      }
       if (event) {
         this.$store.commit('RESUME_MUSIC')
         return
       }
-      console.log(this.previousSong, this.currentlyPlaying)
+      if (this.currentlyPlayingIndex && this.queue.length > 0 && this.currentlyPlayingIndex <= this.queue.length - 1) {
+        this.$store.commit('PLAY_MUSIC', this.queue[this.currentlyPlayingIndex])
+      }
       if (!this.previousSong) {
         this.previousSong = JSON.parse(JSON.stringify(this.currentlyPlaying))
         this.duration = this.currentlyPlaying.duration
