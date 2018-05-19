@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { getBackgroundImageCSS, toColorString, getSongs } from '@/lazy-loaders'
+import { getBackgroundImageCSS, getSongs } from '@/lazy-loaders'
 // import db from '@/library.db'
 import MusicItemTile from '@/components/Partials/MusicItemTile'
 import AlbumArtCard from '@/components/Partials/AlbumArtCard'
@@ -153,7 +153,12 @@ export default {
     computedStyle () {
       if (!this.album) return Promise.resolve('')
       else if (!this.album.colors) return ''
-      else return toColorString(this.album.colors)
+      else {
+        return {
+          backgroundColor: this.album.colors.background,
+          color: this.album.colors.foreground
+        }
+      }
     },
     rawAlbums () {
       return this.$store.state.Library.albums
@@ -339,7 +344,7 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    filter: blur(3px);
+    filter: blur(15px);
     z-index: 0;
     background-position: center;
     background-size: cover;

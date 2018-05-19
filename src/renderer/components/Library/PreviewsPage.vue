@@ -87,6 +87,7 @@ export default {
       return this.$store.state.Music.status
     },
     library () {
+      // return null
       // liveLibrary.refresh()
       // setTimeout(() => {
       //   this.slicedLibrary = liveLibrary.res.slice(0, 10)
@@ -102,6 +103,7 @@ export default {
       // return null
     },
     albums () {
+      // return null
       return (this.$store.state.Library.albums && this.$store.state.Library.albums.slice(0, 20)) || null
       // liveAlbums.refresh()
       // setTimeout(() => {

@@ -62,9 +62,10 @@ export function indexFile (file) {
       let res = Promise.resolve()
       if (picture) {
         res
-          .then(() => cacheAlbumArt(picture.data))
+          .then(() => cacheAlbumArt(picture.format, picture.data))
           .then(path => {
             picture = undefined
+            console.log(libraryItem.fileName, path)
             libraryItem.albumArt = path
           })
           .catch((e) => {
@@ -86,7 +87,7 @@ export function addFiles (path, background = false) {
       total: 0
     }
     let indexQueue = new Queue()
-    indexQueue.concurrency = 4
+    indexQueue.concurrency = 16
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0
@@ -149,7 +150,7 @@ export default function index (path) {
       total: 0
     }
     let indexQueue = new Queue()
-    indexQueue.concurrency = 4
+    indexQueue.concurrency = 16
     indexQueue.autostart = true
     let finish = () => {
       indexDetails.processed = 0

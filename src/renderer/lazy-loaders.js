@@ -3,16 +3,17 @@ import { remote } from 'electron'
 // import { join } from 'path'
 import { join, win32, posix } from 'path'
 // import { stat, mkdir, writeFile } from 'fs'
-import { stat, mkdir, writeFile, readFile } from 'fs'
-import * as crypto from 'crypto'
+import { stat, mkdir, readFile } from 'fs'
+// import * as crypto from 'crypto'
 import { colorsDB, albumsDB, default as db } from '@/library.db'
 import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
 import store from '@/store'
 // import { fieldCaseInsensitiveSort, toFileURL } from './lib/utils'
-import { fieldCaseInsensitiveSort, toFileURL, hashsum } from './lib/utils'
+import { fieldCaseInsensitiveSort, toFileURL, hashsum, cacheAlbumArt as pureCacheAlbumArt } from './lib/utils'
 import WorkerQuantizer from 'node-vibrant/lib/quantizer/worker'
+// import * as Jimp from 'jimp'
 
 const app = remote.app
 const userData = app.getPath('userData')
@@ -41,14 +42,6 @@ let colorQueue = new Queue()
 colorQueue.concurrency = 4
 colorQueue.autostart = true
 
-export function toColorString (color) {
-  if (color.background && color.foreground) return 'background-color:' + color.background + ';color:' + color.foreground
-  else return ''
-}
-
-export function toDataURI (format, buffer) {
-  return 'data:image/' + format + ';base64,' + buffer.toString('base64')
-}
 export function getAlbumArt (filePath) {
   return cacheAlbumArt(filePath).then((path) => Promise.resolve(toFileURL(path)))
 }
@@ -65,7 +58,7 @@ export function getSongs (albumName) {
 }
 export function getAlbum (name) {
   return new Promise((resolve, reject) => {
-    db.find({ album: name }).sort({ album: 1, title: 1 }).execAsync().then((res) => {
+    db.find({ album: name }).sort({ title: 1 }).execAsync().then((res) => {
       if (!res || res.length === 0) return resolve({})
       let album = {}
       album.name = name
@@ -76,6 +69,7 @@ export function getAlbum (name) {
       let resolves = []
       res.forEach(song => {
         if (!song) return
+        console.log(album.name, song.albumArt, song.colors)
         if (song.colors && !album.colors) {
           album.colors = song.colors
           album.art = song.albumArt
@@ -127,7 +121,7 @@ export function indexAlbums () {
     return Promise.all(promises)
   })
   p = p.then((albums) => {
-    Promise.all(albums.map(album => {
+    return Promise.all(albums.map(album => {
       return albumsDB.updateAsync({name: album.name}, album, {upsert: true})
     }))
       .then(() => store.commit('UPDATE_ALBUMS', albums))
@@ -290,35 +284,49 @@ export function getBackgroundImageCSS (resource) {
   if (!resource || resource === 'file:///') resource = 'static/albumart-placeholder.png'
   return 'background-image: url(' + resource + ')'
 }
-export function cacheAlbumArt (filePath) {
+export function cacheAlbumArt (filePath, force = false) {
   return new Promise((resolve, reject) => {
     parseFile(filePath).then((metadata) => {
       if (metadata.common.picture) {
         let picture = metadata.common.picture[0]
-        let hash = crypto.createHash('md5')
-        hash.update(picture.data)
-        let hashsum = hash.digest('hex')
-        let cachePath = join(artsCachePath, hashsum)
-        stat(cachePath, (err, res) => {
-          if (err && err.code === 'ENOENT') {
-            // console.log('Caching art for', filePath)
-            writeFile(cachePath, picture.data, (err) => {
-              if (err) {
-                reject(err)
-              } else {
-                db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
-                  .then(() => resolve(cachePath))
-                  .catch(reject)
-              }
-            })
-          } else if (err) {
-            reject(err)
-          } else {
-            db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
+        pureCacheAlbumArt(picture.format, picture.data)
+          .then((cachePath) => {
+            return db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
               .then(() => resolve(cachePath))
-              .catch(reject)
-          }
-        })
+          })
+          .catch(reject)
+        // let hash = crypto.createHash('md5')
+        // hash.update(picture.data)
+        // let hashsum = hash.digest('hex')
+        // let cachePath = join(artsCachePath, hashsum)
+        // stat(cachePath, (err, res) => {
+        //   if ((err && err.code === 'ENOENT') || force) {
+        //     // console.log('Caching art for', filePath)
+        //     Jimp.read(picture.data).then((image) => {
+        //       image.cover(128, 128).write(cachePath)
+        //     })
+        //       .then(() => {
+        //         return db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
+        //       })
+        //       .then(() => resolve(cachePath))
+        //       .catch(reject)
+        //     // writeFile(cachePath, picture.data, (err) => {
+        //     //   if (err) {
+        //     //     reject(err)
+        //     //   } else {
+        //     //     db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
+        //     //       .then(() => resolve(cachePath))
+        //     //       .catch(reject)
+        //     //   }
+        //     // })
+        //   } else if (err) {
+        //     reject(err)
+        //   } else {
+        //     db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
+        //       .then(() => resolve(cachePath))
+        //       .catch(reject)
+        //   }
+        // })
       } else {
         resolve('')
       }

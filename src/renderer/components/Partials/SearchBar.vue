@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import { toColorString } from '@/lazy-loaders'
 
 export default {
   name: 'search-bar',
@@ -34,7 +33,10 @@ export default {
     },
     borderBottomColor () {
       if (this.currentlyPlaying && this.currentlyPlaying.colors) {
-        return toColorString(this.currentlyPlaying.colors)
+        return {
+          backgroundColor: this.currentlyPlaying.colors.background,
+          color: this.currentlyPlaying.foreground
+        }
       } else {
         return '#3080ff'
       }
