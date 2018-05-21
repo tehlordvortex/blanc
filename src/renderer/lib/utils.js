@@ -48,20 +48,35 @@ export function toDataURI (format, buffer) {
   return 'data:image/' + format + ';base64,' + buffer.toString('base64')
 }
 
+let artCache = {}
 export function cacheAlbumArt (format, buffer) {
   return new Promise((resolve, reject) => {
     let artSum = hashsum(buffer, 'md5')
+    if (artCache[artSum]) {
+      artCache[artSum].push({resolve, reject})
+      return
+    }
+    artCache[artSum] = [{resolve, reject}]
     let artPath = join(artsCachePath, artSum + '.jpg')
     stat(artPath, (err, stats) => {
       if (err && err.code === 'ENOENT') {
         Jimp.read(buffer).then((image) => {
           image.cover(128, 128).write(artPath)
         })
-          .then(() => resolve(artPath))
-          .catch(reject)
-      } else if (err) reject(err)
-      else {
-        resolve(artPath)
+          .then(() => {
+            artCache[artSum].map(i => i.resolve(artPath))
+            artCache[artSum] = null
+          })
+          .catch((e) => {
+            artCache[artSum].map(i => i.reject(e))
+            artCache[artSum] = null
+          })
+      } else if (err) {
+        artCache[artSum].map(i => i.reject(err))
+        artCache[artSum] = null
+      } else {
+        artCache[artSum].map(i => i.resolve(artPath))
+        artCache[artSum] = null
       }
     })
   })

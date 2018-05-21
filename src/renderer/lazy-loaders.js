@@ -9,23 +9,18 @@ import { colorsDB, albumsDB, default as db } from '@/library.db'
 import Color from 'color'
 import Vibrant from 'node-vibrant'
 import Queue from 'queue'
-import store from '@/store'
+// import store from '@/store'
 // import { fieldCaseInsensitiveSort, toFileURL } from './lib/utils'
 import { fieldCaseInsensitiveSort, toFileURL, hashsum, cacheAlbumArt as pureCacheAlbumArt } from './lib/utils'
 import WorkerQuantizer from 'node-vibrant/lib/quantizer/worker'
+import { promisify } from 'bluebird'
 // import * as Jimp from 'jimp'
 
 const app = remote.app
 const userData = app.getPath('userData')
 
-const readFilePromise = (path) => {
-  return new Promise((resolve, reject) => {
-    readFile(path, (err, data) => {
-      if (err) reject(err)
-      else resolve(data)
-    })
-  })
-}
+const statAsync = promisify(stat)
+const readFilePromise = promisify(readFile)
 
 export const artsCachePath = join(userData, 'albumArts')
 stat(artsCachePath, (err, details) => {
@@ -41,6 +36,9 @@ stat(artsCachePath, (err, details) => {
 let colorQueue = new Queue()
 colorQueue.concurrency = 4
 colorQueue.autostart = true
+
+let colorCache = {}
+let artCache = {}
 
 export function getAlbumArt (filePath) {
   return cacheAlbumArt(filePath).then((path) => Promise.resolve(toFileURL(path)))
@@ -81,12 +79,14 @@ export function getAlbum (name) {
         })
         if (!album.art && song.albumArt) {
           album.art = song.albumArt
-          resolves.push(getColors(album.art).then((colors) => {
-            album.colors = colors
-          }).catch(e => {
-            console.warn('Error getting colors for', song.filePath, e)
-            album.art = ''
-          }))
+          if (!song.colors) {
+            resolves.push(getColors(album.art).then((colors) => {
+              album.colors = colors
+            }).catch(e => {
+              console.warn('Error getting colors for', song.filePath, e)
+              album.art = ''
+            }))
+          } else album.colors = song.colors
         }
       })
       Promise.all(resolves).then(() => resolve(album))
@@ -95,8 +95,9 @@ export function getAlbum (name) {
 }
 
 export async function getLibrary () {
-  let library = await db.find({}).execAsync()
-  store.commit('UPDATE_LIBRARY', library)
+  // let library = await db.find({}).execAsync()
+  // await db.find({}).execAsync()
+  // store.commit('UPDATE_LIBRARY', library)
   // return Promise.resolve()
 }
 export function indexAlbums () {
@@ -124,7 +125,7 @@ export function indexAlbums () {
     return Promise.all(albums.map(album => {
       return albumsDB.updateAsync({name: album.name}, album, {upsert: true})
     }))
-      .then(() => store.commit('UPDATE_ALBUMS', albums))
+      // .then(() => store.commit('UPDATE_ALBUMS', albums))
       .then(() => {
         albums = undefined
       })
@@ -149,9 +150,20 @@ export function getAlbums (forceRefresh = false) {
               }
               if (!album.colors && song.colors) {
                 album.colors = song.colors
+                album.art = song.albumArt
               }
               if (!album.art && song.albumArt) {
                 album.art = song.albumArt
+                if (!song.colors) {
+                  resolves = resolves.then(() => {
+                    getColors(album.art).then((colors) => {
+                      album.colors = colors
+                    }).catch(e => {
+                      console.warn('Error getting colors for', song.filePath, e)
+                      album.art = ''
+                    })
+                  })
+                } else album.colors = song.colors
               }
               resolves = resolves.then(() => albumsDB.updateAsync({name: album.name}, album))
             })
@@ -160,9 +172,10 @@ export function getAlbums (forceRefresh = false) {
       })
     }
   })
-  return albumsPromise.then(() => {
-    return albumsDB.find({}).execAsync().then(albums => store.commit('UPDATE_ALBUMS', albums))
-  })
+  // return albumsPromise.then(() => {
+  //   return albumsDB.find({}).execAsync() // .then(albums => store.commit('UPDATE_ALBUMS', albums))
+  // })
+  return albumsDB
 }
 export function getColors (resource, forceLibrayItemCache = false) {
   // return Promise.resolve(null)
@@ -184,17 +197,17 @@ export function getColors (resource, forceLibrayItemCache = false) {
         }
         buffer = null
         if (process.platform === 'win32') {
-          resourceSum = win32.basename(path)
+          resourceSum = win32.basename(path).replace('.jpg', '')
         } else {
-          resourceSum = posix.basename(path)
+          resourceSum = posix.basename(path).replace('.jpg', '')
         }
       } else {
         path = resource
         buffer = null
         if (process.platform === 'win32') {
-          resourceSum = win32.basename(path)
+          resourceSum = win32.basename(path).replace('.jpg', '')
         } else {
-          resourceSum = posix.basename(path)
+          resourceSum = posix.basename(path).replace('.jpg', '')
         }
         if (path.includes('albumart-placeholder.png')) {
           path = join(__static, 'albumart-placeholder.png')
@@ -204,6 +217,11 @@ export function getColors (resource, forceLibrayItemCache = false) {
       buffer = resource
     }
     if (!path) resolve(null)
+    if (colorCache[resourceSum]) {
+      colorCache[resourceSum].push({resolve, reject})
+      return
+    }
+    colorCache[resourceSum] = [{resolve, reject}]
     colorsDB.findOneAsync({ _id: resourceSum }).then((res) => {
       if (!res) {
         colorQueue.push(cb => {
@@ -222,7 +240,8 @@ export function getColors (resource, forceLibrayItemCache = false) {
               } catch (e) {
                 buffer = undefined
                 resource = undefined
-                reject(e)
+                colorCache[resourceSum].map(p => p.reject(e))
+                colorCache[resourceSum] = null
                 cb()
               }
               v.then((swatches) => {
@@ -245,8 +264,9 @@ export function getColors (resource, forceLibrayItemCache = false) {
                     _id: resourceSum
                   },
                   {
-                    _id: resourceSum,
-                    colors: colors
+                    $set: {
+                      colors: colors
+                    }
                   },
                   {
                     upsert: true
@@ -254,12 +274,19 @@ export function getColors (resource, forceLibrayItemCache = false) {
                     .then(() => db.updateAsync({ albumArt: path }, {
                       $set: { colors: colors }
                     }, { multi: true }))
-                    .then(() => resolve(colors))
+                    .then(() => albumsDB.updateAsync({ art: path }, {
+                      $set: { colors }
+                    }))
+                    .then(() => {
+                      colorCache[resourceSum].map(p => p.resolve(colors))
+                      colorCache[resourceSum] = null
+                    })
                     .then(() => cb())
                 })
                 // .then(() => cb())
                 .catch((e) => {
-                  reject(e)
+                  colorCache[resourceSum].map(p => p.reject(e))
+                  colorCache[resourceSum] = null
                   cb()
                 })
             })
@@ -273,7 +300,10 @@ export function getColors (resource, forceLibrayItemCache = false) {
               }, { multi: true })
             }
           })
-          .then(() => resolve(res.colors))
+          .then(() => {
+            colorCache[resourceSum].map(p => p.resolve(res.colors))
+            colorCache[resourceSum] = null
+          })
           // .then(() => cb())
       }
     })
@@ -286,49 +316,29 @@ export function getBackgroundImageCSS (resource) {
 }
 export function cacheAlbumArt (filePath, force = false) {
   return new Promise((resolve, reject) => {
-    parseFile(filePath).then((metadata) => {
+    if (artCache[filePath]) {
+      artCache[filePath].push({resolve, reject})
+      return
+    }
+    artCache[filePath] = [{resolve, reject}]
+    parseFile(filePath, { native: false, duration: false }).then((metadata) => {
       if (metadata.common.picture) {
         let picture = metadata.common.picture[0]
         pureCacheAlbumArt(picture.format, picture.data)
           .then((cachePath) => {
             return db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
-              .then(() => resolve(cachePath))
+              .then(() => {
+                artCache[filePath].map(i => i.resolve(cachePath))
+                artCache[filePath] = null
+              })
           })
-          .catch(reject)
-        // let hash = crypto.createHash('md5')
-        // hash.update(picture.data)
-        // let hashsum = hash.digest('hex')
-        // let cachePath = join(artsCachePath, hashsum)
-        // stat(cachePath, (err, res) => {
-        //   if ((err && err.code === 'ENOENT') || force) {
-        //     // console.log('Caching art for', filePath)
-        //     Jimp.read(picture.data).then((image) => {
-        //       image.cover(128, 128).write(cachePath)
-        //     })
-        //       .then(() => {
-        //         return db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
-        //       })
-        //       .then(() => resolve(cachePath))
-        //       .catch(reject)
-        //     // writeFile(cachePath, picture.data, (err) => {
-        //     //   if (err) {
-        //     //     reject(err)
-        //     //   } else {
-        //     //     db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
-        //     //       .then(() => resolve(cachePath))
-        //     //       .catch(reject)
-        //     //   }
-        //     // })
-        //   } else if (err) {
-        //     reject(err)
-        //   } else {
-        //     db.updateAsync({filePath: filePath}, { $set: {albumArt: cachePath} })
-        //       .then(() => resolve(cachePath))
-        //       .catch(reject)
-        //   }
-        // })
+          .catch((e) => {
+            artCache[filePath].map(i => i.reject(e))
+            artCache[filePath] = null
+          })
       } else {
-        resolve('')
+        artCache[filePath].map(i => i.resolve(''))
+        artCache[filePath] = null
       }
     })
   })
@@ -336,10 +346,18 @@ export function cacheAlbumArt (filePath, force = false) {
 
 export function loadAlbumArt (filePath) {
   // return toFileURL(join(__static, 'albumart-placeholder.png'))
-  return db.find({ filePath: filePath }).execAsync().then((res) => {
-    if (res && res.length > 0 && res[0].albumArt && res[0].albumArt !== 'file:///') {
+  return db.findOne({ filePath: filePath, albumArt: { $nin: [undefined, null, '', 'file:///', 'file://'] } }).execAsync().then((res) => {
+    if (res) {
       // console.log('Using cached art', res[0].albumArt, 'for', filePath)
-      return toFileURL(res[0].albumArt) // we already have an album art
+      return statAsync(res.albumArt)
+        .then(() => {
+          return toFileURL(res.albumArt)
+        })
+        .catch((err) => {
+          if (err.code === 'ENOENT') return cacheAlbumArt(res.filePath).then(path => toFileURL(path))
+          else throw err
+        })
+      // return toFileURL(res[0].albumArt) // we already have an album art
     } else {
       // console.log('Caching art for', filePath)
       return cacheAlbumArt(filePath)
@@ -349,5 +367,5 @@ export function loadAlbumArt (filePath) {
 }
 // window.getColors = getColors
 // window.colorsDB = colorsDB
-window.getAlbums = getAlbums
-window.getLibrary = getLibrary
+// window.getAlbums = getAlbums
+// window.getLibrary = getLibrary
