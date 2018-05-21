@@ -113,7 +113,7 @@ export default {
       else {
         return loadAlbumArt(this.filePath).then((path) => {
           if (path === 'file:///' || !path) {
-            return 'static/albumart-placehoder.png'
+            return 'static/albumart-placeholder.png'
           } else {
             return path
           }
@@ -137,7 +137,7 @@ export default {
           color: this.colors.foreground
         }
       } else {
-        if (!this.image || this.image === 'static/albumart-placehoder.png') return ''
+        if (!this.image || this.image === 'static/albumart-placeholder.png') return ''
         return getColors(this.image).then(colors => {
           return {
             backgroundColor: colors.background,
