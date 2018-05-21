@@ -6,10 +6,7 @@ import { ALBUM_LINE_HEIGHT } from '@/lib/constants'
 export default Vue.component('album-list', {
   data () {
     return {
-      skip: 0,
-      chunks: null,
-      containerHeight: null,
-      style: null
+      skip: 0
     }
   },
   props: {
@@ -24,14 +21,12 @@ export default Vue.component('album-list', {
     }
   },
   render (h) {
-    if (!this.chunks) {
-      this.chunks = chunk(this.albums, this.albumsPerLine)
-      this.containerHeight = this.chunks.length * ALBUM_LINE_HEIGHT
-      this.style = {
-        height: this.containerHeight + 'px'
-      }
+    let chunks = chunk(this.albums, this.albumsPerLine)
+    let containerHeight = chunks.length * ALBUM_LINE_HEIGHT
+    let style = {
+      height: containerHeight + 'px'
     }
-    let displayed = this.chunks.slice(this.skip, this.skip + this.lines)
+    let displayed = chunks.slice(this.skip, this.skip + this.lines)
     let lines = displayed.map((chunk, chunkIndex) => {
       let transformDistance = this.skip * ALBUM_LINE_HEIGHT
       let lineStyle = {
@@ -67,7 +62,7 @@ export default Vue.component('album-list', {
       >
         <div
           class="album-list-inner-container"
-          style={this.style}
+          style={style}
         >
           {lines}
         </div>
