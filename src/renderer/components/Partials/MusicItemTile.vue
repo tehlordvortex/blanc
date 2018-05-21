@@ -3,8 +3,10 @@
     @click="$emit(isActive ? 'pause' : 'play', $event)"
     class="music-item-tile"
     :class="isActive ? 'music-item-tile--active' : ''"
-    :style="isActive ? (computedStyle ? computedStyle : defaultActiveStyle) : ''"
-    @contextmenu="$emit('contextmenu', $event)">
+    :style="isActive && computedStyle"
+    @contextmenu="$emit('contextmenu', $event)"
+    v-observe-visibility="visibilityChanged"
+    >
     <div class="music-item-tile--active-indicator">
       <loading-indicator
       :fullWidth="false"
@@ -42,7 +44,8 @@ import MaterialButton from './MaterialButton'
 export default {
   name: 'music-item-tile',
   data: () => ({
-    defaultActiveStyle: 'background-color: #333;'
+    defaultActiveStyle: 'background-color: #333;',
+    visible: false
   }),
   props: {
     showArt: {
@@ -63,7 +66,7 @@ export default {
       return getSong(this.itemID)
     },
     image () {
-      if (!this.showArt) return ''
+      if (!this.visible) return ''
       if (!this.item) return Promise.resolve('')
       if (this.item.albumArt) return Promise.resolve(toFileURL(this.item.albumArt))
       else return loadAlbumArt(this.item.filePath)
@@ -75,8 +78,11 @@ export default {
     },
     computedStyle () {
       // console.log(this.image)
-      if (!this.colors) return Promise.resolve('')
-      else {
+      if (!this.colors) {
+        return {
+          background: this.isActive ? '#333' : ''
+        }
+      } else {
         // if (!this.showArt) return this.defaultActiveStyle
         return {
           background: this.colors.background,
@@ -85,6 +91,7 @@ export default {
       }
     },
     colors () {
+      if (!this.visible) return null
       if (this.item) {
         if (this.item.colors) return this.item.colors
         else if (this.item.albumArt) return getColors(this.item.albumArt)
@@ -112,6 +119,11 @@ export default {
   components: {
     LoadingIndicator,
     MaterialButton
+  },
+  methods: {
+    visibilityChanged (isVisible) {
+      this.visible = isVisible
+    }
   }
 }
 </script>

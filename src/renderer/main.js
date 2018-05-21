@@ -9,6 +9,7 @@ import '../../static/material-icons/material-icons.css'
 import Spinner from 'vue-spinkit'
 import SweetModal from 'sweet-modal-vue/src/plugin.js'
 import AudioVisual from 'vue-audio-visual/src/index.js'
+import VueObserveVibility from 'vue-observe-visibility'
 
 import { ipcRenderer as ipc } from 'electron'
 
@@ -29,6 +30,7 @@ Vue.use(VueAsyncComputed)
 Vue.use(SweetModal)
 Vue.component('Spinner', Spinner)
 Vue.use(AudioVisual)
+Vue.use(VueObserveVibility)
 
 /* eslint-disable no-new */
 new Vue({

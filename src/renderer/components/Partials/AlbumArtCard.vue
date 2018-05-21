@@ -1,5 +1,5 @@
 <template>
-  <div @click="clicked" class="card" :class="(small ? 'card--small ' : ' ') + (vertical ? 'card--vertical ' : ' ')" :style="computedStyle">
+  <div @click="clicked" class="card" :class="(small ? 'card--small ' : ' ') + (vertical ? 'card--vertical ' : ' ')" :style="computedStyle" v-observe-visibility="visibilityChanged">
     <div class="card--image" :style="computedImageStyle">
       <!-- <img :src="image" class="album-art" /> -->
     </div>
@@ -46,7 +46,8 @@ export default {
     }
   },
   data: () => ({
-    mounted: false
+    mounted: false,
+    visible: true
   }),
   mounted () {
     this.mounted = true
@@ -54,6 +55,9 @@ export default {
   methods: {
     clicked ($e) {
       this.$emit('click', $e)
+    },
+    visibilityChanged (isVisible, entry) {
+      this.visible = isVisible
     }
   },
   asyncComputed: {
@@ -102,6 +106,7 @@ export default {
     // }
     image () {
       // return null
+      if (!this.visible) return null
       if (this.art) return this.art
       if (this.artPath) return Promise.resolve(toFileURL(this.artPath))
       if (!this.filePath) return Promise.resolve('static/albumart-placeholder.png')
