@@ -31,7 +31,7 @@
         <i class="material-icons">skip_previous</i>
       </material-button>
       <span>{{ positionText }}</span>
-      <input :style="computedStyle" type="range" min="0" :max="duration" v-model="sliderPosition" step="1" @change="seekSong"/>
+      <input :style="computedStyle" type="range" min="0" :max="duration" v-model="sliderPosition" step="1" />
       <span>{{ durationText }}</span>
       <material-button
         icon
@@ -540,9 +540,6 @@ export default {
       this.sliderPosition = 0
       this.duration = 0
       Player.stop()
-    },
-    seekSong (e) {
-      console.log(e.target.value)
     },
     goFullscreen () {
       this.fullscreen = true
