@@ -65,8 +65,7 @@
                     <music-item-tile
                       v-for="(item, index) in albumSongs"
                       :key="item.filePath"
-                      :showArt="false"
-                      :itemID="item._id"
+                      :itemObject="item"
                       @play="play(item)"
                       @pause="pause()"
                       @contextmenu="doContextMenu(item)"

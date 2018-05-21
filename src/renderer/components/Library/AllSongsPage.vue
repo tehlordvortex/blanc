@@ -16,7 +16,7 @@
                 v-for="(item, index) in libraryDisplayed" :key="'all-songs-' + item.filePath"
               >
                 <music-item-tile
-                  :itemID="item._id"
+                  :itemObject="item"
                   @play="play(item)"
                   @pause="pause()"
                   :showArt="false"

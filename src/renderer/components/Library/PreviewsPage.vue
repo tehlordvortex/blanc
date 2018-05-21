@@ -27,12 +27,11 @@
       <staggered-slide-in tag="div" class="item-column--content" v-if="library" :scale="0.05">
         <music-item-tile
           v-for="(item, index) in library" :key="'all-songs-' + item.filePath"
-          :itemID="item._id"
+          :itemObject="item"
           :active="musicStatus === 'playing' && currentlyPlaying && item.filePath === currentlyPlaying.filePath"
           @play="play(item)"
           @pause="pause()"
           @click="play(item)"
-          :showArt="false"
           :data-staggered-index="index"
           @contextmenu="doContextMenu(item)"
           >

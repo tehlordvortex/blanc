@@ -17,8 +17,6 @@
       name="line-scale-pulse-out-rapid"
        />
     </div>
-    <div class="music-item-tile--art" v-if="showArt" :style="computedImageStyle">
-    </div>
     <div class="music-item-tile--details">
       <slot></slot>
     </div>
@@ -36,16 +34,16 @@
 </template>
 
 <script>
-import { getColors, loadAlbumArt, getBackgroundImageCSS, getSong } from '@/lazy-loaders'
+import { getColors, loadAlbumArt, getSong } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
-import { toFileURL } from '@/lib/utils'
 import MaterialButton from './MaterialButton'
 
 export default {
   name: 'music-item-tile',
   data: () => ({
     defaultActiveStyle: 'background-color: #333;',
-    visible: false
+    visible: false,
+    cachedSong: null
   }),
   props: {
     showArt: {
@@ -56,6 +54,10 @@ export default {
       type: String,
       default: null
     },
+    itemObject: {
+      type: Object,
+      default: null
+    },
     active: {
       type: Boolean,
       default: null
@@ -63,18 +65,13 @@ export default {
   },
   asyncComputed: {
     item () {
-      return getSong(this.itemID)
-    },
-    image () {
-      if (!this.visible) return ''
-      if (!this.item) return Promise.resolve('')
-      if (this.item.albumArt) return Promise.resolve(toFileURL(this.item.albumArt))
-      else return loadAlbumArt(this.item.filePath)
-    },
-    computedImageStyle () {
-      // console.log(this.image)
-      if (!this.image) return Promise.resolve('')
-      else return getBackgroundImageCSS(this.image)
+      if (this.itemObject) return this.itemObject
+      if (this.cachedSong) return this.cachedSong
+      if (!this.visible) return
+      return getSong(this.itemID).then(song => {
+        this.cachedSong = song
+        return song
+      })
     },
     computedStyle () {
       // console.log(this.image)
@@ -106,7 +103,7 @@ export default {
       if (!this.item) return false
       if (this.active !== null) return this.active
       else {
-        return this.musicStatus === 'playing' && this.currentlyPlaying && this.itemID === this.currentlyPlaying._id
+        return this.musicStatus === 'playing' && this.currentlyPlaying && this.item._id === this.currentlyPlaying._id
       }
     },
     currentlyPlaying () {
