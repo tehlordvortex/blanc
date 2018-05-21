@@ -30,7 +30,7 @@ export default {
   },
   mounted () {
     Mousetrap.bind(['/', 'f'], (e) => {
-      e.stopPropagation()
+      e.stopPropagation() // these two lines prevent the input element from capturing the key on focus
       e.preventDefault()
       this.$el.focus()
       this.$refs.input.focus()
