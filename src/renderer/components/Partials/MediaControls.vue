@@ -88,7 +88,7 @@
           enter-active-class="animated fadeInLeft"
           leave-active-class="animated fadeOutLeft"
         >
-          <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
+          <volume-slider v-show="showVolume" class="media-controls-volume-slider" />
         </transition>
       </div>
       <material-button
@@ -103,7 +103,7 @@
       name="animated-fade-slide-in"
       enter-active-class="animated fadeInRight"
       leave-active-class="animated fadeOutRight">
-      <queue v-if="showQueue" class="media-controls-queue" @close="showQueue = false" />
+      <queue v-show="showQueue" class="media-controls-queue" @close="showQueue = false" />
     </transition>
     <transition
       name="animated-zoom-in"
@@ -203,7 +203,7 @@
                   enter-active-class="animated fadeInLeft"
                   leave-active-class="animated fadeOutLeft"
                 >
-                  <volume-slider v-if="showVolume" class="media-controls-volume-slider" />
+                  <volume-slider v-show="showVolume" class="media-controls-volume-slider" />
                 </transition>
               </div>
               <material-button
@@ -236,7 +236,7 @@
           name="animated-slide-in"
           enter-active-class="animated slideInUp"
           leave-active-class="animated slideOutDown">
-          <queue v-if="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
+          <queue v-show="showFullscreenQueue" @close="showFullscreenQueue = false" class="media-controls-fullscreen-queue "/>
         </transition>
       </div>
     </transition>
