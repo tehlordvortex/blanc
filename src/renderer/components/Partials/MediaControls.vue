@@ -257,6 +257,7 @@ import { toFileURL } from '@/lib/utils'
 import { ipcRenderer as ipc } from 'electron'
 
 import * as Mousetrap from 'mousetrap'
+import { throttle } from 'underscore'
 
 window.appSettings = settings
 
@@ -310,9 +311,9 @@ export default {
     Player.destroy()
     Player.init()
     if (this.status === 'playing' && !Player.getAudio().src) this.$store.commit('STOP_MUSIC')
-    Player.getAudio().addEventListener('timeupdate', () => {
+    Player.getAudio().addEventListener('timeupdate', throttle(() => {
       this.position = Player.getCurrentTime()
-    })
+    }, 1000))
     Player.getAudio().addEventListener('canplaythrough', ($e) => {
       // this.duration = $e.target.duration
       // console.log(Player.play().catch(e => console.warn(e)))
