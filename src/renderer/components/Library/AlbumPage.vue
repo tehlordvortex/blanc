@@ -120,6 +120,8 @@ import AlbumList from '@/components/Partials/AlbumList'
 import MaterialButton from '@/components/Partials/MaterialButton'
 import Card from '@/components/Partials/Card'
 import { remote } from 'electron'
+import { albumsDB } from '@/library.db'
+import { fieldCaseInsensitiveSort } from '../../lib/utils'
 
 const Menu = remote.Menu
 
@@ -132,8 +134,7 @@ export default {
   asyncComputed: {
     album () {
       if (!this.$route.params.album) return null
-      if (!this.albums) return null
-      else return this.albums.find(album => album.name === this.$route.params.album)
+      else return albumsDB.findOneAsync({ name: this.$route.params.album })
     },
     albumSongs () {
       if (!this.album) return null
@@ -161,24 +162,18 @@ export default {
       }
     },
     rawAlbums () {
-      return this.$store.state.Library.albums
+      return albumsDB.find({}).execAsync().then(albums => {
+        return albums.sort(fieldCaseInsensitiveSort('name'))
+      })
     },
     albums () {
+      if (!this.rawAlbums) return
       return this.searchString ? this.rawAlbums.filter(album => {
         let criteria = []
         criteria.push(album.name)
         criteria = criteria.concat(album.artists)
         return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
       }) : this.rawAlbums
-    },
-    albumsDisplayed () {
-      if (!this.albums) return null
-      // let chunks = chunk(this.albums, ALBUM_LINES_PER_CHUNK)
-      // return flatten(chunks.splice(this.skipItems, ALBUM_CHUNKS_TO_DISPLAY)).map((item, index) => {
-      //   let transformDistance = (this.skipItems * ALBUM_CHUNK_HEIGHT)
-      //   return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
-      // })
-      return this.albums
     }
   },
   computed: {
@@ -194,11 +189,6 @@ export default {
     },
     musicStatus () {
       return this.$store.state.Music.status
-    },
-    albumsPerLine () {
-      console.log(this.$refs)
-      if (!this.$refs.flexWrap) return null
-      return Math.floor(this.$refs.flexWrap.clientWidth / (128 + 16 * 2))
     },
     albumListStyle () {
       if (!this.albums) return null

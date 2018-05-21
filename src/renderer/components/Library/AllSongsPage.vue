@@ -48,7 +48,8 @@ import { TILE_HEIGHT, CHUNKS_TO_DISPLAY, TILES_PER_CHUNK, CHUNK_HEIGHT } from '@
 import chunk from 'lodash.chunk'
 import flatten from 'lodash.flatten'
 import { remote } from 'electron'
-// import { default as db } from '@/library.db'
+import { default as db } from '@/library.db'
+import { fieldCaseInsensitiveSort } from '@/lib/utils'
 const { Menu } = remote
 // import db from '@/library.db'
 // import { getLibrary } from '@/lazy-loaders'
@@ -84,29 +85,10 @@ export default {
         height: (this.librarySorted.length * TILE_HEIGHT) + 'px !important'
       }
     },
-    library () {
-      return this.$store.state.Library.library
-    },
     librarySorted () {
       if (!this.library) return null
-      let clone = [...this.library]
-      clone.sort((a, b) => {
-        let aField = a[this.sort.field]
-        let bField = b[this.sort.field]
-        if (typeof aField === 'string') {
-          aField = aField.toLowerCase().trim()
-        }
-        if (typeof bField === 'string') {
-          bField = bField.toLowerCase().trim()
-        }
-        if (aField > bField) {
-          return this.sort.order
-        } else if (aField < bField) {
-          return this.sort.order * -1
-        } else {
-          return 0
-        }
-      })
+      let clone = this.library
+      clone.sort(fieldCaseInsensitiveSort(this.sort.field))
       if (this.searchString) {
         let lib = clone.filter(item => {
           let criteria = []
@@ -152,7 +134,6 @@ export default {
       // console.log(ev)
       // console.log(ev)
       this.skipItems = Math.floor(ev.target.scrollTop / CHUNK_HEIGHT)
-      console.log(this.skipItems)
     },
     doContextMenu (item) {
       const template = [
@@ -183,11 +164,11 @@ export default {
       menu.popup({async: true})
     }
   },
-  // asyncComputed: {
-  //   library () {
-  //     return Promise.all(.library.map(song => getSong(song)))
-  //   }
-  // },
+  asyncComputed: {
+    library () {
+      return db.find({}).execAsync()
+    }
+  },
   watch: {
     searchString () {
       // this.doSearch()

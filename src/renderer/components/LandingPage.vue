@@ -96,7 +96,7 @@
   // import db from '@/library.db'
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
-  import { getLibrary, getAlbums } from '@/lazy-loaders'
+  import { indexAlbums } from '@/lazy-loaders'
   import { default as index } from '@/indexer.lib'
   import { mapState } from 'vuex'
   import LoadingIndicator from '@/components/Partials/LoadingIndicator'
@@ -140,8 +140,7 @@
           .then(() => {
             settings.lastRunVersion = settings.version
           })
-          .then(() => getLibrary())
-          .then(() => getAlbums())
+          .then(() => indexAlbums())
           .then(() => {
             this.doneUpdating = true
           })
@@ -183,7 +182,6 @@
         })
       },
       leavePage: function (immediate) {
-        console.log('leavePage')
         if (!immediate) {
           setTimeout(() => {
             this.$store.commit('SHOW_CHROME')

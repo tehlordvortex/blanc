@@ -33,7 +33,7 @@
 import MaterialButton from '@/components/Partials/MaterialButton'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import db from '@/library.db'
-import { getLibrary, getAlbums } from '@/lazy-loaders'
+// import { getLibrary, getAlbums } from '@/lazy-loaders'
 
 // import { getAlbumArt } from '@/lazy-loaders'
 
@@ -45,7 +45,6 @@ export default {
   mounted () {
     this.$store.commit('SHOW_CHROME')
     this.$store.commit('SHOW_MUSIC_BAR')
-    getLibrary().then(() => getAlbums())
   },
   watch: {
     library (newVal) {

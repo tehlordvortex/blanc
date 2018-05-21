@@ -62,6 +62,7 @@ import MaterialButton from '@/components/Partials/MaterialButton'
 // import { getSong } from '@/lazy-loaders'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import { remote } from 'electron'
+import { albumsDB, default as db } from '@/library.db'
 
 const { Menu } = remote
 
@@ -78,6 +79,12 @@ export default {
     // rawLibrary () {
     //   return db.find({}).execAsync()
     // }
+    library () {
+      return db.find({}).sort({ title: 1 }).limit(20).execAsync()
+    },
+    albums () {
+      return albumsDB.find({}).sort({ name: 1 }).limit(20).execAsync()
+    }
   },
   computed: {
     currentlyPlaying () {
@@ -85,41 +92,41 @@ export default {
     },
     musicStatus () {
       return this.$store.state.Music.status
-    },
-    library () {
-      // return null
-      // liveLibrary.refresh()
-      // setTimeout(() => {
-      //   this.slicedLibrary = liveLibrary.res.slice(0, 10)
-      // }, 2000)
-      // if (!liveLibrary.res) return null
-      return (this.$store.state.Library.library && this.$store.state.Library.library.slice(0, 20)) || null
-      // console.log(liveLibrary.res)
-      // let startIndex = Math.floor(Math.random() * (liveLibrary.res.length - 30))
-      // let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
-      // if (endIndex > liveLibrary.res.length || endIndex === 0) endIndex = liveLibrary.res.length
-      // let slicedLibrary = liveLibrary.res.slice(0, 10)
-      // return slicedLibrary
-      // return null
-    },
-    albums () {
-      // return null
-      return (this.$store.state.Library.albums && this.$store.state.Library.albums.slice(0, 20)) || null
-      // liveAlbums.refresh()
-      // setTimeout(() => {
-      //   this.slicedAlbums = liveAlbums.res.slice(0, 10)
-      // }, 2000)
-      // if (!liveAlbums.res) return null
-      // else {
-      //   return null
-      //   // console.log(liveAlbums.res)
-      //   // let startIndex = Math.floor(Math.random() * (liveAlbums.res.length - 10))
-      //   // let endIndex = Math.floor(10 + (Math.random() * 6)) + startIndex
-      //   // if (endIndex > liveAlbums.res.length || endIndex === 0) endIndex = liveAlbums.res.length
-      //   // let slicedAlbums = liveAlbums.res.slice(startIndex, endIndex)
-      //   // return slicedAlbums
-      // }
     }
+    // library () {
+    //   // return null
+    //   // liveLibrary.refresh()
+    //   // setTimeout(() => {
+    //   //   this.slicedLibrary = liveLibrary.res.slice(0, 10)
+    //   // }, 2000)
+    //   // if (!liveLibrary.res) return null
+    //   return (this.$store.state.Library.library && this.$store.state.Library.library.slice(0, 20)) || null
+    //   // console.log(liveLibrary.res)
+    //   // let startIndex = Math.floor(Math.random() * (liveLibrary.res.length - 30))
+    //   // let endIndex = Math.floor(10 + (Math.random() * 30)) + startIndex
+    //   // if (endIndex > liveLibrary.res.length || endIndex === 0) endIndex = liveLibrary.res.length
+    //   // let slicedLibrary = liveLibrary.res.slice(0, 10)
+    //   // return slicedLibrary
+    //   // return null
+    // },
+    // albums () {
+    //   // return null
+    //   return (this.$store.state.Library.albums && this.$store.state.Library.albums.slice(0, 20)) || null
+    //   // liveAlbums.refresh()
+    //   // setTimeout(() => {
+    //   //   this.slicedAlbums = liveAlbums.res.slice(0, 10)
+    //   // }, 2000)
+    //   // if (!liveAlbums.res) return null
+    //   // else {
+    //   //   return null
+    //   //   // console.log(liveAlbums.res)
+    //   //   // let startIndex = Math.floor(Math.random() * (liveAlbums.res.length - 10))
+    //   //   // let endIndex = Math.floor(10 + (Math.random() * 6)) + startIndex
+    //   //   // if (endIndex > liveAlbums.res.length || endIndex === 0) endIndex = liveAlbums.res.length
+    //   //   // let slicedAlbums = liveAlbums.res.slice(startIndex, endIndex)
+    //   //   // return slicedAlbums
+    //   // }
+    // }
   },
   components: {
     Card,
