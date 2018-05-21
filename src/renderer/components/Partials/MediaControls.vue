@@ -365,6 +365,9 @@ export default {
     Mousetrap.bind('n', () => {
       this.playNext()
     })
+    Mousetrap.bind('r', () => {
+      this.toggleLoop()
+    })
   },
   computed: {
     ...mapState({
