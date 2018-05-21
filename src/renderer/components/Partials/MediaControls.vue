@@ -100,18 +100,24 @@
       </material-button>
     </div>
     <transition
-      name="animated-slide-in"
+      name="animated-fade-slide-in"
       enter-active-class="animated fadeInRight"
       leave-active-class="animated fadeOutRight">
       <queue v-if="showQueue" class="media-controls-queue" @close="showQueue = false" />
     </transition>
     <transition
       name="animated-zoom-in"
-      enter-active-class="animated slideInUp"
-      leave-active-class="animated slideOutDown"
+      enter-active-class="animated slideInUp animated-slow"
+      leave-active-class="animated slideOutDown animated-slow"
     >
-      <div class="media-controls-fullscreen" v-show="fullscreen" :style="computedStyle" ref="fullscreen">
-        <div class="media-controls-fullscreen--background" :style="computedImageStyle"></div>
+      <div class="media-controls-fullscreen" v-show="fullscreen" :style="computedStyle">
+        <transition
+          name="animated-slide-in"
+          :enter-active-class="backgroundEnterActiveClass"
+          :leave-active-class="backgroundLeaveActiveClass"
+        >
+          <div class="media-controls-fullscreen--background" :style="computedImageStyle" :key="computedImageStyle"></div>
+        </transition>
         <div class="media-controls-fullscreen--leave-button">
           <material-button
             icon
@@ -123,7 +129,7 @@
         </div>
         <!-- <div class="media-controls-art media-controls-art--large" :style="computedImageStyle">
         </div> -->
-        <div class="media-controls-details" @click.stop ref="fsdetails">
+        <div class="media-controls-details" @click.stop>
           <!-- <keep-alive> -->
             <av-circle
               v-if="audioElement"
@@ -136,7 +142,6 @@
               canv-class="media-controls-details--background"
               :audio-element="audioElement"
               :enabled="windowFocused && fullscreen && playing"
-              :bar-width="3"
             ></av-circle>
           <!-- </keep-alive> -->
           <div class="media-controls-details--items">
@@ -251,6 +256,8 @@ import { toFileURL } from '@/lib/utils'
 
 import { ipcRenderer as ipc } from 'electron'
 
+import * as Mousetrap from 'mousetrap'
+
 window.appSettings = settings
 
 export default {
@@ -267,7 +274,8 @@ export default {
     showFullscreenQueue: false,
     showVolume: false,
     audioElement: null,
-    notificationTag: 'blanc'
+    notificationTag: 'blanc',
+    direction: ''
   }),
   components: {
     Queue,
@@ -311,20 +319,21 @@ export default {
     })
     Player.getAudio().addEventListener('play', ($e) => {
       if (!document.hasFocus()) {
-        Notification.requestPermission().then((perms) => {
-          let path = toFileURL(this.currentlyPlaying.albumArt)
-          if (path === 'file:///' || path === 'file://' || !path) path = 'static/albumart-placeholder.png'
-          let body = this.currentlyPlaying.artist || 'Unknown Artist'
-          body += '\n'
-          body += this.currentlyPlaying.album || 'Unknown Album'
-          /* eslint-disable no-new */
-          this.notificationTag = (new Notification(this.currentlyPlaying.title, {
-            icon: path,
-            body: body,
-            silent: true,
-            tag: this.notificationTag
-          })).tag
-        })
+        Notification.requestPermission()
+          .then(() => loadAlbumArt(this.currentlyPlaying.filePath))
+          .then((path) => {
+            if (path === 'file:///' || path === 'file://' || !path) path = 'static/albumart-placeholder.png'
+            let body = this.currentlyPlaying.artist || 'Unknown Artist'
+            body += '\n'
+            body += this.currentlyPlaying.album || 'Unknown Album'
+            /* eslint-disable no-new */
+            this.notificationTag = (new Notification(this.currentlyPlaying.title, {
+              icon: path,
+              body: body,
+              silent: true,
+              tag: this.notificationTag
+            })).tag
+          })
       }
     })
     Player.getAudio().addEventListener('ended', ($e) => {
@@ -333,6 +342,28 @@ export default {
       else this.stop()
     })
     this.audioElement = Player.getAudio()
+    Mousetrap.bind('space', () => {
+      if (this.playing) this.pause()
+      else this.play()
+    })
+    Mousetrap.bind('e', () => {
+      if (this.fullscreen) this.leaveFullscreen()
+      else this.goFullscreen()
+    })
+    Mousetrap.bind(['command+e', 'ctrl+e'], () => {
+      if (!this.fullscreen) this.goFullscreen()
+      if (!this.windowFullscreen) this.toggleWindowFullscreen()
+    })
+    Mousetrap.bind(['esc'], () => {
+      if (this.fullscreen) this.leaveFullscreen()
+      if (this.windowFullscreen) this.toggleWindowFullscreen()
+    })
+    Mousetrap.bind('p', () => {
+      this.playPrevious()
+    })
+    Mousetrap.bind('n', () => {
+      this.playNext()
+    })
   },
   computed: {
     ...mapState({
@@ -376,6 +407,20 @@ export default {
       } else {
         return ['#333', '#666']
       }
+    },
+    backgroundEnterActiveClass () {
+      if (this.direction === 'previous') {
+        return 'animated slideInLeft'
+      } else {
+        return 'animated slideInRight'
+      }
+    },
+    backgroundLeaveActiveClass () {
+      if (this.direction === 'previous') {
+        return 'animated slideOutRight'
+      } else {
+        return 'animated slideOutLeft'
+      }
     }
   },
   asyncComputed: {
@@ -384,8 +429,8 @@ export default {
       else {
         // console.log(this.currentlyPlaying.filePath)
         // console.log(this.currentlyPlaying.albumArt)
-        if (this.currentlyPlaying.albumArt) return Promise.resolve(toFileURL(this.currentlyPlaying.albumArt))
-        else return loadAlbumArt(this.currentlyPlaying.filePath)
+        // if (this.currentlyPlaying.albumArt) return Promise.resolve(toFileURL(this.currentlyPlaying.albumArt))
+        return loadAlbumArt(this.currentlyPlaying.filePath)
       }
     },
     computedImageStyle () {
@@ -501,6 +546,7 @@ export default {
     },
     leaveFullscreen () {
       this.fullscreen = false
+      if (this.windowFullscreen) this.toggleWindowFullscreen()
       this.$store.commit('SHOW_CHROME')
     },
     gotoAlbum (album) {
@@ -532,9 +578,11 @@ export default {
       this.showQueue = !this.showQueue
     },
     playPrevious () {
+      this.direction = 'previous'
       this.$store.commit('PLAY_PREVIOUS_SONG', true)
     },
     playNext () {
+      this.direction = 'next'
       this.$store.commit('PLAY_NEXT_SONG', true)
     },
     toggleLoop () {
@@ -676,6 +724,7 @@ export default {
     margin-top: -7px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
     border-radius: 50%;
     /* box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; Add cool effects to your sliders! */
+    -webkit-app-region: no-drag;
   }
 
   input[type=range]:focus {
@@ -690,6 +739,7 @@ export default {
     border-radius: 1px;
     /* border: 0.2px solid #010101; */
     transition: box-shadow 0.3s;
+    -webkit-app-region: no-drag;
   }
   input[type=range]:focus::-webkit-slider-runnable-track,
   input[type=range]:hover::-webkit-slider-runnable-track,
@@ -732,6 +782,9 @@ export default {
     justify-content: center;
     flex-direction: column;
     color: black;
+    background: #222;
+    -webkit-app-region: drag;
+    transition: all 0.5s;
   }
   .media-controls-queue {
     position: absolute;
@@ -786,6 +839,7 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    -webkit-app-region: no-drag;
   }
   .media-controls-fullscreen .media-controls-details p {
     margin: 5px auto;
@@ -829,5 +883,9 @@ export default {
     position: absolute;
     right: 0;
     top: 0;
+  }
+
+  .animated-slow {
+    animation-duration: 1s;
   }
 </style>

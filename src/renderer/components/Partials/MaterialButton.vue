@@ -95,6 +95,7 @@ export default {
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
     text-align: center;
+    -webkit-app-region: no-drag;
   }
   .button.rounded {
     border-radius: 25px;

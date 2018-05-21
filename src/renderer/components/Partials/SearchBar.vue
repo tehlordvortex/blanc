@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import * as Mousetrap from 'mousetrap'
 
 export default {
   name: 'search-bar',
@@ -26,6 +27,14 @@ export default {
   }),
   props: {
     value: String
+  },
+  mounted () {
+    Mousetrap.bind(['/', 'f'], (e) => {
+      e.stopPropagation()
+      e.preventDefault()
+      this.$el.focus()
+      this.$refs.input.focus()
+    }, 'keyup')
   },
   computed: {
     currentlyPlaying () {
@@ -47,6 +56,7 @@ export default {
       $event.target.value = ''
       this.$emit('input', '')
       this.$refs.input.blur()
+      this.$el.blur()
     }
   }
 }
