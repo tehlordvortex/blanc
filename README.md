@@ -10,10 +10,11 @@ Once it's done and you start playing music: Hover over the album art for the pla
 
 It's currently in development, so if anything breaks, please:
 
-1. Go to one of these paths and remove `Local Storage`, `Settings`, `albums.db`, `colors.db`, `library.db`. You may also remove the `albumArts` folder, or remove them one by one and start the app after each file/folder you remove.
+1. Go to one of these paths and remove `Local Storage`, `Settings`, `Indexed DB`. You may also remove the `albumArts` folder, or remove them one by one and start the app after each file/folder you remove.
   - On Linux: `~/.config/blanc`
-  - On Windows: `%APPDATA%\Roaming\blanc`
-3. Create an issue describing what happened when it broke and attach any log files in the `Logs` or `logs` folder in the folder above.
+  - On Windows: `%APPDATA%\Roaming\blanc` (hit `Win+R` and type `appdata` then Enter.)
+  - If it was during an upgrade, please remove `albums.db`, `colors.db`, `library.db` (if they exist) and restart the app.
+2. Create an issue describing what happened when it broke and attach any log files in the folder above.
 
 ## So far it supports
 
