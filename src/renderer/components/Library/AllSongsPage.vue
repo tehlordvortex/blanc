@@ -2,9 +2,9 @@
   <div class="wrapper">
     <search-bar v-model="searchString" />
     <item-column title="all songs" class="fill-height">
-      <sort-bar v-if="libraryDisplayed" :criterias="sortCriterias" @sort="updateSort" />
-      <template v-if="libraryDisplayed">
-        <div class="songs-wrapper"
+      <sort-bar v-if="librarySorted" :criterias="sortCriterias" @sort="updateSort" />
+      <template v-if="librarySorted">
+        <!-- <div class="songs-wrapper"
         @scroll="scrolled"
         >
           <div
@@ -30,7 +30,13 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
+        <song-list
+          :songs="librarySorted"
+          @play="play"
+          @pause="pause"
+          @contextmenu="doContextMenu"
+        />
       </template>
       <loading-indicator v-else />
     </item-column>
@@ -38,21 +44,16 @@
 </template>
 
 <script>
-import MusicItemTile from '@/components/Partials/MusicItemTile'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import SortBar from '@/components/Partials/SortBar'
 import ItemColumn from '@/components/Partials/ItemColumn'
 import StaggeredSlideIn from '@/components/Transitions/StaggeredSlideIn'
 import SearchBar from '@/components/Partials/SearchBar'
-import { TILE_HEIGHT, CHUNKS_TO_DISPLAY, TILES_PER_CHUNK, CHUNK_HEIGHT } from '@/lib/constants'
-import chunk from 'lodash.chunk'
-import flatten from 'lodash.flatten'
 import { remote } from 'electron'
 import { default as db } from '@/library.db'
 import { fieldCaseInsensitiveSort } from '@/lib/utils'
+import SongList from '@/components/Partials/SongList'
 const { Menu } = remote
-// import db from '@/library.db'
-// import { getLibrary } from '@/lazy-loaders'
 export default {
   name: 'library-all-songs-page',
   data: () => ({
@@ -79,16 +80,10 @@ export default {
     skipItems: 0
   }),
   computed: {
-    songListStyle () {
-      if (!this.librarySorted) return null
-      return {
-        height: (this.librarySorted.length * TILE_HEIGHT) + 'px !important'
-      }
-    },
     librarySorted () {
       if (!this.library) return null
       let clone = this.library
-      clone.sort(fieldCaseInsensitiveSort(this.sort.field))
+      clone.sort(fieldCaseInsensitiveSort(this.sort.field, this.sort.order))
       if (this.searchString) {
         let lib = clone.filter(item => {
           let criteria = []
@@ -104,14 +99,6 @@ export default {
       } else {
         return clone
       }
-    },
-    libraryDisplayed () {
-      if (!this.librarySorted) return null
-      let chunks = chunk(this.librarySorted, TILES_PER_CHUNK)
-      return flatten(chunks.splice(this.skipItems, CHUNKS_TO_DISPLAY)).map((item, index) => {
-        let transformDistance = (this.skipItems * TILE_HEIGHT * TILES_PER_CHUNK)
-        return { ...item, style: { transform: `translate3d(0, ${transformDistance}px, 0)` } }
-      })
     }
   },
   methods: {
@@ -124,16 +111,6 @@ export default {
     updateSort (criteria, order) {
       this.sort.field = criteria.field
       this.sort.order = order
-      // this.libraryDirty = true
-    },
-    doSearch (searchString) {
-      // this.searchString = searchString
-      // this.libraryDirty = true
-    },
-    scrolled (ev) {
-      // console.log(ev)
-      // console.log(ev)
-      this.skipItems = Math.floor(ev.target.scrollTop / CHUNK_HEIGHT)
     },
     doContextMenu (item) {
       const template = [
@@ -169,18 +146,13 @@ export default {
       return db.find({}).execAsync()
     }
   },
-  watch: {
-    searchString () {
-      // this.doSearch()
-    }
-  },
   components: {
-    MusicItemTile,
     SortBar,
     LoadingIndicator,
     ItemColumn,
     StaggeredSlideIn,
-    SearchBar
+    SearchBar,
+    SongList
   }
 }
 </script>

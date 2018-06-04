@@ -67,7 +67,6 @@ export function getAlbum (name) {
       let resolves = []
       res.forEach(song => {
         if (!song) return
-        console.log(album.name, song.albumArt, song.colors)
         if (song.colors && !album.colors) {
           album.colors = song.colors
           album.art = song.albumArt

@@ -10,26 +10,26 @@ export function toColorString (color) {
   else return ''
 }
 
-export function caseInsensitiveSort (a, b) {
+export function caseInsensitiveSort (a, b, order = 1) {
   if (!a && !b) return 0
-  if (!a && b) return -1
-  else if (a && !b) return 1
+  if (!a && b) return -1 * order
+  else if (a && !b) return order
   else {
     let al = a.toLowerCase().trim()
     let bl = b.toLowerCase().trim()
     if (al < bl) {
-      return -1
+      return -1 * order
     } else if (al > bl) {
-      return 1
+      return order
     } else {
       return 0
     }
   }
 }
 
-export function fieldCaseInsensitiveSort (field) {
+export function fieldCaseInsensitiveSort (field, order = 1) {
   return (a, b) => {
-    return caseInsensitiveSort(a[field], b[field])
+    return caseInsensitiveSort(a[field], b[field], order)
   }
 }
 
