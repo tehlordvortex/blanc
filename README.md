@@ -16,6 +16,15 @@ It's currently in development, so if anything breaks, please:
   - If it was during an upgrade, please remove `albums.db`, `colors.db`, `library.db` (if they exist) and restart the app.
 2. Create an issue describing what happened when it broke and attach any log files in the folder above.
 
+## Keyboard Shortcuts
+- `e` - Toggle expanded view. `Ctrl-e` fullscreen along with that.
+- `Space` - Pause/play
+- `p` - Previous song
+- `n` - Next song
+- `q` - Toggle queue. Works in expanded view too.
+- `r` - Toggle repeat.
+- `/`/`Ctrl-f` - Focus the searchbar when it's present.
+
 ## So far it supports
 
 1. Playing music
