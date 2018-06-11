@@ -1,13 +1,11 @@
 <template>
-  <div class="wrapper" :class="partial ? 'no-fill-height' : ''">
-    <item-column title="About" class="about-page">
-      <div style="text-align: center">
-        <h1>Blanc</h1>
-        <h3>Version {{ appVersion }}</h3>
-      </div>
-      <p>Built with &lt;3 by <a href="#" @click="gotoGithub">tehlordvortex</a></p>
-    </item-column>
-  </div>
+  <item-column title="About" class="about-page" pad>
+    <div style="text-align: center">
+      <h1>Blanc</h1>
+      <h3>Version {{ appVersion }}</h3>
+    </div>
+    <p>Built with &lt;3 by <a href="#" @click="gotoGithub">tehlordvortex</a></p>
+  </item-column>
 </template>
 
 <script>

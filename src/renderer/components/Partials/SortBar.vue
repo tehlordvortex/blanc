@@ -1,5 +1,6 @@
 <template>
-  <div class="sort-bar" :style="computedStyle">
+  <div class="sort-bar" :style="colorfulStyle">
+    <span class="sort-bar--item sort-bar-active-indicator"></span>
     <a
       v-for="(criteria, index) in criterias"
       :key="index"
@@ -14,10 +15,11 @@
 </template>
 
 <script>
-import { getColors, loadAlbumArt } from '@/lazy-loaders'
+import makeColorful from '@/components/Mixins/Colorful'
 
 export default {
   name: 'sort-bar',
+  mixins: [makeColorful()],
   props: {
     criterias: {
       type: Array,
@@ -46,31 +48,6 @@ export default {
       }
       this.$emit('sort', this.sortedBy, this.sortOrder)
     }
-  },
-  computed: {
-    currentlyPlaying () {
-      return this.$store.state.Music.currentlyPlaying
-    }
-  },
-  asyncComputed: {
-    colors () {
-      if (this.currentlyPlaying) {
-        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
-        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
-        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
-      } else {
-        return Promise.resolve('')
-      }
-    },
-    computedStyle () {
-      if (this.colors) {
-        return {
-          backgroundColor: this.colors.background
-        }
-      } else {
-        return Promise.resolve('')
-      }
-    }
   }
 }
 </script>
@@ -83,7 +60,6 @@ export default {
     height: 24px;
     color: white;
     background-color: #222;
-    border-bottom: 1px solid grey;
     transition: background-color 0.3s;
   }
   .sort-bar--item {
@@ -93,7 +69,11 @@ export default {
     color: white;
     position: relative;
     cursor: pointer;
-
+    /* border-right: 1px solid black; */
+  }
+  .sort-bar-active-indicator {
+    width: 42px;
+    flex-grow: 0;
   }
   .sort-bar--item.sort-bar--item-active {
     background-color: rgba(0, 0, 0, 0.3);
@@ -111,9 +91,6 @@ export default {
     font-style: normal;
     font-size: 24px;
     display: inline-block;
-    /* vertical-align: middle; */
-    /* width: 24px;
-    height: 24px; */
     line-height: 1;
     text-transform: none;
     letter-spacing: normal;

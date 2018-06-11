@@ -1,6 +1,11 @@
 <template>
   <div class="item-row" :class="wrap ? 'item-row--wrap' : ''">
-    <span class="item-row--title" v-text="title"></span>
+    <span class="item-row--title">
+      {{ title }}
+      <div class="item-row--title-side-content">
+        <slot name="title-side-content"></slot>
+      </div>
+    </span>
     <div class="item-row--content" :class="wrap ? 'item-row--content--wrap' : ''" @scroll="$emit('scroll', $event)">
       <slot></slot>
     </div>
@@ -8,6 +13,7 @@
 </template>
 
 <script>
+
 export default {
   name: 'item-row',
   props: {
@@ -19,7 +25,6 @@ export default {
 
 <style scoped>
   .item-row {
-    padding: 1em;
     width: 100%;
     overflow-x: auto;
   }
@@ -36,9 +41,11 @@ export default {
   .item-row--title {
     font-weight: lighter;
     text-transform: uppercase;
-    height: 1em;
-    margin-bottom: 1em;
+    height: 3em;
+    padding: 1em;
     display: block;
+    background: #222;
+    -webkit-app-region: drag;
   }
   .item-row--content {
     display: flex;
@@ -51,6 +58,9 @@ export default {
     flex-wrap: wrap;
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: calc(100% - 2em);
+    max-height: calc(100% - 3em);
+  }
+  .item-row--title-side-content {
+    float: right;
   }
 </style>

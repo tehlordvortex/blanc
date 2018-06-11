@@ -1,6 +1,14 @@
 <template>
   <div class="media-controls" :style="computedStyle">
-    <div class="media-controls-art" :style="computedImageStyle">
+    <transition
+      name="animated-fade-in-down"
+      enter-active-class="animated fadeInUp"
+      leave-active-class="animated fadeOutDown"
+    >
+      <div class="media-controls-big-art" :style="computedImageStyle" v-show="showBigArt">
+      </div>
+    </transition>
+    <div class="media-controls-art" :style="computedImageStyle" @click="showBigArt = !showBigArt">
       <!-- <img :src="currentlyPlaying ? image : ''" /> -->
       <material-button
         icon
@@ -27,45 +35,35 @@
         icon
         flat
         @click="playPrevious"
+        colorful
       >
         <i class="material-icons">skip_previous</i>
       </material-button>
-      <span>{{ positionText }}</span>
+      <span :style="{ color: this.colors && this.colors.foreground }">{{ positionText }}</span>
       <input :style="computedStyle" type="range" min="0" :max="duration" v-model="sliderPosition" step="1" />
-      <span>{{ durationText }}</span>
+      <span :style="{ color: this.colors && this.colors.foreground }">{{ durationText }}</span>
       <material-button
         icon
         flat
         @click="playNext"
+        colorful
       >
         <i class="material-icons">skip_next</i>
       </material-button>
     </div>
     <div class="media-controls-actions">
-      <!-- <i
-        class="material-icons icon-button"
-        tabindex="0"
-        @click="playing ? pause($event) : play($event)"
-        @keyup.enter="playing ? pause($event) : play($event)"
-        >{{ playing ? 'pause' : 'play_arrow' }}</i> -->
-      <!-- <i
-        class="material-icons icon-button"
-        @click="stop"
-        @keyup.enter="stop"
-        tabindex="0"
-        >
-        stop
-      </i> -->
       <material-button
         icon
         flat
         @click="toggleLoop"
+        colorful
       >
         <i class="material-icons">{{ loopIcon }}</i>
       </material-button>
       <material-button
         icon
         flat
+        colorful
         @click.stop="toggleQueue"
       >
         <i
@@ -79,6 +77,7 @@
           @click="showVolume = !showVolume"
           icon
           flat
+          colorful
         >
           <i class="material-icons">{{ this.volume > 0.5 ? 'volume_up' : 'volume_down' }}</i>
         </material-button>
@@ -95,6 +94,7 @@
         icon
         flat
         @click="goFullscreen"
+        colorful
       >
         <i class="material-icons">keyboard_arrow_up</i>
       </material-button>
@@ -127,10 +127,7 @@
             <i class="material-icons">keyboard_arrow_down</i>
           </material-button>
         </div>
-        <!-- <div class="media-controls-art media-controls-art--large" :style="computedImageStyle">
-        </div> -->
         <div class="media-controls-details" @click.stop>
-          <!-- <keep-alive> -->
             <av-circle
               v-if="audioElement"
               :canv-width="500"
@@ -143,7 +140,6 @@
               :audio-element="audioElement"
               :enabled="windowFocused && fullscreen && playing"
             ></av-circle>
-          <!-- </keep-alive> -->
           <div class="media-controls-details--items">
             <template v-if="currentlyPlaying">
               <p class="media-controls-details--title">{{ currentlyPlaying.title || currentlyPlaying.fileName }}</p>
@@ -230,7 +226,6 @@
               </material-button>
             </div>
           </div>
-          <!-- <canvas ref="visualizer"></canvas> -->
         </div>
         <transition
           name="animated-slide-in"
@@ -245,6 +240,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import store from '@/store'
 import settings from '@/lib/settings'
 import { getColors, loadAlbumArt, getBackgroundImageCSS } from '@/lazy-loaders'
 import Player from '@/lib/player'
@@ -258,8 +254,6 @@ import { ipcRenderer as ipc } from 'electron'
 
 import * as Mousetrap from 'mousetrap'
 import { throttle } from 'underscore'
-
-window.appSettings = settings
 
 export default {
   name: 'media-controls',
@@ -276,7 +270,8 @@ export default {
     showVolume: false,
     audioElement: null,
     notificationTag: 'blanc',
-    direction: ''
+    direction: '',
+    showBigArt: false
   }),
   components: {
     Queue,
@@ -293,6 +288,12 @@ export default {
         this.play()
       }
     })
+    ipc.on('music-play', () => {
+      if (!this.playing) this.play()
+    })
+    ipc.on('music-pause', () => {
+      if (this.playing) this.pause()
+    })
     ipc.on('music-previous', () => {
       this.playPrevious()
     })
@@ -305,6 +306,7 @@ export default {
     window.addEventListener('focus', ($e) => {
       this.windowFocused = true
     })
+    if (process.env.NODE_ENV === 'development' || store.state.App.devMode) window.appSettings = settings
   },
   mounted () {
     this.audioElement = null
@@ -314,10 +316,6 @@ export default {
     Player.getAudio().addEventListener('timeupdate', throttle(() => {
       this.position = Player.getCurrentTime()
     }, 1000))
-    Player.getAudio().addEventListener('canplaythrough', ($e) => {
-      // this.duration = $e.target.duration
-      // console.log(Player.play().catch(e => console.warn(e)))
-    })
     Player.getAudio().addEventListener('play', ($e) => {
       if (!document.hasFocus()) {
         Notification.requestPermission()
@@ -367,6 +365,10 @@ export default {
     })
     Mousetrap.bind('r', () => {
       this.toggleLoop()
+    })
+    Mousetrap.bind('q', () => {
+      if (this.fullscreen) this.showFullscreenQueue = !this.showFullscreenQueue
+      else this.showQueue = !this.showQueue
     })
   },
   computed: {
@@ -558,14 +560,6 @@ export default {
         }
       })
     },
-    visualizationStep () {
-      requestAnimationFrame(this.visualizationStep)
-      // update data in frequencyData
-      this.analyser.getByteFrequencyData(this.frequencyData)
-      console.log(this.frequencyData)
-      // render frame based on values in frequencyData
-      // console.log(frequencyData)
-    },
     toggleWindowFullscreen () {
       if (!document.webkitFullscreenElement) {
         this.windowFullscreen = true
@@ -628,6 +622,13 @@ export default {
     z-index: 900;
     user-select: none;
   }
+  .media-controls-big-art {
+    width: 128px;
+    height: 128px;
+    position: absolute;
+    bottom: 73px;
+    left: 1px;
+  }
   .bottom-right {
     position: absolute;
     bottom: 0;
@@ -659,7 +660,7 @@ export default {
     margin-left: 1em;
     /* font-size: 0.8em; */
     margin-right: 1em; 
-    color: white;
+    /* color: white; */
     position: relative;
   }
 

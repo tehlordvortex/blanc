@@ -13,7 +13,7 @@ export default Vue.component('album-list', {
     albums: Array,
     albumsPerLine: {
       type: Number,
-      default: 5
+      default: 4
     },
     lines: {
       type: Number,

@@ -4,7 +4,7 @@
     enter-active-class="animated slideInDown"
     leave-active-class="animated slideOutUp"
   >
-    <div id="top-bar" :style="computedStyle">
+    <div id="top-bar">
       <div id="window-buttons">
         <button @click="goBack"><i class="material-icons">arrow_back</i></button>
         <span class="spacer">
@@ -25,7 +25,6 @@
 import { ipcRenderer } from 'electron'
 import ProgressBar from 'vue-simple-progress'
 import { getColors, loadAlbumArt } from '@/lazy-loaders'
-import Color from 'color'
 
 export default {
   name: 'chrome',
@@ -60,12 +59,7 @@ export default {
       return this.$store.state.Music.currentlyPlaying
     },
     barColor () {
-      if (this.colors) {
-        let color = Color(this.colors.background)
-        return (color.isDark() ? color.lighten(0.3) : color.darken(0.3)).rgb().string()
-      } else {
-        return '#3080ff'
-      }
+      return this.colors.background
     }
   },
   asyncComputed: {
@@ -96,7 +90,7 @@ export default {
 <style scoped>
   #top-bar {
     height: 1.5em;
-    background-color: #333;
+    background-color: #222;
     width: 100%;
     color: white;
     position: fixed;

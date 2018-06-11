@@ -1,49 +1,49 @@
 <template>
-  <transition
-    name="animated-slide-out-horizontal"
-    enter-active-class="animated slideInLeft"
-    leave-active-class="animated slideOutLeft"
-  >
-    <div class="navbar" :class="active ? 'navbar--active' : ''" :style="computedStyle">
-      <div class="navbar-icon--wrapper">
-        <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
-          <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
-        </div>
+  <div class="navbar" :class="active ? 'navbar--active' : ''">
+    <!-- <div class="navbar-icon--wrapper">
+      <div class="navbar-icon" @click.stop.prevent="active = !active" @keyup.enter="active = !active" tabindex="0">
+        <i class="material-icons">{{ active ? 'clear' : 'menu' }}</i>
       </div>
-      <nav class="navbar-items">
-        <ul>
-          <li
-            v-for="item in items"
-            :key="item.path"
-            >
-            <router-link
-              :tabindex="active ? '0' : '-1'"
-              v-if="!(!active && item.subitem)"
-              class="navbar-item"
-              :class="($route.path.startsWith(item.path) ? 'navbar-item--active': '') + ' ' + (item.subitem ? 'navbar-item--subitem' : '')"
-              :to="item.path">
-              <i class="material-icons">{{ item.icon }}</i>
-              <span v-if="active">{{ item.title }}</span>
-            </router-link>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </transition>
+    </div> -->
+    <nav class="navbar-items">
+      <ul>
+        <li
+          v-for="item in items"
+          :key="item.title"
+          >
+          <span class="navbar-group-header" v-if="item.header">{{ item.title }}</span>
+          <router-link
+            v-else
+            :tabindex="active ? '0' : '-1'"
+            class="navbar-item"
+            :class="($route.path === (item.path) ? 'navbar-item--active': '')"
+            :to="item.path">
+            <i class="material-icons">{{ item.icon }}</i>
+            <span>{{ item.title }}</span>
+          </router-link>
+        </li>
+      </ul>
+    </nav>
+  </div>
 </template>
 
 <script>
-import { getColors, loadAlbumArt } from '@/lazy-loaders'
+// import { getColors, loadAlbumArt } from '@/lazy-loaders'
 
 export default {
   name: 'navbar',
   data: () => ({
-    active: false,
+    active: true,
     items: [
       {
         title: 'Library',
-        icon: 'library_music',
-        path: '/library'
+        header: true
+      },
+      {
+        title: 'All Songs',
+        icon: 'queue_music',
+        path: '/library',
+        subitem: true
       },
       {
         title: 'Albums',
@@ -52,20 +52,13 @@ export default {
         subitem: true
       },
       {
-        title: 'All Songs',
-        icon: 'queue_music',
-        path: '/library/all',
-        subitem: true
-      },
-      {
         title: 'Settings',
-        icon: 'settings',
-        path: '/settings'
+        header: true
       },
       {
         title: 'Libraries',
         icon: 'library_music',
-        path: '/settings/library',
+        path: '/settings',
         subitem: true
       },
       {
@@ -91,50 +84,32 @@ export default {
     keyup ($e) {
       console.log($e)
     }
-  },
-  computed: {
-    currentlyPlaying () {
-      return this.$store.state.Music.currentlyPlaying
-    }
-  },
-  asyncComputed: {
-    computedStyle () {
-      // console.log(this.image)
-      if (!this.colors) return Promise.resolve('')
-      else {
-        // if (!this.showArt) return this.defaultActiveStyle
-        return {
-          background: this.colors.background
-        }
-      }
-    },
-    colors () {
-      if (this.currentlyPlaying) {
-        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
-        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
-        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
-      } else {
-        return Promise.resolve('')
-      }
-    }
   }
 }
 </script>
 
 <style>
   .navbar {
-    width: 50px;
-    height: calc(100% - 70px - 1.5em);
-    position: fixed;
+    width: 300px;
+    height: 100%;
+    /* position: fixed; */
     top: 1.5em;
     left: 0px;
-    background-color: #333;
+    background-color: rgba(0, 0, 0, 0.3);
     color: white;
-    z-index: 1000;
+    z-index: 100;
     transition: all 0.3s;
     overflow: hidden;
   }
 
+  .navbar-group-header {
+    font-weight: 200;
+    text-transform: uppercase;
+    color: #555;
+    height: 2em;
+    display: block;
+    padding: 0.5em 1em;
+  }
   .navbar-item:focus, .navbar-icon:focus {
     outline: none;
   }
@@ -142,7 +117,7 @@ export default {
   .navbar.navbar--active {
     width: 300px;
     /* background: #333; */
-    box-shadow: 1px 0 5px 0 rgba(0, 0, 0, 0.6);
+    /* box-shadow: 1px 0 5px 0 rgba(0, 0, 0, 0.6); */
   }
   .navbar-items ul {
     list-style-type: none;
@@ -158,6 +133,7 @@ export default {
     padding: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    padding-left: 2em;
   }
   .navbar-item .material-icons {
     font-size: 26px;
@@ -183,7 +159,6 @@ export default {
 
   .navbar-items li a span {
     line-height: 24px;
-    text-transform: uppercase;
     font-weight: lighter;
   }
 

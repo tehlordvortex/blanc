@@ -1,43 +1,15 @@
 <template>
   <div class="wrapper">
-    <search-bar v-model="searchString" />
     <item-column title="all songs" class="fill-height">
+      <search-bar v-model="searchString" slot="title-side-content" />
       <sort-bar v-if="librarySorted" :criterias="sortCriterias" @sort="updateSort" />
-      <template v-if="librarySorted">
-        <!-- <div class="songs-wrapper"
-        @scroll="scrolled"
-        >
-          <div
-          v-if="libraryDisplayed"
-          >
-            <div :style="songListStyle">
-              <div
-                :style="item.style"
-                v-for="(item, index) in libraryDisplayed" :key="'all-songs-' + item.filePath"
-              >
-                <music-item-tile
-                  :itemObject="item"
-                  @play="play(item)"
-                  @pause="pause()"
-                  :showArt="false"
-                  :data-staggered-index="index"
-                  @contextmenu="doContextMenu(item)"
-                  >
-                  <p>{{ item.title }}</p>
-                  <p>{{ item.artist }}</p>
-                  <p>{{ item.album }}</p>
-                </music-item-tile>
-              </div>
-            </div>
-          </div>
-        </div> -->
-        <song-list
+      <song-list
           :songs="librarySorted"
           @play="play"
           @pause="pause"
           @contextmenu="doContextMenu"
-        />
-      </template>
+          v-if="librarySorted"
+      />
       <loading-indicator v-else />
     </item-column>
   </div>
@@ -85,6 +57,7 @@ export default {
       let clone = this.library
       clone.sort(fieldCaseInsensitiveSort(this.sort.field, this.sort.order))
       if (this.searchString) {
+        let searchString = this.searchString.toLowerCase()
         let lib = clone.filter(item => {
           let criteria = []
           if (item.title) criteria.push(item.title)
@@ -92,7 +65,7 @@ export default {
           if (item.artists) criteria.push(item.artists.join())
           if (item.album) criteria.push(item.album)
           if (item.fileName) criteria.push(item.fileName)
-          return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(this.searchString) > -1) || acc, false)
+          return criteria.reduce((acc, c) => (c.toLowerCase().indexOf(searchString) > -1) || acc, false)
           // return filter.test(item.title) || filter.test(item.artist) || filter.test(item.artists.join()) || filter.test(item.album)
         })
         return lib
@@ -168,7 +141,6 @@ export default {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    padding: 0 1em;
   }
 
   .vertical-bar {

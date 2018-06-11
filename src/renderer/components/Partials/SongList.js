@@ -3,7 +3,7 @@ import MusicItemTile from './MusicItemTile'
 // import chunk from 'lodash.chunk'
 // import flatten from 'lodash.flatten'
 import { TILE_HEIGHT, CHUNK_HEIGHT, TILES_PER_CHUNK, CHUNKS_TO_DISPLAY } from '../../lib/constants'
-import { throttle } from 'underscore'
+// import { throttle } from 'underscore'
 
 export default Vue.component('song-list', {
   data () {
@@ -25,7 +25,6 @@ export default Vue.component('song-list', {
       height: containerHeight + 'px'
     }
     let displayed = this.songs.slice(this.skip * TILES_PER_CHUNK, (this.skip * TILES_PER_CHUNK) + CHUNKS_TO_DISPLAY * TILES_PER_CHUNK)
-    console.log(this.skip * TILES_PER_CHUNK, this.skip + CHUNKS_TO_DISPLAY * TILES_PER_CHUNK)
     let tiles = displayed.map((item, itemIndex) => {
       let transformDistance = (this.skip * TILE_HEIGHT * TILES_PER_CHUNK)
       let tileStyle = {
@@ -41,6 +40,7 @@ export default Vue.component('song-list', {
             onPlay={() => this.onPlay(item)}
             onPause={() => this.onPause()}
             onContextmenu={() => this.onContextMenu(item)}
+            compact
           >
             <p>{item.title}</p>
             <p>{item.artist}</p>
@@ -52,7 +52,7 @@ export default Vue.component('song-list', {
     return (
       <div
         class="songs-wrapper"
-        onScroll={throttle(this.scrolled.bind(this), 300)}
+        onScroll={this.scrolled.bind(this)}
       >
         <div
           style={style}

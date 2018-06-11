@@ -18,13 +18,7 @@
       <h1>Indexing library, please wait...</h1>
       <loading-indicator :fullHeight="false" />
     </div>
-    <transition
-      mode="out-in"
-      enter-active-class="animated slideInLeft"
-      leave-active-class="animated slideOutRight"
-      >
-      <router-view v-if="!indexing"/>
-    </transition>
+    <router-view v-if="!indexing"/>
   </div>
 </template>
 

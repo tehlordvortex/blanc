@@ -1,7 +1,6 @@
 <template>
   <div class="wrapper" :class="partial ? 'no-fill-height' : ''">
-    <section>
-      <p class="section-header">Libraries</p>
+    <item-column title="libraries" pad>
       <dropzone
         @drop="dropPath"
         @click="choosePath">
@@ -9,14 +8,16 @@
         <p>Drop a folder here to add it to your library</p>
         <p>Or click here to select a folder</p>
       </dropzone>
-      <material-button
-        :disabled="indexing"
-        @click="refreshLibraries"
-        rounded
-        flat
-        >
-        Refresh Libraries
-      </material-button>
+      <p>
+        <material-button
+          :disabled="indexing"
+          @click="refreshLibraries"
+          rounded
+          flat
+          >
+          Refresh Libraries
+        </material-button>
+      </p>
       <transition-group
         tag="div"
         name="animated-slide-in"
@@ -32,7 +33,7 @@
           <p>{{ library }}</p>
         </list-row>
       </transition-group>
-    </section>
+    </item-column>
   </div>
 </template>
 
@@ -43,6 +44,7 @@ import MaterialButton from '@/components/Partials/MaterialButton'
 import settings from '@/lib/settings'
 import { addFiles, removeFiles } from '@/indexer.lib'
 import { ipcRenderer } from 'electron'
+import ItemColumn from '@/components/Partials/ItemColumn'
 
 export default {
   name: 'library-settings',
@@ -52,7 +54,8 @@ export default {
   components: {
     Dropzone,
     ListRow,
-    MaterialButton
+    MaterialButton,
+    ItemColumn
   },
   data: () => ({
     librariesClone: settings.libraries

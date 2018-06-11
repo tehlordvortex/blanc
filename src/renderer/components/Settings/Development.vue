@@ -1,12 +1,10 @@
 <template>
-  <div class="wrapper" :class="partial ? 'no-fill-height' : ''">
-    <item-column title="development">
-      <div class="input-group">
-        <input type="checkbox" id="devmode" v-model="devmode" />
-        <label for="devmode">Development Mode</label>
-      </div>
-    </item-column>
-  </div>
+  <item-column title="development" pad>
+    <div class="input-group">
+      <input type="checkbox" id="devmode" v-model="devmode" />
+      <label for="devmode">Development Mode</label>
+    </div>
+  </item-column>
 </template>
 
 <script>

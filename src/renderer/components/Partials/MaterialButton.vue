@@ -38,6 +38,10 @@ export default {
     rounded: {
       type: Boolean,
       default: false
+    },
+    colorful: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -66,10 +70,15 @@ export default {
       }
     },
     buttonColor () {
-      if (this.icon && this.flat) return ''
-      if (this.colors) {
+      if (this.icon && this.flat && !this.colorful) return ''
+      if (this.colors && !this.icon) {
         return {
-          backgroundColor: this.colors.background
+          backgroundColor: this.colors.background,
+          color: this.colors.foreground
+        }
+      } else if (this.colors && this.icon) {
+        return {
+          color: this.colors.foreground
         }
       } else {
         return ''

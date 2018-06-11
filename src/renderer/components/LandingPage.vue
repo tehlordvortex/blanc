@@ -96,7 +96,7 @@
   // import db from '@/library.db'
   import settings from '@/lib/settings'
   import ProgressBar from 'vue-simple-progress'
-  import { indexAlbums } from '@/lazy-loaders'
+  // import { indexAlbums } from '@/lazy-loaders'
   import { default as index } from '@/indexer.lib'
   import { mapState } from 'vuex'
   import LoadingIndicator from '@/components/Partials/LoadingIndicator'
@@ -140,7 +140,6 @@
           .then(() => {
             settings.lastRunVersion = settings.version
           })
-          .then(() => indexAlbums())
           .then(() => {
             this.doneUpdating = true
           })
@@ -187,14 +186,14 @@
             this.$store.commit('SHOW_CHROME')
             this.$store.commit('SHOW_MUSIC_BAR')
             this.$router.push({
-              name: 'library-landing-page'
+              name: 'library-all-songs-page'
             })
           }, 2000)
         } else {
           this.$store.commit('SHOW_CHROME')
           this.$store.commit('SHOW_MUSIC_BAR')
           this.$router.push({
-            name: 'library-landing-page'
+            name: 'library-all-songs-page'
           })
         }
       }

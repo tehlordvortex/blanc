@@ -7,13 +7,8 @@
     :class="showChrome ? 'pad-body' : ''"
     >
     <chrome v-if="showChrome && $route.path !== '/'" />
-    <navbar v-if="showChrome && $route.path !== '/'" />
-    <transition
-      mode="out-in"
-      enter-active-class="animated slideInLeft"
-      :leave-active-class="leaveClass">
-      <router-view></router-view>
-    </transition>
+    <navbar v-if="$route.path !== '/'" />
+    <router-view />
     <media-controls v-if="showMusicBar" />
   </div>
 </template>
@@ -94,6 +89,9 @@
     background-color: #333;
     color: white;
     transition: padding 0.5s, background-color 0.3s;
+    display: flex;
+    font-size: 16px;
+    user-select: none;
   }
   .wrapper {
     width: 100%;
@@ -114,7 +112,7 @@
   .pad-body {
     padding-top: 1.5em;
     padding-bottom: 70px;
-    padding-left: 50px;
+    /* padding-left: 50px; */
   }
   ::-webkit-scrollbar
   {

@@ -1,103 +1,85 @@
 <template>
-  <div class="wrapper">
-    <transition
-      mode="out-in"
-      enter-active-class="animated slideInLeft"
-      leave-active-class="animated slideOutRight"
-      >
-      <template v-if="$route.params.album">
-        <div class="album-page">
-          <div class="album-banner" :style="computedStyle" v-if="album">
-            <!-- <div class="back-button" @click="goBack"><i class="material-icons">arrow_back</i></div> -->
-            <div class="album-banner-fullimage" :style="computedImageStyle"></div>
-            <div class="album-banner-others">
-              <div class="album-banner--text">
-                <transition
-                  name="animated-slide-in"
-                  appear
-                  enter-active-class="animated slideInLeft"
-                  leave-active-class="animated slideOutLeft"
-                >
-                  <div class="album-image" :style="computedImageStyle">
-                    <loading-indicator v-if="!computedImageStyle" />
-                  </div>
-                </transition>
-                <transition
-                  name="animated-slide-in-up"
-                  appear
-                  enter-active-class="animated slideInUp"
-                  leave-active-class="animated slideOutDown"
-                >
-                  <div class="album-details">
-                    <p>{{ album.name }}</p>
-                    <p>{{ albumArtists }}</p>
-                    <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
-                    <p>
-                      <material-button
-                        rounded
-                        flat
-                        :style="computedStyle"
-                        @click="playAlbum"
-                      >
-                        play
-                      </material-button>
-                    </p>
-                  </div>
-                </transition>
-              </div>
-              <div class="album-banner--songs">
-                <transition
-                  mode="out-in"
-                  appear
-                  enter-active-class="animated slideInUp"
-                  leave-active-class="animated slideOutDown"
-                >
-                  <card class="raise-up">
-                    <!-- <material-button
-                      big
-                      icon
-                      class="album-play-button"
+  <div class="wrapper" ref="container">
+    <template v-if="$route.params.album">
+      <div class="album-page">
+        <div class="album-banner" :style="computedStyle" v-if="album">
+          <div class="album-banner-fullimage" :style="computedImageStyle"></div>
+          <div class="album-banner-others">
+            <div class="album-banner--text">
+              <transition
+                name="animated-slide-in"
+                appear
+                enter-active-class="animated slideInLeft"
+                leave-active-class="animated slideOutLeft"
+              >
+                <div class="album-image" :style="computedImageStyle">
+                  <loading-indicator v-if="!computedImageStyle" />
+                </div>
+              </transition>
+              <transition
+                name="animated-slide-in-up"
+                appear
+                enter-active-class="animated slideInUp"
+                leave-active-class="animated slideOutDown"
+              >
+                <div class="album-details">
+                  <p>{{ album.name }}</p>
+                  <p>{{ albumArtists }}</p>
+                  <p>{{ album.songs.length }} Song{{ album.songs.length > 1 ? 's': '' }}</p>
+                  <p>
+                    <material-button
+                      rounded
+                      flat
                       :style="computedStyle"
                       @click="playAlbum"
                     >
-                      <i class="material-icons">play_arrow</i>
-                    </material-button> -->
-                    <music-item-tile
-                      v-for="(item, index) in albumSongs"
-                      :key="item.filePath"
-                      :itemObject="item"
-                      @play="play(item)"
-                      @pause="pause()"
-                      @contextmenu="doContextMenu(item)"
-                      :data-index="index"
-                    >
-                      <p>{{ item.title }}</p>
-                      <p>{{ item.artist }}</p>
-                    </music-item-tile>
-                  </card>
-                </transition>
-              </div>
+                      play
+                    </material-button>
+                  </p>
+                </div>
+              </transition>
+            </div>
+            <div class="album-banner--songs">
+              <transition
+                mode="out-in"
+                appear
+                enter-active-class="animated slideInUp"
+                leave-active-class="animated slideOutDown"
+              >
+                <card class="raise-up">
+                  <music-item-tile
+                    v-for="(item, index) in albumSongs"
+                    :key="item.filePath"
+                    :itemObject="item"
+                    @play="play(item)"
+                    @pause="pause()"
+                    @contextmenu="doContextMenu(item)"
+                    :data-index="index"
+                  >
+                    <p>{{ item.title }}</p>
+                    <p>{{ item.artist }}</p>
+                  </music-item-tile>
+                </card>
+              </transition>
             </div>
           </div>
-          <loading-indicator v-else />
-          <!-- <div class="album-songs" v-if="album"> -->
-          <!-- <div class="album-songs-wrapper">
-          </div> -->
         </div>
-      </template>
-      <template v-else>
-        <item-row wrap title="albums" @scroll="scrolled">
-          <search-bar v-model="searchString" />
-          <album-list
-            :albums="albums"
-            v-if="albums"
-            @click="albumClicked"
-            />
-          <loading-indicator v-else />
-        </item-row>
-      </template>
-    </transition>
-    <!-- </div> -->
+        <loading-indicator v-else />
+      </div>
+    </template>
+    <template v-else>
+      <item-row wrap title="albums" @scroll="scrolled">
+        <search-bar v-model="searchString" slot="title-side-content" />
+        <album-list
+          :albums="albums"
+          v-if="albums"
+          :albumsPerLine="itemsPerLine"
+          :lines="albumLines"
+          @click="albumClicked"
+          />
+        <loading-indicator v-else />
+      </item-row>
+    </template>
   </div>
 </template>
 
@@ -110,10 +92,7 @@ import BackButton from '@/components/Partials/BackButton'
 import ItemRow from '@/components/Partials/ItemRow'
 import LoadingIndicator from '@/components/Partials/LoadingIndicator'
 import SearchBar from '@/components/Partials/SearchBar'
-import { ALBUM_LINE_HEIGHT } from '@/lib/constants'
-// import { ALBUM_LINE_HEIGHT, ALBUM_CHUNKS_TO_DISPLAY, ALBUM_LINES_PER_CHUNK, ALBUM_CHUNK_HEIGHT } from '@/lib/constants'
-// import chunk from 'lodash.chunk'
-// import flatten from 'lodash.flatten'
+import { ALBUM_LINE_HEIGHT, ALBUM_CARD_WIDTH } from '@/lib/constants'
 import { toFileURL } from '@/lib/utils'
 import AlbumList from '@/components/Partials/AlbumList'
 import MaterialButton from '@/components/Partials/MaterialButton'
@@ -128,8 +107,18 @@ export default {
   name: 'album-page',
   data: () => ({
     skipItems: 0,
-    searchString: ''
+    searchString: '',
+    itemsPerLine: 4,
+    albumLines: 8
   }),
+  mounted () {
+    if (!this.$route.params.album) {
+      this.updateItemCount()
+      window.addEventListener('resize', ($e) => {
+        this.updateItemCount()
+      })
+    }
+  },
   asyncComputed: {
     album () {
       if (!this.$route.params.album) return null
@@ -203,17 +192,16 @@ export default {
     }
   },
   methods: {
-    scrolled (ev) {
-      // console.log(ev)
-      // console.log(ev)
-      console.log(ev.target.scrollTop)
-      // console.log(ALBUM_CHUNK_HEIGHT)
-      // this.skipItems = Math.floor(Math.max(0, (ev.target.scrollTop - 16 * 4)) / ALBUM_CHUNK_HEIGHT)
-      // console.log(this.skipItems)
+    updateItemCount () {
+      if (!this.$el) return
+      let width = this.$el.clientWidth
+      width -= 16 * 2 // 1em padding
+      this.itemsPerLine = Math.floor(width / ALBUM_CARD_WIDTH)
+      let height = this.$el.clientHeight
+      height -= 3 * 16 // 3em header
+      this.albumLines = Math.min(8, Math.floor(height / ALBUM_LINE_HEIGHT) + 3)
     },
     play (item) {
-      // console.log('Playing', item)
-      // this.$store.commit('SET_QUEUE', this.albumSongs)
       this.$store.commit('PLAY_MUSIC', item)
     },
     pause () {
@@ -323,6 +311,7 @@ export default {
     margin: 1em;
     z-index: 50;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .album-banner--text  p {
     margin: 5px;

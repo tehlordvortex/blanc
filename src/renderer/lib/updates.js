@@ -1,7 +1,7 @@
 import settings from './settings'
 import { colorsDB, default as db } from '@/library.db'
 import { join } from 'path'
-import { indexAlbums, artsCachePath, getLibrary, getAlbums } from '../lazy-loaders'
+import { indexAlbums, artsCachePath, getLibrary } from '../lazy-loaders'
 
 export default function finishUpdate () {
   let p = Promise.resolve()
@@ -26,7 +26,7 @@ export default function finishUpdate () {
   }
   if (settings.lastRunVersion < '0.8.1') {
     console.log('Updating store\'s library & albums...')
-    p = p.then(() => getLibrary()).then(() => getAlbums())
+    p = p.then(() => getLibrary()).then(() => indexAlbums())
   }
   return p
 }

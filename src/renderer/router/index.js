@@ -16,11 +16,6 @@ let router = new Router({
       children: [
         {
           path: '',
-          name: 'library-landing-page',
-          component: require('@/components/Library/PreviewsPage').default
-        },
-        {
-          path: 'all',
           name: 'library-all-songs-page',
           component: require('@/components/Library/AllSongsPage').default
         },
@@ -37,11 +32,6 @@ let router = new Router({
       children: [
         {
           path: '',
-          name: 'settings-page',
-          component: require('@/components/Settings/All.vue').default
-        },
-        {
-          path: 'library',
           name: 'settings-library-page',
           component: require('@/components/Settings/Library.vue').default
         },
