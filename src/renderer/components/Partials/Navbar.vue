@@ -14,7 +14,6 @@
           <span class="navbar-group-header" v-if="item.header">{{ item.title }}</span>
           <router-link
             v-else
-            :tabindex="active ? '0' : '-1'"
             class="navbar-item"
             :class="($route.path === (item.path) ? 'navbar-item--active': '')"
             :to="item.path">
@@ -49,6 +48,12 @@ export default {
         title: 'Albums',
         icon: 'subscriptions',
         path: '/library/album',
+        subitem: true
+      },
+      {
+        title: 'Playlists',
+        icon: 'playlist_play',
+        path: '/library/playlists',
         subitem: true
       },
       {

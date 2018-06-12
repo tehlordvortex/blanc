@@ -1,10 +1,10 @@
 <template>
   <item-column title="About" class="about-page" pad>
-    <div style="text-align: center">
+    <div class="wrapper-message">
       <h1>Blanc</h1>
       <h3>Version {{ appVersion }}</h3>
+      <p>Built with &lt;3 by <a href="#" @click="gotoGithub">tehlordvortex</a></p>
     </div>
-    <p>Built with &lt;3 by <a href="#" @click="gotoGithub">tehlordvortex</a></p>
   </item-column>
 </template>
 

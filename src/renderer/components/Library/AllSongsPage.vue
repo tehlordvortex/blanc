@@ -12,6 +12,42 @@
       />
       <loading-indicator v-else />
     </item-column>
+    <sweet-modal ref="createPlaylistModal" modal-theme="dark" overlay-theme="dark">
+      <input type="text" v-model="playlistName">
+      <material-button
+        flat
+        @click="createPlaylist"
+      >
+        Create
+      </material-button>
+    </sweet-modal>
+    <sweet-modal icon="error" modal-theme="dark" overlay-theme="dark" ref="playlistExistsErrorModal">
+      That playlist already exists!
+    </sweet-modal>
+    <sweet-modal modal-theme="dark" overlay-theme="dark" ref="showAllPlaylistsModal" title="Select playlist">
+      <search-bar v-model="playlistSearch" slot="box-action"/>
+      <div class="wrapper" v-if="playlists && playlists.length > 0">
+        <list-row
+          v-for="{ name } in playlists"
+          :key="name"
+          :active="playlistName === name"
+          @click="playlistName = name"
+          :hideDelete="true"
+        >
+          {{ name }}
+        </list-row>
+      </div>
+      <div class="wrapper-message" v-else>
+        <h3>No playlists</h3>
+      </div>
+      <material-button
+        @click="addToPlaylist"
+        slot="button"
+        flat
+      >
+        Add
+      </material-button>
+    </sweet-modal>
   </div>
 </template>
 
@@ -25,6 +61,9 @@ import { remote } from 'electron'
 import { default as db } from '@/library.db'
 import { fieldCaseInsensitiveSort } from '@/lib/utils'
 import SongList from '@/components/Partials/SongList'
+import Playlists from '@/lib/playlists'
+import MaterialButton from '@/components/Partials/MaterialButton'
+import ListRow from '@/components/Partials/ListRow'
 const { Menu } = remote
 export default {
   name: 'library-all-songs-page',
@@ -49,7 +88,11 @@ export default {
       }
     ],
     libraryDirty: true,
-    skipItems: 0
+    skipItems: 0,
+    playlistName: '',
+    selectedSong: null,
+    playlistSearch: '',
+    playlists: []
   }),
   computed: {
     librarySorted () {
@@ -75,6 +118,24 @@ export default {
     }
   },
   methods: {
+    createPlaylist () {
+      if (!this.playlistName) return
+      Playlists.createPlaylist(this.playlistName, this.selectedSong._id)
+        .then(() => {
+          this.$refs.createPlaylistModal.close()
+          this.playlistName = ''
+        })
+        .catch(e => {
+          this.$refs.playlistExistsErrorModal.open()
+        })
+    },
+    addToPlaylist () {
+      if (!this.playlistName) return
+      Playlists.addSongToPlaylist(this.playlistName, this.selectedSong._id)
+        .then(() => {
+          this.playlistName = ''
+        })
+    },
     play (item) {
       this.$store.commit('PLAY_MUSIC', item)
     },
@@ -85,13 +146,58 @@ export default {
       this.sort.field = criteria.field
       this.sort.order = order
     },
-    doContextMenu (item) {
+    async doContextMenu (item) {
+      let playlistTemplate = [
+        {
+          label: 'Create New',
+          click: () => {
+            this.selectedSong = item
+            this.playlistName = ''
+            this.$refs.createPlaylistModal.open()
+          }
+        }
+      ]
+      let playlists = await Playlists.getAllPlaylists({ name: 1 })
+      this.playlists = playlists
+      if (playlists.length > 0) {
+        playlistTemplate.push({
+          type: 'separator'
+        })
+        playlists = playlists.slice(0, 10)
+        playlists = playlists.map(({ name }) => {
+          return {
+            label: name,
+            click: () => {
+              Playlists.addSongToPlaylist(name, item._id)
+            }
+          }
+        })
+        playlistTemplate = playlistTemplate.concat(playlists)
+        playlistTemplate.push({
+          type: 'separator'
+        })
+        playlistTemplate.push({
+          label: 'Show all',
+          click: () => {
+            this.playlistName = ''
+            this.selectedSong = item
+            this.$refs.showAllPlaylistsModal.open()
+          }
+        })
+      }
       const template = [
         {
           label: 'Play Next',
           click: () => {
             this.$store.commit('PLAY_NEXT', item)
           }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Add to playlist',
+          submenu: playlistTemplate
         },
         {
           type: 'separator'
@@ -125,7 +231,9 @@ export default {
     ItemColumn,
     StaggeredSlideIn,
     SearchBar,
-    SongList
+    SongList,
+    MaterialButton,
+    ListRow
   }
 }
 </script>
@@ -143,12 +251,6 @@ export default {
     position: relative;
   }
 
-  .vertical-bar {
-    background-color: turquoise !important;
-  }
-  .vertical-bar-internal {
-    background-color: green !important;
-  }
   .fill-height {
     height: 100%;
   }
@@ -159,54 +261,18 @@ export default {
     width: 25px;
     height: 25px;
   }
-  .vuescroll-vertical-scrollbar {
-    min-height: 25px;
-    transform: scaleY(0.5);
+  input[type="text"] {
+    min-width: 300px;
+    height: 3em;
+    border: 1px solid #777;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 100;
+    padding: 0 1em;
+    color: #777;
+    box-sizing: border-box;
   }
-  .vb > .vb-dragger {
-    z-index: 5;
-    width: 12px;
-    min-height: 25px;
-    right: 0;
-  }
-
-  .vb > .vb-dragger > .vb-dragger-styler {
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      -webkit-transform: rotate3d(0,0,0,0);
-      transform: rotate3d(0,0,0,0);
-      -webkit-transition:
-          background-color 100ms ease-out,
-          margin 100ms ease-out,
-          height 100ms ease-out;
-      transition:
-          background-color 100ms ease-out,
-          margin 100ms ease-out,
-          height 100ms ease-out;
-      background-color: rgba(48, 121, 244,.1);
-      margin: 5px 5px 5px 0;
-      border-radius: 20px;
-      height: calc(100% - 10px);
-      display: block;
-  }
-
-  .vb.vb-scrolling-phantom > .vb-dragger > .vb-dragger-styler {
-      background-color: rgba(48, 121, 244,.3);
-  }
-
-  .vb > .vb-dragger:hover > .vb-dragger-styler {
-      background-color: rgba(48, 121, 244,.5);
-      margin: 0px;
-      height: 100%;
-  }
-
-  .vb.vb-dragging > .vb-dragger > .vb-dragger-styler {
-      background-color: rgba(48, 121, 244,.5);
-      margin: 0px;
-      height: 100%;
-  }
-
-  .vb.vb-dragging-phantom > .vb-dragger > .vb-dragger-styler {
-      background-color: rgba(48, 121, 244,.5);
+  input[type="text"]:focus {
+    outline: none !important;
   }
 </style>

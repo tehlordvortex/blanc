@@ -1,5 +1,5 @@
 <template>
-  <div class="list-row">
+  <div class="list-row" :style="active ? colorfulStyle : ''">
     <div class="list-row-content" @click.stop="$emit('click', $event)">
       <slot></slot>
     </div>
@@ -18,11 +18,16 @@
 
 <script>
 import MaterialButton from './MaterialButton'
-
+import makeColorful from '../Mixins/Colorful'
 export default {
   name: 'list-row',
+  mixins: [makeColorful()],
   props: {
     hideDelete: {
+      type: Boolean,
+      default: false
+    },
+    active: {
       type: Boolean,
       default: false
     }

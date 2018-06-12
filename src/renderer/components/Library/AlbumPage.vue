@@ -68,7 +68,7 @@
       </div>
     </template>
     <template v-else>
-      <item-row wrap title="albums" @scroll="scrolled">
+      <item-row wrap title="albums">
         <search-bar v-model="searchString" slot="title-side-content" />
         <album-list
           :albums="albums"

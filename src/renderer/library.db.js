@@ -4,7 +4,7 @@ import Promise from 'bluebird'
 const LinvoDB = require('linvodb3')
 
 LinvoDB.defaults.store = { db: require('level-js') }
-export const appDataPath = require('electron').ipcRenderer.sendSync('sync-get-path', 'userData')
+export const appDataPath = require('electron').remote.app.getPath('userData')
 console.log('App database at', appDataPath)
 LinvoDB.dbPath = appDataPath
 
@@ -15,6 +15,7 @@ db.ensureIndex({
 })
 export const albumsDB = new LinvoDB('albums')
 export const colorsDB = new LinvoDB('colors')
+export const playlistsDB = new LinvoDB('playlists')
 /* eslint-disable no-proto */
 Promise.promisifyAll(db.find().__proto__)
 Promise.promisifyAll(db)
@@ -22,6 +23,8 @@ Promise.promisifyAll(albumsDB.find().__proto__)
 Promise.promisifyAll(albumsDB)
 Promise.promisifyAll(colorsDB.find().__proto__)
 Promise.promisifyAll(colorsDB)
+Promise.promisifyAll(playlistsDB.find().__proto__)
+Promise.promisifyAll(playlistsDB)
 
 // function handleUpdate (type = 'library') {
 //   return debounce(() => {

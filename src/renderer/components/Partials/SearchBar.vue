@@ -73,22 +73,19 @@ export default {
 
 <style>
   .searchbar {
-    /* position: fixed; */
-    right: 1em;
-    top: 2em;
-    min-width: 32px;
-    min-height: 32px;
+    height: 32px;
     background-color: rgba(0, 0, 0, 0.1);
     padding: 2px 5px;
     z-index: 10;
-    width: 300px;
+    width: 200px;
     color: white;
     -webkit-app-region: no-drag;
+    display: inline-block;
   }
   .searchbar-items {
     position: relative;
     height: 24px;
-    width: 290px;
+    width: 100%;
     transition: width 0.3s;
     -webkit-app-region: no-drag;
   }
@@ -113,7 +110,6 @@ export default {
     border-bottom-color: #3080ff;
     display: inline-block;
     padding-right: 24px;
-    width: 290px;
   }
 
   .searchbar-icon {
@@ -121,12 +117,6 @@ export default {
     left: 0em;
     top: 0em;
     z-index: 3;
-  }
-  .searchbar:hover .searchbar-items {
-    width: 290px;
-  }
-  .searchbar:hover .searchbar-text {
-    width: 290px;
   }
   .searchbar-items:focus ~ .searchbar-text {
     display: inline-block;

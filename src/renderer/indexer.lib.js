@@ -115,6 +115,7 @@ export function addFiles (path, background = false) {
         indexDetails.total = files.length
         if (files.length === 0) {
           finish()
+          return null
         }
         files.forEach(file => {
           indexQueue.push(cb => {
@@ -127,6 +128,7 @@ export function addFiles (path, background = false) {
                       // console.log(indexDetails)
                       if (!background) store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                       cb()
+                      return null
                     }).catch((e) => {
                       console.warn('Error indexing', file, e)
                       cb()
@@ -135,6 +137,7 @@ export function addFiles (path, background = false) {
                   indexDetails.processed++
                   if (!background) store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                   cb()
+                  return null
                 }
               })
           })
@@ -174,6 +177,7 @@ export default function index (path) {
         indexDetails.total = files.length
         if (files.length === 0) {
           finish()
+          return null
         }
         files.forEach(file => {
           indexQueue.push(cb => {
@@ -183,6 +187,7 @@ export default function index (path) {
                 // console.log(indexDetails)
                 store.commit('UPDATE_INDEXING_PROGRESS', indexDetails)
                 cb()
+                return null
               }).catch((e) => {
                 console.warn('Error indexing', file, e)
                 cb()

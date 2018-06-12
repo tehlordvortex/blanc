@@ -23,6 +23,11 @@ let router = new Router({
           path: 'album/:album?',
           name: 'library-album-page',
           component: require('@/components/Library/AlbumPage').default
+        },
+        {
+          path: 'playlists/:playlistID?',
+          name: 'library-playlist-page',
+          component: require('@/components/Library/PlaylistsPage').default
         }
       ]
     },

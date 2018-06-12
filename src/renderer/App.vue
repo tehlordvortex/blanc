@@ -99,6 +99,18 @@
     overflow-y: auto;
     overflow-x: hidden;
   }
+  .wrapper-message {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* font-weight: lighter; */
+  }
+  .wrapper-message > * {
+    font-weight: 100;
+    color: #999;
+  }
   .wrapper.no-fill-height {
     height: auto;
     overflow: none;
@@ -133,6 +145,12 @@
   }
   .animated {
     animation-duration: 0.5s !important;
+  }
+  .wrapper-message a, a:visited {
+    color: #444;
+  }
+  .wrapper-message a:hover {
+    color: #555;
   }
   /* CSS */
 </style>

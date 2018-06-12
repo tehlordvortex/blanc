@@ -9,11 +9,13 @@
 </template>
 
 <script>
-import { loadAlbumArt, getColors } from '@/lazy-loaders'
+// import { loadAlbumArt, getColors } from '@/lazy-loaders'
+import makeColorful from '@/components/Mixins/Colorful'
 
 // const defaultColors = 'background-color: #3050ff; color: white'
 export default {
   name: 'material-button',
+  mixins: [makeColorful()],
   props: {
     icon: {
       type: Boolean,
@@ -54,20 +56,6 @@ export default {
       if (this.flat) classes.push('flat')
       if (this.rounded) classes.push('rounded')
       return classes
-    },
-    currentlyPlaying () {
-      return this.$store.state.Music.currentlyPlaying
-    }
-  },
-  asyncComputed: {
-    colors () {
-      if (this.currentlyPlaying) {
-        if (this.currentlyPlaying.colors) return this.currentlyPlaying.colors
-        else if (this.currentlyPlaying.albumArt) return getColors(this.currentlyPlaying.albumArt)
-        else return loadAlbumArt(this.currentlyPlaying.filePath).then(path => getColors(path))
-      } else {
-        return Promise.resolve('')
-      }
     },
     buttonColor () {
       if (this.icon && this.flat && !this.colorful) return ''
