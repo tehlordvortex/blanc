@@ -13,7 +13,7 @@
       <loading-indicator v-else />
     </item-column>
     <sweet-modal ref="createPlaylistModal" modal-theme="dark" overlay-theme="dark">
-      <input type="text" v-model="playlistName">
+      <input type="text" v-model="playlistName" @keyup.enter="createPlaylist">
       <material-button
         flat
         @click="createPlaylist"
