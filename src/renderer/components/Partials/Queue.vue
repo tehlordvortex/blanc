@@ -29,6 +29,7 @@
           :key="index"
           @click="play(item)"
           @delete="remove(item)"
+          :active="currentlyPlaying && (currentlyPlaying._id === item._id)"
         >
           <p>{{ item.title }} - {{ item.artist || 'Unknown Artist' }} - {{ item.album || 'Unknown Album' }}</p>
         </list-row>
@@ -40,7 +41,7 @@
 
 <script>
 import ListRow from './ListRow'
-
+import { mapState } from 'vuex'
 export default {
   name: 'queue',
   data: () => ({}),
@@ -48,9 +49,10 @@ export default {
     hideCloseButton: Boolean
   },
   computed: {
-    queue () {
-      return this.$store.state.Music.queue
-    }
+    ...mapState({
+      queue: state => state.Music.queue,
+      currentlyPlaying: state => state.Music.currentlyPlaying
+    })
   },
   components: {
     ListRow
