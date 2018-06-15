@@ -73,6 +73,7 @@
     "node-dir": "^0.1.17",
     "node-vibrant": "^3.0.0",
     "queue": "^4.4.2",
+    "semver": "^5.5.0",
     "sweet-modal-vue": "^2.0.0",
     "underscore": "^1.8.3",
     "vue": "^2.3.3",

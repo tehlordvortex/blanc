@@ -2,14 +2,15 @@ import settings from './settings'
 import { colorsDB, default as db } from '@/library.db'
 import { join } from 'path'
 import { indexAlbums, artsCachePath, getLibrary } from '../lazy-loaders'
+import semver from 'semver'
 
 export default function finishUpdate () {
   let p = Promise.resolve()
-  if (settings.lastRunVersion < '0.5.0') {
+  if (semver.lt(settings.lastRunVersion, '0.5.0')) {
     console.log('Re-indexing albums...')
     p = p.then(() => indexAlbums())
   }
-  if (settings.lastRunVersion < '0.7.1') {
+  if (semver.lt(settings.lastRunVersion, '0.7.1')) {
     console.log('Re-caching colors...')
     p = p.then(() => {
       return colorsDB.find({}).execAsync().then(docs => {
@@ -24,7 +25,7 @@ export default function finishUpdate () {
       })
     })
   }
-  if (settings.lastRunVersion < '0.8.1') {
+  if (semver.lt(settings.lastRunVersion, '0.8.1')) {
     console.log('Updating store\'s library & albums...')
     p = p.then(() => getLibrary()).then(() => indexAlbums())
   }
